@@ -10,7 +10,7 @@ import eel
 @eel.expose
 def create_imageset(base_dir: str, name: str):
   imageset_path = os.path.join(base_dir, name)
-  if os.path.exists(imageset_path):
+  if not os.path.exists(imageset_path):
     os.mkdir(imageset_path)
     # 返回创建成功
   

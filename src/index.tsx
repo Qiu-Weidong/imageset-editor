@@ -6,6 +6,7 @@ import './index.css';
 import { store } from "./app/store";
 import reportWebVitals from './reportWebVitals';
 import Start from './page/start/Start';
+import Settings from './page/settings/Settings';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -23,6 +24,8 @@ root.render(
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<Start />} />
+          <Route path='/Settings' element={<Settings />} />
+          <Route path="*" element={"404"}></Route>
         </Routes>
       </BrowserRouter>
     </Provider>

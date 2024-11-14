@@ -1,23 +1,16 @@
-import { Button, Divider, InputAdornment, Stack, TextField } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, InputAdornment, Stack, TextField } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { push, setImageLoaded } from "../../app/imageDirSlice";
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/Help';
+import { useState } from "react";
+import { eel } from "../..";
 
 function Start() {
-  const dispatch = useDispatch();
-
-  const [path, setPath] = useState("");
-  const [errinfo, setErrInfo] = useState({ error: false, helperText: "" });
-
   const navigate = useNavigate();
-
-  // 进到首页就重新加载
-  useEffect(() => { dispatch(setImageLoaded(false)) }, []);
+  const [newDialog, setNewDialog] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
 
   return (
     // 外层 div 负责将子元素居中
@@ -32,10 +25,12 @@ function Start() {
         direction="row" spacing={4}
         divider={<Divider orientation="vertical" flexItem />}
         >
-          <Button color="secondary" variant="contained" startIcon={<CreateNewFolderIcon />}>New</Button>
+          <Button color="secondary" variant="contained" startIcon={<CreateNewFolderIcon />} 
+            onClick={() => setNewDialog(true) }
+          >New</Button>
           <Button color="success" variant="contained" startIcon={<FolderOpenIcon />} >Open</Button>
-          <Button color="primary" variant="contained" startIcon={<SettingsIcon />}>Settings</Button>
-          <Button color="warning" variant="contained" startIcon={<HelpIcon />}>Help</Button>
+          <Button color="primary" variant="contained" startIcon={<SettingsIcon />} onClick={() => navigate("/settings") }>Settings</Button>
+          <Button color="warning" variant="contained" startIcon={<HelpIcon />} href="https://github.com/Qiu-Weidong/imageset-editor.git">Help</Button>
         </Stack>
 
       </div>
@@ -52,7 +47,58 @@ function Start() {
           objectFit: 'cover',
         }} />
       
-
+      <Dialog
+        open={newDialog}
+        onClose={() => setNewDialog(false) }
+        PaperProps={{
+          component: 'form',
+          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            const formJson = Object.fromEntries((formData as any).entries());
+            const name = formJson.name;
+            const path = formJson.path;
+            console.log(name, path);
+            
+            
+            eel.create_imageset(path, name);
+            
+            setNewDialog(false);
+          },
+        }}
+      >
+        <DialogTitle>create new imageset</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            input dest path and imageset name to create a new imageset.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="name"
+            name="name"
+            label="ImageSet Name"
+            type="text"
+            variant="standard"
+          />
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="path"
+            name="path"
+            label="Path"
+            type="text"
+            fullWidth
+            variant="standard"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNewDialog(false) }>Cancel</Button>
+          <Button type="submit">CREATE</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
