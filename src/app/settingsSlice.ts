@@ -1,15 +1,19 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { eel } from "..";
 
+// 定义配置项目
 
 export interface SettingsState {
   defaultImageGalleryColumns: number, // 图片的列数
   thumbnailWidth: number, // 缩略图的宽度
+  baseDir: string, // 数据集存放路径
 };
 
-
+// eel
 const initialState: SettingsState = {
   defaultImageGalleryColumns: 12,
   thumbnailWidth: 128,
+  baseDir: '',
 }
 
 

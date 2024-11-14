@@ -1,4 +1,25 @@
-"""Main Python application file for the EEL-CRA demo."""
+'''
+严格按照这个格式来管理
+
+数据集的格式
+name
+  src
+    <n>_concept1
+    <m>_concept2
+  reg
+    <t>_concept3
+    <k>_concept4
+  .imageset
+    settings.json
+    project.json
+    
+    
+base_dir
+  imageset-name1
+  imageset-name2
+  ...
+  
+'''
 
 import platform
 import sys, os
@@ -6,23 +27,29 @@ import eel
 import logging
 
 
+base_dir = './tmp'
 
 @eel.expose
-def create_imageset(base_dir: str, name: str):
+def find_imageset_list():
+  imageset_names: list[str] = os.listdir(base_dir)
+  imageset_names = [name[9:] for name in imageset_names if name.startswith('imageset-')]
+  logging.info(f'found imageset {imageset_names}')
+  return imageset_names
+
+
+@eel.expose
+def create_imageset(name: str):
+  origin_name = name
+  name = 'imageset-' + name
   imageset_path = os.path.join(base_dir, name)
   logging.info(f'create_imageset {imageset_path}')
   if not os.path.exists(imageset_path):
     os.mkdir(imageset_path)
-    # 创建项目描述文件
-    # 返回创建成功
-    return imageset_path
+    return origin_name
   # 创建失败
-  raise Exception(f"{imageset_path} is existed.")
+  raise Exception(f"imageset '{origin_name}' is existed.")
   
-  
-@eel.expose  
-def open_imageset(imageset_path: str):
-  pass  
+
 
 
 def main(develop):
