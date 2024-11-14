@@ -7,6 +7,11 @@ import HelpIcon from '@mui/icons-material/Help';
 import { useState } from "react";
 import { eel } from "../..";
 
+
+
+const default_workspace = 'D:\\train-dataset\\tmp';
+
+
 function Start() {
   const navigate = useNavigate();
   const [newDialog, setNewDialog] = useState(false);
@@ -28,7 +33,7 @@ function Start() {
           <Button color="secondary" variant="contained" startIcon={<CreateNewFolderIcon />} 
             onClick={() => setNewDialog(true) }
           >New</Button>
-          <Button color="success" variant="contained" startIcon={<FolderOpenIcon />} >Open</Button>
+          <Button color="success" variant="contained" startIcon={<FolderOpenIcon />} onClick={() => setOpenDialog(true) } >Open</Button>
           <Button color="primary" variant="contained" startIcon={<SettingsIcon />} onClick={() => navigate("/settings") }>Settings</Button>
           <Button color="warning" variant="contained" startIcon={<HelpIcon />} href="https://github.com/Qiu-Weidong/imageset-editor.git">Help</Button>
         </Stack>
@@ -57,20 +62,22 @@ function Start() {
             const formData = new FormData(event.currentTarget);
             const formJson = Object.fromEntries((formData as any).entries());
             const name = formJson.name;
-            const path = formJson.path;
-            console.log(name, path);
+            console.log(name);
+            eel.create_imageset(default_workspace, name)()
+              .then((res: any) => console.log(res))
+              .catch((err: any) => console.log(err))
+              .finally(() => {
+                setNewDialog(false);
+              });
             
             
-            eel.create_imageset(path, name);
-            
-            setNewDialog(false);
           },
         }}
       >
         <DialogTitle>create new imageset</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            input dest path and imageset name to create a new imageset.
+            input imageset name to create a new imageset.
           </DialogContentText>
           <TextField
             autoFocus
@@ -82,21 +89,47 @@ function Start() {
             type="text"
             variant="standard"
           />
-          <TextField
-            autoFocus
-            required
-            margin="dense"
-            id="path"
-            name="path"
-            label="Path"
-            type="text"
-            fullWidth
-            variant="standard"
-          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setNewDialog(false) }>Cancel</Button>
           <Button type="submit">CREATE</Button>
+        </DialogActions>
+      </Dialog>
+
+
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false) }
+        PaperProps={{
+          component: 'form',
+          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            const formJson = Object.fromEntries((formData as any).entries());
+            const path = formJson.path;
+            console.log(path);
+            setNewDialog(false);
+          },
+        }}
+      >
+        <DialogTitle>open imageset</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            please input the imageset path to open it. if it is not a imageset, it will create one in the path you input.                  
+          </DialogContentText>
+          <TextField 
+            label="请输入文件夹路径"
+            id="path"
+            name="path"
+            variant="standard"
+            fullWidth
+            autoFocus
+            required
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false) }>Cancel</Button>
+          <Button type="submit">OPEN</Button>
         </DialogActions>
       </Dialog>
     </div>

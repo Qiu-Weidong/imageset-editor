@@ -2,19 +2,22 @@
 
 import platform
 import sys, os
-from pathlib import Path
 import eel
+import logging
 
 
 
 @eel.expose
 def create_imageset(base_dir: str, name: str):
   imageset_path = os.path.join(base_dir, name)
+  logging.info(f'create_imageset {imageset_path}')
   if not os.path.exists(imageset_path):
     os.mkdir(imageset_path)
+    # 创建项目描述文件
     # 返回创建成功
-  
+    return imageset_path
   # 创建失败
+  raise Exception(f"{imageset_path} is existed.")
   
   
 @eel.expose  
@@ -52,6 +55,8 @@ def main(develop):
 
 
 if __name__ == '__main__':
+  logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+  
   # Pass any second argument to enable debugging
   if not main(develop=len(sys.argv) == 2):
     print('failed to start service.')

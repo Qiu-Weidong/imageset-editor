@@ -18,6 +18,8 @@ eel.set_host( 'ws://localhost:8080' );
 
 // 直接 eel.python_func 即可
 
+// 加载 settings
+
 root.render(
   <React.StrictMode>
     <Provider store={ store }>
