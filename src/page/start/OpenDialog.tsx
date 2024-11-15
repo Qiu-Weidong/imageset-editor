@@ -27,7 +27,7 @@ function OpenDialog(props: OpenDialogProps) {
   ) : imagesetNames?.length > 0 ? (<List>
     {
       imagesetNames.map((name) => <ListItem disablePadding>
-        <ListItemButton onClick={() => navigate(`/home`, { state: { imageset_name: name } })}>
+        <ListItemButton onClick={() => navigate(`/overview`, { state: { imageset_name: name } })}>
           <ListItemText primary={name} />
         </ListItemButton>
       </ListItem>)

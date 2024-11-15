@@ -1,7 +1,8 @@
 /// <reference types="react-scripts" />
 
 interface Window {
-  eel: any;
+  eel: any,
+  api_port: number,
 }
 
 declare var window: Window;

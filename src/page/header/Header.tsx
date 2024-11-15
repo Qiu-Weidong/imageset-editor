@@ -1,4 +1,4 @@
-import { AppBar, Box, IconButton, Toolbar, Typography } from "@mui/material";
+import { AppBar, IconButton, Toolbar, Typography } from "@mui/material";
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
@@ -8,8 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { setImageLoaded } from "../../app/imageDirSlice";
-import { clearAlerts } from "../../app/alertMsgSlice";
 import DeleteIcon from '@mui/icons-material/Delete';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
@@ -24,21 +22,16 @@ export default function Header() {
   const dispatch = useDispatch();
 
   // 保存当前的 imagedir
-  const imagedir = useSelector((state: RootState) => state.imagedir.currentDir) || '';
   const ctl = useRef<{ loading: boolean, stop: boolean, init: boolean }>({ loading: false, stop: false, init: true });
   const [loading, setLoading] = useState(ctl.current.loading);
   const [disableTextField, setDisableTextField] = useState(true);
 
 
-  const imageLoaded = useSelector((state: RootState) => state.imagedir.imageLoaded);
 
 
   // 不要在这里执行
   useEffect(() => {
-    if (!imageLoaded) {
-      refresh(imagedir);
-      dispatch(setImageLoaded(true));
-    }
+
   }, []);
 
   const imageWidth = useSelector((state: RootState) => state.setting.thumbnailWidth);
@@ -89,7 +82,7 @@ export default function Header() {
 
 
       {
-        !loading ? <IconButton disabled={!disableTextField} onClick={() => refresh(imagedir)}>
+        !loading ? <IconButton disabled={!disableTextField} onClick={() => {} }>
           <RefreshIcon />
         </IconButton> : <IconButton onClick={stoploading}>
           <CloseIcon />
@@ -107,7 +100,6 @@ export default function Header() {
       <IconButton onClick={() => {
         // 主页之间要先将没有加载完成的stop了
         stoploading();
-        dispatch(clearAlerts());
         navigate("/");
       }}>
         <HomeIcon />

@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, } from 'react-router-dom';
 import './App.css';
 import Start from './page/start/Start';
 import Settings from './page/settings/Settings';
@@ -6,9 +6,11 @@ import Home from './page/detail/Home';
 import Detail from './page/detail/Detail';
 
 
-
+// 通过环境变量传递一个端口进来
+const port = window.api_port;
+console.log(port);
 export const eel = window.eel;
-eel.set_host('ws://localhost:8080');
+eel.set_host(`ws://localhost:${port}`); // 因为这里绑定的是 8080, 不如使用环境变量
 
 
 export function App() {
@@ -16,10 +18,11 @@ export function App() {
     <>
       <BrowserRouter>
         <Routes>
-          <Route path='/' element={<Start />} />
-          <Route path='/home' element={<Home />} />
+          <Route path='/home' element={<Start />} />
+          <Route path='/overview' element={<Home />} />
           <Route path='/settings' element={<Settings />} />
           <Route path='/detail' element={<Detail />} />
+          <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="*" element={"404"}></Route>
         </Routes>
       </BrowserRouter>

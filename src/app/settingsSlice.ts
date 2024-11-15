@@ -1,5 +1,4 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { eel } from "../App";
 
 // 定义配置项目
 

@@ -14,7 +14,7 @@ interface Meta {
 
 
 // 展示训练集和正则集的基本信息, 点击即可进入
-function Home() {
+function Overview() {
 
 
   // 通过路由传参将打开的imageset名称传入
@@ -140,6 +140,6 @@ function Home() {
 
 
 
-export default Home;
+export default Overview;
 
 

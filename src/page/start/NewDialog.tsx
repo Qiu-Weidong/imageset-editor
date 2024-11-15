@@ -46,7 +46,7 @@ function NewDialog(props: newDialogProps) {
           eel.create_imageset(name) ()
             .then((res: any) => {
               setState({ ...state, msg: `create imageset '${res}' successful.`, open: true, severity: 'success' });
-              navigate(`/home`, { state: { imageset_name: name } });
+              navigate(`/overview`, { state: { imageset_name: name } });
             })
             .catch((err: any) => {
               setState({ ...state, msg: exception2string(err), open: true, severity: 'error' })
