@@ -8,6 +8,8 @@ def start(develop: bool, port: int):
     directory = 'src'
     app = None
     page = {'port': 3000}
+    with open('public/config.js', 'w') as f:
+      f.write(f'window.api_port = {port};')
   else:
     directory = 'build'
     app = 'chrome-app'
@@ -46,6 +48,9 @@ def main():
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
   else:
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+  
+  # 设置 base_dir 
+  set_base_dir(args.data_path)
   
   start(args.dev, args.port)
   

@@ -7,10 +7,9 @@ import Detail from './page/detail/Detail';
 
 
 // 通过环境变量传递一个端口进来
-const port = window.api_port;
-console.log(port);
+const port = window.api_port || 1420;
 export const eel = window.eel;
-eel.set_host(`ws://localhost:${port}`); // 因为这里绑定的是 8080, 不如使用环境变量
+eel.set_host(`ws://localhost:${port}`);
 
 
 export function App() {

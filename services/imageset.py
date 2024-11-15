@@ -29,7 +29,13 @@ from PIL import Image
 import base64
 import io
 
-base_dir = './tmp'
+base_dir = ''
+
+def set_base_dir(new_base_dir: str):
+  global base_dir
+  base_dir = new_base_dir
+
+
 
 @eel.expose
 def find_imageset_list() -> list[str]:
