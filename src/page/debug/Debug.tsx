@@ -1,4 +1,4 @@
-import { Box, Card, Container } from "@mui/material";
+import { Box, Card, CardContent, Container, Typography } from "@mui/material";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from 'swiper/modules';
 
@@ -11,61 +11,80 @@ import 'swiper/css/pagination';
 
 // 展示训练集和正则集的基本信息, 点击即可进入
 function Debug() {
-  const child = (
-    <div style={{   display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-      <div style={{ height: '80%', width: '100%' }}>
-        <Card sx={{ width: '100%', height: '100%', }}>
-          <Swiper
-            spaceBetween={25}
-            slidesPerView={1}
-            navigation
-            pagination={{ clickable: true }}
-            loop
-            style={{ height: '100%' }}
+  // 528 * 738.6
+  const swiper = (
+    <div style={{ backgroundColor: 'yellow', flex: 1, }}>
+      <Swiper
+        spaceBetween={25}
+        slidesPerView={1}
+        navigation
+        pagination={{ clickable: true }}
+        loop
+        modules={[Navigation, Pagination]}
+        style={{ height: '100%', minHeight: '100%', }}
+      >
+        <SwiperSlide>
+          <img
+            src="/xxx.png"
+            alt="img" style={{ objectFit: 'cover', width: '100%', height: '100%', transform: 'scale(1.05)',   }} />
+        </SwiperSlide>
+        <SwiperSlide>
+          <img
+            src="/yyy.png"
+            alt="img" style={{ objectFit: 'cover', width: '100%', height: '100%' }}/>
+        </SwiperSlide>
+        {/* <SwiperSlide>
+          <img
+            src="http://b.hiphotos.baidu.com/image/pic/item/e824b899a9014c08878b2c4c0e7b02087af4f4a3.jpg"
+            alt="img" width="100%" height="100%" style={{ objectFit: 'cover' }} />
+        </SwiperSlide> */}
 
-            modules={[Navigation, Pagination]}
-          >
-            <SwiperSlide>
-              <img src="http://e.hiphotos.baidu.com/image/pic/item/a1ec08fa513d2697e542494057fbb2fb4316d81e.jpg"
-                alt="" style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
-            </SwiperSlide>
-            <SwiperSlide>
-              <img src="http://c.hiphotos.baidu.com/image/pic/item/30adcbef76094b36de8a2fe5a1cc7cd98d109d99.jpg"
-                alt="" style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
-            </SwiperSlide>
-            <SwiperSlide>
-              <img src="http://h.hiphotos.baidu.com/image/pic/item/7c1ed21b0ef41bd5f2c2a9e953da81cb39db3d1d.jpg"
-                alt="" style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
-            </SwiperSlide>
-            <SwiperSlide>
-              <img src="http://g.hiphotos.baidu.com/image/pic/item/55e736d12f2eb938d5277fd5d0628535e5dd6f4a.jpg"
-                alt="" style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
-            </SwiperSlide>
-            <SwiperSlide>
-              <img src="http://e.hiphotos.baidu.com/image/pic/item/4e4a20a4462309f7e41f5cfe760e0cf3d6cad6ee.jpg"
-                alt="" style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
-            </SwiperSlide>
-          </Swiper>
-        </Card>
-      </div>
+      </Swiper>
+
+
     </div>
   );
 
 
 
+  const child2 = (
+
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100%', height: '100%', }}>
+      {/* 必须指定 height, card 不能指定 height */}
+      <Card sx={{ width: '100%',  marginBottom: 1, }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', }} id="inside-card">
+          <CardContent>
+            <Typography gutterBottom variant="h5" component="div">
+              Train Dataset
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Lizards are a widespread group of squamate reptiles, with over 6,000
+              species, ranging across all continents except Antarctica
+            </Typography>
+          </CardContent>
+
+          {swiper}
+
+        </div>
+      </Card>
+
+    </div >
+  );
+
+
+
   return (
-    // 首先竖着排, 名称和内容
-    <Container fixed style={{ display: 'flex', flexDirection: 'column', height: '100vh',  }}>
-      
-      <h1>Hello World</h1>
 
-      <Box style={{ display: 'flex',  flex: 1, }}>
+    <Container sx={{ minHeight: '100vh', }}>
+      <Typography variant="h2" gutterBottom>
+        Hello World
+      </Typography>
 
-        <Container style={{ width: '50%' }} >
-          {child}
+      <Box style={{ display: 'flex', minHeight: '85vh', }}>
+        <Container style={{ width: '50%', minHeight: '100%' }} >
+          {child2}
         </Container>
-        <Container style={{ width: '50%' }} >
-          {child}
+        <Container style={{ width: '50%', backgroundColor: 'yellow', minHeight: '100%' }} >
         </Container>
       </Box>
 

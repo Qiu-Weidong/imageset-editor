@@ -31,7 +31,7 @@ export function App() {
       <img src="https://images.unsplash.com/photo-1549388604-817d15aa0110"
         style={{
           zIndex: -1,
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
           width: '100%',

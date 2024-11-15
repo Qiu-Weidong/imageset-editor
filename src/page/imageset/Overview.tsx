@@ -56,14 +56,14 @@ function Overview() {
 
       <Swiper 
         // 在这里设置宽度
-        // style={{ width: 100 }}
+        style={{ width: 100 }}
         spaceBetween={25}
         slidesPerView={1}
         navigation
         loop
       >
         <SwiperSlide>
-          <img src="https://images.unsplash.com/photo-1549388604-817d15aa0110" alt="img" width={100} height={100} />
+          <img src="" alt="" width={100} />
         </SwiperSlide>
         <SwiperSlide>Slide 2</SwiperSlide>
       </Swiper>
