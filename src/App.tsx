@@ -4,7 +4,7 @@ import Start from './page/start/Start';
 import Settings from './page/settings/Settings';
 import Overview from './page/imageset/Overview';
 import Detail from './page/detail/Detail';
-import Debug from './page/debug/Debug';
+import Debug from './page/debug/Debug2';
 
 
 // 通过环境变量传递一个端口进来

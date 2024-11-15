@@ -2,9 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from "react-redux";
 import './index.css';
+import '@mantine/core/styles.css';
 import { store } from "./app/store";
 import reportWebVitals from './reportWebVitals';
 import App from './App';
+import { MantineProvider } from '@mantine/core';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -15,8 +17,11 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <Provider store={ store }>
-      <App />
+    <Provider store={store}>
+      <MantineProvider>
+        <App />
+      </MantineProvider>
+
     </Provider>
   </React.StrictMode>
 );
