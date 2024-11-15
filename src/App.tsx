@@ -2,8 +2,9 @@ import { BrowserRouter, Navigate, Route, Routes, } from 'react-router-dom';
 import './App.css';
 import Start from './page/start/Start';
 import Settings from './page/settings/Settings';
-import Home from './page/detail/Home';
+import Overview from './page/imageset/Overview';
 import Detail from './page/detail/Detail';
+import Debug from './page/debug/Debug';
 
 
 // 通过环境变量传递一个端口进来
@@ -18,9 +19,10 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path='/home' element={<Start />} />
-          <Route path='/overview' element={<Home />} />
+          <Route path='/overview' element={<Overview />} />
           <Route path='/settings' element={<Settings />} />
           <Route path='/detail' element={<Detail />} />
+          <Route path='/debug' element={<Debug />} />
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="*" element={"404"}></Route>
         </Routes>

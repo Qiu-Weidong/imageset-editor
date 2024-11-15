@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { eel } from "../../App";
 import { Card, CardContent, CardMedia, CircularProgress, Container, Fab, Typography } from "@mui/material";
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
+import { Carousel } from "../../componet/Carousel";
+import { SwiperSlide, Swiper } from "swiper/react";
 
 
 interface Meta {
@@ -50,25 +52,22 @@ function Overview() {
   };
 
   const train = trainset ? (
-    <Card sx={{  width: '90%' }} onClick={() => jump2detail(false) } >
-      {/* 后端随机传一张 image 来, 如果一张图片都没有就不显示 */}
+    <Card  sx={{ width: '100%', height: '80%', }}>
 
-      {
-        trainset.cover ?
-          <CardMedia
-            sx={{ height: 320 }}
-            image={trainset.cover} // 直接使用 base64 即可
-          /> : <></>
-      }
+      <Swiper 
+        // 在这里设置宽度
+        // style={{ width: 100 }}
+        spaceBetween={25}
+        slidesPerView={1}
+        navigation
+        loop
+      >
+        <SwiperSlide>
+          <img src="https://images.unsplash.com/photo-1549388604-817d15aa0110" alt="img" width={100} height={100} />
+        </SwiperSlide>
+        <SwiperSlide>Slide 2</SwiperSlide>
+      </Swiper>
 
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
-          Train Dataset
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {trainset.concept_count} concepts, {trainset.image_count} images, {trainset.repeat} repeat.
-        </Typography>
-      </CardContent>
     </Card>
   ) : <Fab variant="extended" color="primary">
     <NoteAddIcon sx={{ mr: 1 }} />
@@ -78,16 +77,12 @@ function Overview() {
 
 
   const reg = regset ? (
-    <Card sx={{ maxWidth: 400, width: '80%' }} onClick={() => jump2detail(true) }>
+    <Card >
       {/* 后端随机传一张 image 来, 如果一张图片都没有就不显示 */}
 
-      {
-        regset.cover ?
-          <CardMedia
-            sx={{ height: 240 }}
-            image={regset.cover} // 直接使用 base64 即可
-          /> : <></>
-      }
+      <CardContent>
+        <Carousel></Carousel>
+      </CardContent>
 
       <CardContent>
         <Typography gutterBottom variant="h5" component="div">
@@ -108,32 +103,32 @@ function Overview() {
 
   return (<Container fixed style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
     <h1>{imageset_name}</h1>
-    { 
+    {
       !loading ?
-      <>
-    <Container style={{ flex: 1, boxSizing: 'border-box', display: "flex" }}>
-      {/* 分为两列 */}
-      <Container style={{
-        flex: 1,
-        boxSizing: 'border-box',
-        display: "flex",
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        {train}
-      </Container>
+        <>
+          <Container style={{ flex: 1, boxSizing: 'border-box', display: "flex" }}>
+            {/* 分为两列 */}
+            <Container style={{
+              flex: 1,
+              boxSizing: 'border-box',
+              display: "flex",
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              {train}
+            </Container>
 
-      <Container style={{
-        flex: 1,
-        boxSizing: 'border-box',
-        display: "flex",
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-        {reg}
-      </Container>
-    </Container>
-    </> :  <div style={{margin: "auto"}}><CircularProgress /></div>
+            <Container style={{
+              flex: 1,
+              boxSizing: 'border-box',
+              display: "flex",
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              {reg}
+            </Container>
+          </Container>
+        </> : <div style={{ margin: "auto" }}><CircularProgress /></div>
     }
   </Container>);
 }
