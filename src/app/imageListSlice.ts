@@ -3,30 +3,34 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 
 
 /**
+ * ImageSetState {
+ *   name: string, 
+ *   type: 'regular' | 'train',
+ *   concepts: {name: string, repeat: number, }[],
+ *   images: ImageState[], 
+ * };
+ * 
  * ImageState {
  *   id: string, // filename 可能存在重复，采用 id 来标识图片
  *   filename: string, 
  *   path: string,
  *   captions: string[],
+ *   concept: string, // 所属概念, 用id来标记选中和过滤
  *   width: number,
  *   height: number,
- *   isSelected: boolean,
- *   isFiltered: boolean,
- *   isOpened: boolean,
  * 
- *   src: 缩略图的base64编码
- * }
+ *   src: string, // 缩略图base64
+ * };
+ * 
  */
 
 
-
-
 export interface ImageState {
-  src: string,
-  id: string,
-  path: string,
-  filename: string,
-  captions: string[],
+  src: string, // 缩略图编码
+  id: string,  // shortid
+  path: string, // 实际路径
+  filename: string, // 实际文件名
+  captions: string[], // 已打标签
 
 
   isSelected: boolean,

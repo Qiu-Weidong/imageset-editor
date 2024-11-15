@@ -1,35 +1,41 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css';
-
-interface IAppState {
-  message: string
-  path: string
-}
-
-
-const defPath = '~';
-
-export class App extends Component<{}, {}> {
-  public state: IAppState = {
-    message: `Click button to choose a random file from the user's system`,
-    path: defPath,
-  }
+import Start from './page/start/Start';
+import Settings from './page/settings/Settings';
+import Home from './page/detail/Home';
+import Detail from './page/detail/Detail';
 
 
 
-  public render() {
-    // 调用 python 代码
+export const eel = window.eel;
+eel.set_host('ws://localhost:8080');
 
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>{this.state.message}</p>
-        </header>
-      </div>
-    );
-  }
+
+export function App() {
+  return (
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path='/' element={<Start />} />
+          <Route path='/home' element={<Home />} />
+          <Route path='/settings' element={<Settings />} />
+          <Route path='/detail' element={<Detail />} />
+          <Route path="*" element={"404"}></Route>
+        </Routes>
+      </BrowserRouter>
+      {/* 背景图片 */}
+      <img src="https://images.unsplash.com/photo-1549388604-817d15aa0110"
+        style={{
+          zIndex: -1,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+        }} />
+    </>
+  );
 }
 
 export default App;

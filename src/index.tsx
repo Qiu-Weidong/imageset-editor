@@ -1,37 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import './index.css';
 import { store } from "./app/store";
 import reportWebVitals from './reportWebVitals';
-import Start from './page/start/Start';
-import Settings from './page/settings/Settings';
+import App from './App';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
 
-export const eel = window.eel;
-eel.set_host( 'ws://localhost:8080' );
-
 // 直接 eel.python_func 即可
-
-// 加载 settings
 
 root.render(
   <React.StrictMode>
     <Provider store={ store }>
-      <BrowserRouter>
-        <Routes>
-          <Route path='/' element={<Start />} />
-          <Route path='/Settings' element={<Settings />} />
-          <Route path="*" element={"404"}></Route>
-        </Routes>
-      </BrowserRouter>
+      <App />
     </Provider>
-    
   </React.StrictMode>
 );
 

@@ -39,20 +39,6 @@ function Start() {
         </Stack>
 
       </div>
-
-      {/* 背景图片 */}
-      <img src="https://images.unsplash.com/photo-1549388604-817d15aa0110"
-        style={{
-          zIndex: -1,
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-        }} />
-      
-
       <NewDialog open={newDialog} onClose={() => setNewDialog(false) }></NewDialog>
 
       <OpenDialog open={openDialog} onClose={() => setOpenDialog(false) }></OpenDialog>

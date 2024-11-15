@@ -1,7 +1,9 @@
 import { Alert, AlertColor, AlertPropsColorOverrides, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItem, ListItemButton, ListItemText, TextField } from "@mui/material";
-import { eel } from "../..";
+import { eel } from "../../App";
 import { useState } from "react";
 import Snackbar, { SnackbarOrigin } from '@mui/material/Snackbar';
+import { exception2string } from "../../utils";
+import { useNavigate } from "react-router-dom";
 
 interface newDialogProps {
   open: boolean;
@@ -17,7 +19,8 @@ interface State extends SnackbarOrigin {
 }
 
 function NewDialog(props: newDialogProps) {
-
+  const navigate = useNavigate();
+  
   const [state, setState] = useState<State>({
     open: false,
     vertical: 'top',
@@ -40,12 +43,13 @@ function NewDialog(props: newDialogProps) {
           const formJson = Object.fromEntries((formData as any).entries());
           const name = formJson.name;
 
-          eel.create_imageset(name)()
+          eel.create_imageset(name) ()
             .then((res: any) => {
-              setState({ ...state, msg: `create imageset '${res}' successful.`, open: true, severity: 'success' })
+              setState({ ...state, msg: `create imageset '${res}' successful.`, open: true, severity: 'success' });
+              navigate(`/home`, { state: { imageset_name: name } });
             })
             .catch((err: any) => {
-              setState({ ...state, msg: JSON.stringify(err), open: true, severity: 'error' })
+              setState({ ...state, msg: exception2string(err), open: true, severity: 'error' })
             })
             .finally(() => {
               props.onClose();
