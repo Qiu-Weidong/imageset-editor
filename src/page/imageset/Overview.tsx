@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { eel } from "../../App";
-import { Card, CardContent, CardMedia, CircularProgress, Container, Fab, Typography } from "@mui/material";
+import { Box, Card, CardContent, CircularProgress, Container, Fab, Typography } from "@mui/material";
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
-import { Carousel } from "../../componet/Carousel";
-import { SwiperSlide, Swiper } from "swiper/react";
+import { Carousel } from '@mantine/carousel';
+import '@mantine/carousel/styles.css';
 
 
 interface Meta {
@@ -17,6 +17,10 @@ interface Meta {
 
 // 展示训练集和正则集的基本信息, 点击即可进入
 function Overview() {
+
+  const images = [
+    '/00001-766364056.png', "/00002-3026625078.png", "/00003-1370649249.png",
+  ];
 
 
   // 通过路由传参将打开的imageset名称传入
@@ -52,22 +56,7 @@ function Overview() {
   };
 
   const train = trainset ? (
-    <Card  sx={{ width: '100%', height: '80%', }}>
-
-      <Swiper 
-        // 在这里设置宽度
-        style={{ width: 100 }}
-        spaceBetween={25}
-        slidesPerView={1}
-        navigation
-        loop
-      >
-        <SwiperSlide>
-          <img src="" alt="" width={100} />
-        </SwiperSlide>
-        <SwiperSlide>Slide 2</SwiperSlide>
-      </Swiper>
-
+    <Card sx={{ width: '100%', height: '80%', }}>
     </Card>
   ) : <Fab variant="extended" color="primary">
     <NoteAddIcon sx={{ mr: 1 }} />
@@ -100,37 +89,69 @@ function Overview() {
     ;
 
 
+  const loadingContent = (<div style={{
+    margin: "auto",
+    minWidth: '100%',
+    minHeight: '80%',
+    width: '100%',
+    height: '80%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}><CircularProgress /></div>);
 
-  return (<Container fixed style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-    <h1>{imageset_name}</h1>
-    {
-      !loading ?
-        <>
-          <Container style={{ flex: 1, boxSizing: 'border-box', display: "flex" }}>
-            {/* 分为两列 */}
-            <Container style={{
-              flex: 1,
-              boxSizing: 'border-box',
-              display: "flex",
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              {train}
-            </Container>
 
-            <Container style={{
-              flex: 1,
-              boxSizing: 'border-box',
-              display: "flex",
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              {reg}
-            </Container>
-          </Container>
-        </> : <div style={{ margin: "auto" }}><CircularProgress /></div>
-    }
-  </Container>);
+  return (
+    <Container sx={{ minHeight: '100vh', height: '100vh' }}>
+      <Typography variant="h2" gutterBottom>
+        {imageset_name}
+      </Typography>
+      <Box style={{ display: 'flex', minHeight: '85vh', }}>
+        <Container style={{ 
+          width: '50%', 
+          minHeight: '100%', 
+          display: 'flex',  
+          justifyContent: 'center',
+          alignItems: 'center',
+        }} >
+          <Card sx={{ width: '100%', marginBottom: 1, }}>
+            <CardContent>
+              <Typography gutterBottom variant="h5" component="div">
+                Train Dataset
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Lizards are a widespread group of squamate reptiles, with over 6,000
+                species, ranging across all continents except Antarctica
+              </Typography>
+            </CardContent>
+
+            <Carousel withIndicators height={640} loop >
+            {
+                images.map((url: string) => <Carousel.Slide style={{ height: '100%', backgroundImage: `url('${url}')`, backgroundSize: 'cover' }}>
+                <img
+                  src={url}
+                  alt="img" style={{ objectFit: 'contain', width: '100%', height: '100%', background: 'rgba(255, 255, 255, .47)', backdropFilter: 'blur(48px)' }} />
+              </Carousel.Slide>)
+              }
+            </Carousel>
+
+          </Card>
+        </Container>
+
+        <Container style={{ 
+          width: '50%', 
+          minHeight: '100%', 
+          display: 'flex',  
+          justifyContent: 'center',
+          alignItems: 'center',
+        }} >
+
+        </Container>
+      </Box>
+
+
+
+    </Container>);
 }
 
 

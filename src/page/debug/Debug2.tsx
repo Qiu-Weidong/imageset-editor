@@ -3,16 +3,6 @@ import { Carousel } from '@mantine/carousel';
 
 import '@mantine/carousel/styles.css';
 
-function Demo() {
-  return (
-    <Carousel withIndicators height={200} loop >
-      <Carousel.Slide>1</Carousel.Slide>
-      <Carousel.Slide>2</Carousel.Slide>
-      <Carousel.Slide>3</Carousel.Slide>
-    </Carousel>
-  );
-}
-
 // 展示训练集和正则集的基本信息, 点击即可进入
 function Debug() {
 
@@ -53,6 +43,7 @@ function Debug() {
 
           </Card>
         </Container>
+        
         <Container style={{ width: '50%', minHeight: '100%' }} >
         </Container>
 
