@@ -48,14 +48,20 @@ def find_imageset_list() -> list[str]:
 
 
 @eel.expose
-def get_imageset_cover(name: str) -> dict:
+def get_imageset_metadata(name: str) -> dict:
   '''
     {
       'train': {
-        'repeat': 12,
+        'total_repeat': 12,
         'image_count': 34,
-        'concept_count': 12
-        'cover': 'base64',
+        'concepts': [
+          {
+            'name': '',
+            'repeat': 3,
+            'image_count': 3,
+            'cover': 'xx'  
+          }
+        ],
       },
       'regular': {
       },
@@ -68,51 +74,59 @@ def get_imageset_cover(name: str) -> dict:
   train_data_dir = os.path.join(imageset_dir, 'src')
   reg_data_dir = os.path.join(imageset_dir, 'reg')
   
+  def load_cover(concept_image_filenames: list[str]) -> str | None:
+    if len(concept_image_filenames) <= 0:
+      return None
+    import random
+    random_element = random.choice(concept_image_filenames)
+    with Image.open(random_element) as img:
+      img = img.convert('RGB')
+      img.thumbnail(size=(640, 640))
+    
+      # 将缩略图保存到一个字节流中
+      buffered = io.BytesIO()
+      img.save(buffered, format="JPEG")  # 可以选择不同的格式，例如 "JPEG"
+      
+      # 获取字节流的内容并转换为 Base64 编码
+      img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8').replace("\r\n", "")
+      img_base64 = f'data:image/{os.path.basename(random_element)};base64,{img_base64}'
+      return img_base64
+
   def get_metadata(data_dir: str) -> dict:
     import re
     ret = {
-      'cover': None, 
-      'repeat': 0,
+      'total_repeat': 0,
       'image_count': 0,
-      'concept_count': 0,
+      'concepts': [],
+    
+      'image_count': 0,
     }
 
     image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff'}
     pattern = r'^(?P<repeat>\d+)_(?P<concept>.+)$'
-    
-    imagefiles = []
 
     for name in os.listdir(data_dir):
       match = re.match(pattern, name)
-      if match:
-        
-        repeat: int = int(match.group('repeat'))
+      if not match:
+        continue
+      # 获取当前concept的重复次数
+      repeat: int = int(match.group('repeat'))
+      concept_name: str = match.group('concept')
+      
 
-        # 获取目录下的图片文件的数量.
-        images = [os.path.join(data_dir, name, filename) for filename in os.listdir(os.path.join(data_dir, name)) 
-                      if os.path.splitext(filename)[1].lower() in image_extensions]
-        imagefiles.extend(images)
-        
-        count = len(images)
-        ret['image_count'] += count
-        ret['repeat'] += count * repeat
-        ret['concept_count'] += 1
-  
-    if not ret['cover'] and len(imagefiles) > 0:
-      import random
-      random_element = random.choice(imagefiles)
-      with Image.open(random_element) as img:
-        # 创建缩略图
-        img.thumbnail(size=(360, 360))
-        
-        # 将缩略图保存到一个字节流中
-        buffered = io.BytesIO()
-        img.save(buffered, format="PNG")  # 可以选择不同的格式，例如 "JPEG"
-        
-        # 获取字节流的内容并转换为 Base64 编码
-        img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8').replace("\r\n", "")
-        img_base64 = f'data:image/{random_element};base64,{img_base64}'
-        ret['cover'] = img_base64
+      # 获取目录下的图片文件的数量.
+      concept_image_filenames = [os.path.join(data_dir, name, filename) for filename in os.listdir(os.path.join(data_dir, name)) 
+                    if os.path.splitext(filename)[1].lower() in image_extensions]
+      cover = load_cover(concept_image_filenames)
+      count = len(concept_image_filenames)
+      ret['concepts'].append({
+        'name': concept_name, 
+        'cover': cover,
+        'repeat': repeat, 
+        'image_count': count,
+      })
+      ret['image_count'] += count
+      ret['total_repeat'] += repeat * count
     return ret
   
   result = {}
@@ -126,7 +140,9 @@ def get_imageset_cover(name: str) -> dict:
 
   return result
 
-
+@eel.expose
+def hello():
+  logging.info('hello world')
 
 @eel.expose
 def create_imageset(name: str) -> str:

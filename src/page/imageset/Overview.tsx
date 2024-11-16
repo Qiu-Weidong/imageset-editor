@@ -7,11 +7,17 @@ import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
 
 
-interface Meta {
+interface ConceptMetadata {
+  name: string,
   repeat: number,
   image_count: number,
-  concept_count: number,
-  cover: string | null,
+  cover: string | null, // 封面 base64
+};
+
+interface ImageSetMetadata {
+  image_count: number, // 总图片数量
+  total_repeat: number, // 总重复次数
+  concepts: ConceptMetadata[], // 概念的metadata
 };
 
 
@@ -28,65 +34,39 @@ function Overview() {
   const navigate = useNavigate();
 
   const { imageset_name } = location.state;
+  const [trainDataset, setTrainDataset] = useState<ImageSetMetadata | null>(null);
+  const [regularDataset, setRegularDataset] = useState<ImageSetMetadata | null>(null);
 
-  const [trainset, setTrainset] = useState<Meta | null>(null);
-  const [regset, setRegset] = useState<Meta | null>(null);
+
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // 先简单一点, 加载一张预览图就好
-    eel.get_imageset_cover(imageset_name)().then((result: any) => {
+
+    eel.get_imageset_metadata(imageset_name)().then((result: any) => {
       if (result.train) {
-        setTrainset(result.train);
+        setTrainDataset(result.train);
       }
       if (result.regular) {
-        setRegset(result.regular);
+        setRegularDataset(result.regular);
       }
-
       setLoading(false);
-    }).catch((err: any) => {
-      console.error(err);
-    })
+    }).catch((error: any) => {
+      console.error(error);
+    });
 
   }, []);
 
-
-  const jump2detail = (isRegular: boolean) => {
-    navigate("/detail", { state: { imageset_name, isRegular } });
+  // 还需要添加一个 concept 参数
+  const jump2detail = (isRegular: boolean, concept: string) => {
+    navigate("/detail", { state: { imageset_name, isRegular, concept } });
   };
 
-  const train = trainset ? (
-    <Card sx={{ width: '100%', height: '80%', }}>
-    </Card>
-  ) : <Fab variant="extended" color="primary">
+  const button = <Fab variant="extended" color="primary">
     <NoteAddIcon sx={{ mr: 1 }} />
     Create Train Dataset
-  </Fab>
-    ;
-
-
-  const reg = regset ? (
-    <Card >
-      {/* 后端随机传一张 image 来, 如果一张图片都没有就不显示 */}
-
-      <CardContent>
-        <Carousel></Carousel>
-      </CardContent>
-
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
-          Regular Dataset
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {regset.concept_count} concepts, {regset.image_count} images, {regset.repeat} repeat.
-        </Typography>
-      </CardContent>
-    </Card>
-  ) : <Fab variant="extended" color="secondary">
-    <NoteAddIcon sx={{ mr: 1 }} />
-    Create Regular Dataset
-  </Fab>
-    ;
+  </Fab>;
 
 
   const loadingContent = (<div style={{
@@ -98,7 +78,77 @@ function Overview() {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-  }}><CircularProgress /></div>);
+  }}><CircularProgress size={128} /></div>);
+
+
+  const train = trainDataset ?
+    <Card sx={{ width: '100%', marginBottom: 1, }}>
+      <CardContent>
+        <Typography gutterBottom variant="h5" component="div">
+          Train Dataset
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          {trainDataset.concepts.length} concepts, {trainDataset.image_count} images, {trainDataset.total_repeat} repeat.
+        </Typography>
+      </CardContent>
+
+      <Carousel withIndicators height={640} loop >
+        {
+          trainDataset.concepts.map((item: ConceptMetadata, index: number) =>
+            <Carousel.Slide key={index} style={{ height: '100%', backgroundImage: `url('${item.cover}')`, backgroundSize: 'cover' }}>
+              <img
+                src={item.cover || ''}
+                alt="img" style={{
+                  objectFit: 'contain',
+                  width: '100%',
+                  height: '100%',
+                  background: 'rgba(255, 255, 255, .47)',
+                  backdropFilter: 'blur(48px)',
+                }} />
+            </Carousel.Slide>)
+        }
+      </Carousel>
+
+    </Card> : <Fab variant="extended" color="primary">
+      <NoteAddIcon sx={{ mr: 1 }} />
+      Create Train Dataset
+    </Fab>
+    ;
+
+
+  const regular = regularDataset ?
+    <Card sx={{ width: '100%', marginBottom: 1, }}>
+      <CardContent>
+        <Typography gutterBottom variant="h5" component="div">
+          Regular Dataset
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          {regularDataset.concepts.length} concepts, {regularDataset.image_count} images, {regularDataset.total_repeat} repeat.
+        </Typography>
+      </CardContent>
+
+      <Carousel withIndicators height={640} loop >
+        {
+          regularDataset.concepts.map((item: ConceptMetadata, index: number) =>
+            <Carousel.Slide key={index} style={{ height: '100%', backgroundImage: `url('${item.cover}')`, backgroundSize: 'cover' }}>
+              <img
+                src={item.cover || ''}
+                alt="img" style={{
+                  objectFit: 'contain',
+                  width: '100%',
+                  height: '100%',
+                  background: 'rgba(255, 255, 255, .47)',
+                  backdropFilter: 'blur(48px)',
+                }} />
+            </Carousel.Slide>)
+        }
+      </Carousel>
+
+    </Card> : <Fab variant="extended" color="primary">
+      <NoteAddIcon sx={{ mr: 1 }} />
+      Create Regular Dataset
+    </Fab>
+    ;
 
 
   return (
@@ -107,46 +157,30 @@ function Overview() {
         {imageset_name}
       </Typography>
       <Box style={{ display: 'flex', minHeight: '85vh', }}>
-        <Container style={{ 
-          width: '50%', 
-          minHeight: '100%', 
-          display: 'flex',  
-          justifyContent: 'center',
-          alignItems: 'center',
-        }} >
-          <Card sx={{ width: '100%', marginBottom: 1, }}>
-            <CardContent>
-              <Typography gutterBottom variant="h5" component="div">
-                Train Dataset
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Lizards are a widespread group of squamate reptiles, with over 6,000
-                species, ranging across all continents except Antarctica
-              </Typography>
-            </CardContent>
+        {
+          loading ? <>{loadingContent}</> :
+            <><Container style={{
+              width: '50%',
+              minHeight: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }} >
+              {train}
+            </Container>
 
-            <Carousel withIndicators height={640} loop >
-            {
-                images.map((url: string) => <Carousel.Slide style={{ height: '100%', backgroundImage: `url('${url}')`, backgroundSize: 'cover' }}>
-                <img
-                  src={url}
-                  alt="img" style={{ objectFit: 'contain', width: '100%', height: '100%', background: 'rgba(255, 255, 255, .47)', backdropFilter: 'blur(48px)' }} />
-              </Carousel.Slide>)
-              }
-            </Carousel>
+              <Container style={{
+                width: '50%',
+                minHeight: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }} >
+                {regular}
+              </Container>
+            </>
+        }
 
-          </Card>
-        </Container>
-
-        <Container style={{ 
-          width: '50%', 
-          minHeight: '100%', 
-          display: 'flex',  
-          justifyContent: 'center',
-          alignItems: 'center',
-        }} >
-
-        </Container>
       </Box>
 
 

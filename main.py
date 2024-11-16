@@ -1,5 +1,29 @@
 from services import *
 
+'''
+严格按照这个格式来管理
+
+数据集的格式
+name
+  src
+    <n>_concept1
+    <m>_concept2
+  reg
+    <t>_concept3
+    <k>_concept4
+  .imageset
+    settings.json
+    project.json
+    
+    
+base_dir
+  imageset-name1
+  imageset-name2
+  ...
+  
+'''
+
+
 
 def start(develop: bool, port: int):
   """Start Eel with either production or development configuration."""
