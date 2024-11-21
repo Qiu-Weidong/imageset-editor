@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 
 interface OpenDialogProps {
-  open: boolean;
+  open: boolean,
   onClose: () => void,
 };
 
@@ -44,10 +44,7 @@ function OpenDialog(props: OpenDialogProps) {
     ;
 
   return (
-    <Dialog open={props.open} onClose={props.onClose}
-      onChange={() => console.log('onchange')}
-      onLoad={() => console.log('onload')}
-    >
+    <Dialog open={props.open} onClose={props.onClose}>
       <DialogTitle>open imageset</DialogTitle>
       <DialogContent>
         {content}

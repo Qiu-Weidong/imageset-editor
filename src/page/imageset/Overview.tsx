@@ -8,6 +8,7 @@ import '@mantine/carousel/styles.css';
 import Header from "../header/Header";
 import { useDispatch } from "react-redux";
 import { setImageSetName } from "../../app/imageSetSlice";
+import CreateDialog from "../dialog/CreateDialog";
 
 
 
@@ -70,6 +71,8 @@ function Overview() {
   const [trainDataset, setTrainDataset] = useState<ImageSetMetadata | null>(null);
   const [regularDataset, setRegularDataset] = useState<ImageSetMetadata | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [createDialog, setCreateDialog] = useState<'train' | 'regular' | null>(null);
 
   async function load() {
     setLoading(true);
@@ -140,7 +143,7 @@ function Overview() {
         }
       </Carousel>
 
-    </Card> : <Fab variant="extended" color="primary">
+    </Card> : <Fab variant="extended" color="primary" onClick={() => setCreateDialog("train") }>
       <NoteAddIcon sx={{ mr: 1 }} />
       Create Train Dataset
     </Fab>
@@ -167,7 +170,7 @@ function Overview() {
         }
       </Carousel>
 
-    </Card> : <Fab variant="extended" color="secondary">
+    </Card> : <Fab variant="extended" color="secondary" onClick={() => setCreateDialog('regular') }>
       <NoteAddIcon sx={{ mr: 1 }} />
       Create Regular Dataset
     </Fab>
@@ -211,7 +214,7 @@ function Overview() {
 
       </Box>
 
-
+      <CreateDialog open={createDialog} onClose={() => setCreateDialog(null) } />
 
     </Container>);
 }
