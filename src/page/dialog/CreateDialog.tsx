@@ -1,12 +1,26 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, ListItem, Radio, RadioGroup } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+
+import '@mantine/dropzone/styles.css';
 
 
 interface createDialogProps {
   open: 'train' | 'regular' | null | undefined,
   onClose: () => void,
 };
+
+
+
+function ConceptCreator(props: { key: number, }) {
+  // state
+  
+  return (<ListItem key={props.key}>
+
+  </ListItem>);
+}
+
 
 function CreateDialog(props: createDialogProps) {
   const navigate = useNavigate();
@@ -45,6 +59,13 @@ function CreateDialog(props: createDialogProps) {
             name="row-radio-buttons-group"
             defaultValue={props.open}
             value={type}
+            onChange={(event) =>  {  
+              if(event.currentTarget.value == "train") {
+                setType(event.currentTarget.value);
+              } else if(event.currentTarget.value == "regular") {
+                setType(event.currentTarget.value );
+              }
+            } }
           >
             <FormControlLabel value="train" control={<Radio />} label="Train" />
             <FormControlLabel value="regular" control={<Radio />} label="Regular" />
