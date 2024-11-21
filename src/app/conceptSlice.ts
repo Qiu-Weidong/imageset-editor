@@ -17,13 +17,13 @@ export interface ImageState {
 export interface ConceptState {
   name: string, // concept 的名称
   repeat: number, // 重复次数
-  images: ImageState[], 
+  images: ImageState[] | null, // 如果为 null 表示还未加载 
 };
 
 const initialState: ConceptState = {
   name: '<no>',
   repeat: 0, 
-  images: [],
+  images: null,
 };
 
 export const conceptSlice = createSlice({

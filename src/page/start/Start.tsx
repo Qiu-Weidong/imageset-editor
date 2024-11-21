@@ -5,8 +5,8 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/Help';
 import { useState } from "react";
-import OpenDialog from "./OpenDialog";
-import NewDialog from "./NewDialog";
+import OpenDialog from "../dialog/OpenDialog";
+import NewDialog from "../dialog/NewDialog";
 
 
 

@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { eel } from "../../App";
-import { Box, Card, CardContent, CircularProgress, Container, Fab, Typography } from "@mui/material";
+import { Box, Card, CardContent, CircularProgress, Container, Fab, Paper, Toolbar, Typography } from "@mui/material";
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
+import Header from "../header/Header";
+import { useDispatch } from "react-redux";
+import { setImageSetName } from "../../app/imageSetSlice";
+
 
 
 interface ConceptMetadata {
@@ -21,52 +25,87 @@ interface ImageSetMetadata {
 };
 
 
+function ConceptCover(props: { concept: ConceptMetadata, onClick: () => void }) {
+  return (<div style={{
+    height: '100%', backgroundImage: `url('${props.concept.cover}')`,
+    backgroundSize: 'cover', position: 'relative',
+  }}
+    onClick={props.onClick}>
+    <img
+      src={props.concept.cover || ''}
+      alt="img" style={{
+        objectFit: 'contain',
+        width: '100%',
+        height: '100%',
+        background: 'rgba(255, 255, 255, .47)',
+        backdropFilter: 'blur(48px)',
+      }} />
+    <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', }} >
+      <CardContent>
+        <Typography variant="h4" component="div" color="success" style={{ fontWeight: 900 }} >
+          {props.concept.name}
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          {props.concept.image_count} images, {props.concept.repeat} repeat.
+        </Typography>
+      </CardContent>
+    </div>
+  </div>);
+}
+
+
 // 展示训练集和正则集的基本信息, 点击即可进入
 function Overview() {
+  const carousel_height = 480;
 
-  const images = [
-    '/00001-766364056.png', "/00002-3026625078.png", "/00003-1370649249.png",
-  ];
-
+  const location = useLocation();
+  const { imageset_name } = location.state;
+  const dispatch = useDispatch();
 
   // 通过路由传参将打开的imageset名称传入
-  const location = useLocation();
   const navigate = useNavigate();
 
-  const { imageset_name } = location.state;
+  // imageset_name 可以直接使用 selector
+  // const imageset_name = useSelector((state: RootState) => state.imageSet.name);
   const [trainDataset, setTrainDataset] = useState<ImageSetMetadata | null>(null);
   const [regularDataset, setRegularDataset] = useState<ImageSetMetadata | null>(null);
-
-
-
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // 先简单一点, 加载一张预览图就好
+  async function load() {
+    setLoading(true);
+    setTrainDataset(null);
+    setRegularDataset(null);
 
-    eel.get_imageset_metadata(imageset_name)().then((result: any) => {
+    try {
+      let result: { train: ImageSetMetadata, regular: ImageSetMetadata } = await eel.get_imageset_metadata(imageset_name)();
+      // 这里的 load 是无法 stop 的
       if (result.train) {
         setTrainDataset(result.train);
       }
       if (result.regular) {
         setRegularDataset(result.regular);
       }
-      setLoading(false);
-    }).catch((error: any) => {
+      // dispatch 以修改 redux 的状态 name 修改为
+      dispatch(setImageSetName(imageset_name));
+    } catch(error) {
       console.error(error);
-    });
+      // 跳转到 404 页面
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  }, []);
+
+
+  useEffect(() => {
+    setImageSetName(imageset_name);
+  }, [imageset_name]);
 
   // 还需要添加一个 concept 参数
   const jump2detail = (isRegular: boolean, concept: string) => {
+    // 设置类型为 train | regular
     navigate("/detail", { state: { imageset_name, isRegular, concept } });
   };
-
-  const button = <Fab variant="extended" color="primary">
-    <NoteAddIcon sx={{ mr: 1 }} />
-    Create Train Dataset
-  </Fab>;
 
 
   const loadingContent = (<div style={{
@@ -92,19 +131,11 @@ function Overview() {
         </Typography>
       </CardContent>
 
-      <Carousel withIndicators height={640} loop >
+      <Carousel withIndicators height={carousel_height} loop >
         {
           trainDataset.concepts.map((item: ConceptMetadata, index: number) =>
-            <Carousel.Slide key={index} style={{ height: '100%', backgroundImage: `url('${item.cover}')`, backgroundSize: 'cover' }}>
-              <img
-                src={item.cover || ''}
-                alt="img" style={{
-                  objectFit: 'contain',
-                  width: '100%',
-                  height: '100%',
-                  background: 'rgba(255, 255, 255, .47)',
-                  backdropFilter: 'blur(48px)',
-                }} />
+            <Carousel.Slide key={index}>
+              <ConceptCover concept={item} onClick={() => jump2detail(false, item.name)} />
             </Carousel.Slide>)
         }
       </Carousel>
@@ -127,24 +158,16 @@ function Overview() {
         </Typography>
       </CardContent>
 
-      <Carousel withIndicators height={640} loop >
+      <Carousel withIndicators height={carousel_height} loop >
         {
           regularDataset.concepts.map((item: ConceptMetadata, index: number) =>
             <Carousel.Slide key={index} style={{ height: '100%', backgroundImage: `url('${item.cover}')`, backgroundSize: 'cover' }}>
-              <img
-                src={item.cover || ''}
-                alt="img" style={{
-                  objectFit: 'contain',
-                  width: '100%',
-                  height: '100%',
-                  background: 'rgba(255, 255, 255, .47)',
-                  backdropFilter: 'blur(48px)',
-                }} />
+              <ConceptCover concept={item} onClick={() => jump2detail(false, item.name)} />
             </Carousel.Slide>)
         }
       </Carousel>
 
-    </Card> : <Fab variant="extended" color="primary">
+    </Card> : <Fab variant="extended" color="secondary">
       <NoteAddIcon sx={{ mr: 1 }} />
       Create Regular Dataset
     </Fab>
@@ -153,9 +176,14 @@ function Overview() {
 
   return (
     <Container sx={{ minHeight: '100vh', height: '100vh' }}>
-      <Typography variant="h2" gutterBottom>
-        {imageset_name}
-      </Typography>
+      <Header onRenameImageset={(_, new_name) => {
+        navigate('/overview', { replace: true, state: { imageset_name: new_name } });
+      }}
+        onLoad={load}
+      ></Header>
+
+      {/* tool bar 占位 */}
+      <Toolbar></Toolbar>
       <Box style={{ display: 'flex', minHeight: '85vh', }}>
         {
           loading ? <>{loadingContent}</> :

@@ -5,6 +5,7 @@ import Snackbar, { SnackbarOrigin } from '@mui/material/Snackbar';
 import { exception2string } from "../../utils";
 import { useNavigate } from "react-router-dom";
 
+
 interface newDialogProps {
   open: boolean;
   onClose: () => void,
@@ -20,6 +21,7 @@ interface State extends SnackbarOrigin {
 
 function NewDialog(props: newDialogProps) {
   const navigate = useNavigate();
+  // const dispatch = useDispatch();
   
   const [state, setState] = useState<State>({
     open: false,
@@ -46,6 +48,7 @@ function NewDialog(props: newDialogProps) {
           eel.create_imageset(name) ()
             .then((res: any) => {
               setState({ ...state, msg: `create imageset '${res}' successful.`, open: true, severity: 'success' });
+              // 应该在这里就设置 imageset_name
               navigate(`/overview`, { state: { imageset_name: name } });
             })
             .catch((err: any) => {

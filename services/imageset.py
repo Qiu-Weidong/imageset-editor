@@ -129,6 +129,9 @@ def get_imageset_metadata(name: str) -> dict:
       ret['total_repeat'] += repeat * count
     return ret
   
+  if not os.path.exists(imageset_dir):
+    raise Exception(f'{imageset_dir} is not existed.')
+  
   result = {}
   if os.path.exists(train_data_dir):
     # 如果存在数据集, 那么获取数据集的相关元信息
@@ -137,12 +140,7 @@ def get_imageset_metadata(name: str) -> dict:
   if os.path.exists(reg_data_dir):
     # 如果存在正则集, 那么获取正则集的相关元信息
     result['regular'] = get_metadata(reg_data_dir)
-
   return result
-
-@eel.expose
-def hello():
-  logging.info('hello world')
 
 @eel.expose
 def create_imageset(name: str) -> str:
@@ -155,5 +153,47 @@ def create_imageset(name: str) -> str:
     return origin_name
   # 创建失败
   raise Exception(f"imageset '{origin_name}' is existed.")
+
+@eel.expose
+def rename_imageset(origin_name: str, new_name: str): 
+  new_name = 'imageset-' + new_name
+  origin_name = 'imageset-' + origin_name
+  new_path = os.path.join(base_dir, new_name)
+  origin_path = os.path.join(base_dir, origin_name)
+  os.rename(origin_path, new_path)  
+
+@eel.expose
+def delete_imageset(imageset_name: str, type: str | None = None, concept: str | None = None, repeat: int | None = None):
+  import shutil
+  imageset_dir = os.path.join(base_dir, 'imageset-' + imageset_name)
   
+  import re
+  if not type:
+    # 删除整个数据集
+    shutil.rmtree(imageset_dir)
+    return 
+  elif type == 'train':
+    data_dir = os.path.join(imageset_dir, 'src')
+  elif type == 'regular':
+    data_dir = os.path.join(imageset_dir, 'reg')
+  else:
+    raise Exception('unknow data type')
+  
+
+  if not concept:
+    # 删除整个训练集
+    shutil.rmtree(data_dir)
+  elif not repeat:
+    # 删除训练集中所有的 concept
+    pattern = re.compile(f'^\\d+_{concept}$')
+    dirs = [d for d in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, d))]
+    dirs = [os.path.join(data_dir, d) for d in dirs if pattern.match(d)]
+    for dir in dirs:
+      shutil.rmtree(dir)
+  else:
+    # 删除训练集中重复次数为 repeat 的 concept
+    dir = os.path.join(data_dir, f'{repeat}_{concept}')
+    shutil.rmtree(dir)
+  
+
 
