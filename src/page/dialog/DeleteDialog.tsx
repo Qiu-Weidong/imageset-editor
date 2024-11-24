@@ -1,8 +1,7 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from "@mui/material";
-import { eel } from "../../App";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { exception2string } from "../../utils";
+import api from "../../api";
 
 
 interface deleteDialogProps {
@@ -29,32 +28,10 @@ function DeleteDialog(props: deleteDialogProps) {
         onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
           event.preventDefault();
           // 根据用户选择的选项执行相关的删除操作 
-          let promis = null;
-
-          if (deleteRadio == 0) {
-            // 删除整个数据集
-            eel.delete_imageset(props.imagesetName)().then(() => {
-              navigate("/");
-            }).catch((error: any) => console.error(exception2string(error))).finally(() => props.onClose());
-          } else if (deleteRadio == 1) {
-            // 删除整个训练集
-            promis = eel.delete_imageset(props.imagesetName, 'train')();
-          } else if (deleteRadio == 2) {
-            // 删除整个正则集
-            promis = eel.delete_imageset(props.imagesetName, 'regular')();
-          } else if (props.concept && deleteRadio == 3) {
-            // 删除对应的concept
-            promis = eel.delete_imageset(props.imagesetName, props.concept.type, props.concept.name)();
-          } else if (props.concept && deleteRadio == 4) {
-            // 删除重复次数为repeat的concept
-            promis = eel.delete_imageset(props.imagesetName, props.concept.type, props.concept.name, props.concept.repeat)();
-          }
-
-          if (promis) {
-            promis.then(() => {
-              navigate("/overview", { replace: true, state: { imageset_name: props.imagesetName } });
-            }).catch((error: any) => console.error(error)).finally(() => props.onClose());
-          }
+          api.delete_imageset(props.imagesetName).then(() => {
+            navigate("/overview", { replace: true, state: { imageset_name: props.imagesetName } });
+          }).catch((error: any) => console.error(error))
+            .finally(() => props.onClose());
 
         },
       }}

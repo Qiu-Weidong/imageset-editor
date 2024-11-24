@@ -13,8 +13,6 @@ const root = ReactDOM.createRoot(
 );
 
 
-// 直接 eel.python_func 即可
-
 root.render(
   <React.StrictMode>
     <Provider store={store}>

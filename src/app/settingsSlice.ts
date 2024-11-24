@@ -8,7 +8,6 @@ export interface SettingsState {
 
 };
 
-// eel
 const initialState: SettingsState = {
   defaultImageGalleryColumns: 12,
   thumbnailWidth: 128,

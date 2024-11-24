@@ -1,7 +1,7 @@
 import { CircularProgress, Dialog, DialogContent, DialogTitle, List, ListItem, ListItemButton, ListItemText } from "@mui/material";
 import { useEffect, useState } from "react";
-import { eel } from "../../App";
 import { useNavigate } from "react-router-dom";
+import api from "../../api";
 
 
 interface OpenDialogProps {
@@ -16,7 +16,7 @@ function OpenDialog(props: OpenDialogProps) {
   useEffect(() => {
     if (props.open) {
       setImagesetNames(null);
-      eel.find_imageset_list()().then((names: string[]) => {
+      api.find_imageset_list().then((names: string[]) => {
         setImagesetNames(names);
       }).catch((err: any) => {
         setImagesetNames([]);

@@ -9,7 +9,7 @@ api_imageset = APIRouter()
 
 
 @api_imageset.get('/metadata')
-def get_imageset_metadata(name: str):
+async def get_imageset_metadata(name: str):
   imageset_dir = os.path.join(config.repo_dir, "imageset-" + name)
   base_url = f'http://{config.host}:{config.port}/image/imageset-{name}'
   train_data_dir = os.path.join(imageset_dir, 'src')
@@ -79,11 +79,39 @@ def get_imageset_metadata(name: str):
     # 如果存在正则集, 那么获取正则集的相关元信息
     result['regular'] = get_metadata(reg_data_dir, reg_data_url)
   return result
-  
-  
+    
+@api_imageset.get("/create")  
+async def create_imageset(name: str):
+  origin_name = name
+  name = 'imageset-' + name
+  imageset_path = os.path.join(config.repo_dir, name)
+  if not os.path.exists(imageset_path):
+    os.mkdir(imageset_path)
+    return origin_name
+  # 创建失败
+  raise HTTPException(status_code=400, detail=f"imageset {origin_name} is already exists.")
+
+@api_imageset.get("/rename")  
+async def rename_imageset(origin_name: str, new_name: str): 
+  new_name = 'imageset-' + new_name
+  origin_name = 'imageset-' + origin_name
+  new_path = os.path.join(config.repo_dir, new_name)
+  origin_path = os.path.join(config.repo_dir, origin_name)
+  try:
+    os.rename(origin_path, new_path)  
+  except Exception as e:
+    raise HTTPException(status_code=400, detail=str(e))
+  return new_name
+
+
+@api_imageset.delete("/delete")
+async def delete_imageset(name: str):
+  imageset_dir = os.path.join(config.repo_dir, 'imageset-' + name)
+  import shutil
+  shutil.rmtree(imageset_dir)
 
 @api_imageset.get("/")
-def get_imageset_list():
+async def get_imageset_list():
   '''
     查找已经创建的所有数据集
   '''

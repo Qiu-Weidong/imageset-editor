@@ -15,10 +15,10 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import CheckIcon from '@mui/icons-material/Check';
 import { setImageSetName as setImageSetNameRedux } from "../../app/imageSetSlice";
-import { eel } from "../../App";
 import NewDialog from "../dialog/NewDialog";
 import OpenDialog from "../dialog/OpenDialog";
 import DeleteDialog from "../dialog/DeleteDialog";
+import api from "../../api";
 
 
 interface HeaderProps {
@@ -62,7 +62,7 @@ export default function Header(props: HeaderProps) {
 
   function renameImageset(name: string) {
     // 调用后端修改名字的函数
-    eel.rename_imageset(imageset_name, name)().then(() => {
+    api.rename_imageset(imageset_name, name).then(() => {
       // 修改 redux 中的数据集名称
       dispatch(setImageSetNameRedux(name));
       setShowInput(false);

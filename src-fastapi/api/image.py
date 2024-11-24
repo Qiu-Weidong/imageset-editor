@@ -30,8 +30,6 @@ async def get_thumbnail(image_name: str):
       return FileResponse(thumbnail_path)
   raise HTTPException(status_code=404, detail="Image not found")
   
-
-
 # 直接通过路径获取原图
 @api_image.get("/{image_name:path}")
 async def get_image(image_name: str):

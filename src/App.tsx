@@ -8,9 +8,6 @@ import Debug from './page/debug/Debug';
 
 
 // 通过环境变量传递一个端口进来, 后端绑定的是 1420
-const port = window.api_port || 1420;
-export const eel = window.eel;
-eel.set_host(`ws://localhost:${port}`);
 
 
 export function App() {

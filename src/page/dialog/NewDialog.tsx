@@ -1,9 +1,9 @@
 import { Alert, AlertColor, AlertPropsColorOverrides, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, List, ListItem, ListItemButton, ListItemText, TextField } from "@mui/material";
-import { eel } from "../../App";
 import { useState } from "react";
 import Snackbar, { SnackbarOrigin } from '@mui/material/Snackbar';
 import { exception2string } from "../../utils";
 import { useNavigate } from "react-router-dom";
+import api from "../../api";
 
 
 interface newDialogProps {
@@ -45,7 +45,7 @@ function NewDialog(props: newDialogProps) {
           const formJson = Object.fromEntries((formData as any).entries());
           const name = formJson.name;
 
-          eel.create_imageset(name) ()
+          api.create_imageset(name)
             .then((res: any) => {
               setState({ ...state, msg: `create imageset '${res}' successful.`, open: true, severity: 'success' });
               // 应该在这里就设置 imageset_name

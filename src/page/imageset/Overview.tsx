@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { eel } from "../../App";
 import { Box, Button, Card, CardContent, CircularProgress, Container, Fab, IconButton, Paper, Toolbar, Typography } from "@mui/material";
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
@@ -9,16 +8,17 @@ import { useDispatch } from "react-redux";
 import { setImageSetName } from "../../app/imageSetSlice";
 import CreateDialog from "../dialog/CreateDialog";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import api from "../../api";
 
 
-interface ConceptMetadata {
+export interface ConceptMetadata {
   name: string,
   repeat: number,
   image_count: number,
   cover: string | null, // 封面 base64
 };
 
-interface ImageSetMetadata {
+export interface ImageSetMetadata {
   image_count: number, // 总图片数量
   total_repeat: number, // 总重复次数
   concepts: ConceptMetadata[], // 概念的metadata
@@ -80,7 +80,7 @@ function Overview() {
     setRegularDataset(null);
 
     try {
-      let result: { train: ImageSetMetadata, regular: ImageSetMetadata } = await eel.get_imageset_metadata(imageset_name)();
+      let result: { train: ImageSetMetadata, regular: ImageSetMetadata } = await api.get_imageset_metadata(imageset_name);
       // 这里的 load 是无法 stop 的
       if (result.train) {
         setTrainDataset(result.train);
