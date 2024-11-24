@@ -41,7 +41,7 @@ def start(develop: bool, port: int):
     with open('build/config.js', 'w') as f:
       f.write(f'window.api_port = {port};')
 
-  eel.init(directory, ['.tsx', '.ts', '.jsx', '.js', '.html'])
+  eel.init(directory, ['.tsx', '.ts', '.jsx', '.js', '.html', ".jpg", ".png", ".jpeg"])
 
   eel_kwargs = dict(
     host='localhost',
@@ -73,8 +73,9 @@ def main():
   else:
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
   
-  # 设置 base_dir 
-  set_base_dir(args.data_path)
+  # 设置 base_dir, 注意相对路径转绝对路径
+  absolute_path = os.path.normpath(os.path.abspath(args.data_path)).replace('\\', '/')
+  set_base_dir(absolute_path)
   
   start(args.dev, args.port)
   

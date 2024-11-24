@@ -31,11 +31,13 @@ import io
 
 base_dir = ''
 
+
+
+
+
 def set_base_dir(new_base_dir: str):
   global base_dir
   base_dir = new_base_dir
-
-
 
 @eel.expose
 def find_imageset_list() -> list[str]:
@@ -79,6 +81,9 @@ def get_imageset_metadata(name: str) -> dict:
       return None
     import random
     random_element = random.choice(concept_image_filenames)
+    url = f'file://{random_element}'
+    logging.debug(url)
+    return url
     with Image.open(random_element) as img:
       img = img.convert('RGB')
       img.thumbnail(size=(640, 640))
@@ -117,6 +122,8 @@ def get_imageset_metadata(name: str) -> dict:
       # 获取目录下的图片文件的数量.
       concept_image_filenames = [os.path.join(data_dir, name, filename) for filename in os.listdir(os.path.join(data_dir, name)) 
                     if os.path.splitext(filename)[1].lower() in image_extensions]
+      # 将路径规范化
+      concept_image_filenames = [os.path.normpath(filename).replace('\\', '/') for filename in concept_image_filenames]
       cover = load_cover(concept_image_filenames)
       count = len(concept_image_filenames)
       ret['concepts'].append({

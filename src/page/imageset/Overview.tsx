@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { eel } from "../../App";
-import { Box, Card, CardContent, CircularProgress, Container, Fab, Paper, Toolbar, Typography } from "@mui/material";
-import NoteAddIcon from '@mui/icons-material/NoteAdd';
+import { Box, Button, Card, CardContent, CircularProgress, Container, Fab, IconButton, Paper, Toolbar, Typography } from "@mui/material";
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
 import Header from "../header/Header";
 import { useDispatch } from "react-redux";
 import { setImageSetName } from "../../app/imageSetSlice";
 import CreateDialog from "../dialog/CreateDialog";
-
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 
 interface ConceptMetadata {
@@ -72,7 +71,8 @@ function Overview() {
   const [regularDataset, setRegularDataset] = useState<ImageSetMetadata | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [createDialog, setCreateDialog] = useState<'train' | 'regular' | null>(null);
+  const [createTrainsetDialog, setCreateTrainsetDialog] = useState<boolean>(false);
+  const [createRegularsetDialog, setCreateRegularsetDialog] = useState<boolean>(false);
 
   async function load() {
     setLoading(true);
@@ -90,7 +90,7 @@ function Overview() {
       }
       // dispatch 以修改 redux 的状态 name 修改为
       dispatch(setImageSetName(imageset_name));
-    } catch(error) {
+    } catch (error) {
       console.error(error);
       // 跳转到 404 页面
     } finally {
@@ -125,13 +125,20 @@ function Overview() {
 
   const train = trainDataset ?
     <Card sx={{ width: '100%', marginBottom: 1, }}>
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
+      <CardContent sx={{ display: 'flex' }}>
+        <div style={{ flex: 1 }}>
+          <Typography gutterBottom variant="h5" component="div">
           Train Dataset
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {trainDataset.concepts.length} concepts, {trainDataset.image_count} images, {trainDataset.total_repeat} repeat.
         </Typography>
+        </div>
+        
+
+        <Button variant="text" startIcon={<AddCircleIcon />} size="small" color="primary" onClick={() => setCreateTrainsetDialog(true) }>
+          add concept
+        </Button>
       </CardContent>
 
       <Carousel withIndicators height={carousel_height} loop >
@@ -143,22 +150,30 @@ function Overview() {
         }
       </Carousel>
 
-    </Card> : <Fab variant="extended" color="primary" onClick={() => setCreateDialog("train") }>
-      <NoteAddIcon sx={{ mr: 1 }} />
-      Create Train Dataset
+    </Card> : <Fab variant="extended" color="primary" size="small" onClick={() => setCreateTrainsetDialog(true)}>
+      <AddCircleIcon sx={{ mr: 1 }} />
+      add train concept
     </Fab>
     ;
 
 
   const regular = regularDataset ?
     <Card sx={{ width: '100%', marginBottom: 1, }}>
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
-          Regular Dataset
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {regularDataset.concepts.length} concepts, {regularDataset.image_count} images, {regularDataset.total_repeat} repeat.
-        </Typography>
+      <CardContent sx={{ display: 'flex' }}>
+        <div style={{ flex: 1, }}>
+          <Typography gutterBottom variant="h5" component="div">
+            Regular Dataset
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {regularDataset.concepts.length} concepts, {regularDataset.image_count} images, {regularDataset.total_repeat} repeat.
+          </Typography>
+        </div>
+        <Button variant="text" startIcon={<AddCircleIcon />} size="small" color="secondary" onClick={() => setCreateRegularsetDialog(true) }>
+          add concept
+        </Button>
+
+
+
       </CardContent>
 
       <Carousel withIndicators height={carousel_height} loop >
@@ -170,9 +185,9 @@ function Overview() {
         }
       </Carousel>
 
-    </Card> : <Fab variant="extended" color="secondary" onClick={() => setCreateDialog('regular') }>
-      <NoteAddIcon sx={{ mr: 1 }} />
-      Create Regular Dataset
+    </Card> : <Fab variant="extended" color="secondary" size="small" onClick={() => setCreateRegularsetDialog(true)}>
+      <AddCircleIcon sx={{ mr: 1 }} />
+      add regular concept
     </Fab>
     ;
 
@@ -214,8 +229,8 @@ function Overview() {
 
       </Box>
 
-      <CreateDialog open={createDialog} onClose={() => setCreateDialog(null) } />
-
+      <CreateDialog open={createTrainsetDialog} type="train" onClose={() => setCreateTrainsetDialog(false)} />
+      <CreateDialog open={createRegularsetDialog} type="regular" onClose={() => setCreateRegularsetDialog(false)} />
     </Container>);
 }
 

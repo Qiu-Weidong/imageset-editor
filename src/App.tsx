@@ -4,10 +4,10 @@ import Start from './page/start/Start';
 import Settings from './page/settings/Settings';
 import Overview from './page/imageset/Overview';
 import Detail from './page/detail/Detail';
-import Debug from './page/debug/Debug2';
+import Debug from './page/debug/Debug';
 
 
-// 通过环境变量传递一个端口进来
+// 通过环境变量传递一个端口进来, 后端绑定的是 1420
 const port = window.api_port || 1420;
 export const eel = window.eel;
 eel.set_host(`ws://localhost:${port}`);
