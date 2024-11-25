@@ -105,9 +105,9 @@ function Overview() {
   }, [imageset_name]);
 
   // 还需要添加一个 concept 参数
-  const jump2detail = (isRegular: boolean, concept: string) => {
+  const jump2detail = (isRegular: boolean, concept: string, repeat: number) => {
     // 设置类型为 train | regular
-    navigate("/detail", { state: { imageset_name, isRegular, concept } });
+    navigate("/detail", { state: { imageset_name, isRegular, concept, repeat } });
   };
 
 
@@ -145,7 +145,7 @@ function Overview() {
         {
           trainDataset.concepts.map((item: ConceptMetadata, index: number) =>
             <Carousel.Slide key={index}>
-              <ConceptCover concept={item} onClick={() => jump2detail(false, item.name)} />
+              <ConceptCover concept={item} onClick={() => jump2detail(false, item.name, item.repeat)} />
             </Carousel.Slide>)
         }
       </Carousel>
@@ -180,7 +180,7 @@ function Overview() {
         {
           regularDataset.concepts.map((item: ConceptMetadata, index: number) =>
             <Carousel.Slide key={index} style={{ height: '100%', backgroundImage: `url('${item.cover}')`, backgroundSize: 'cover' }}>
-              <ConceptCover concept={item} onClick={() => jump2detail(false, item.name)} />
+              <ConceptCover concept={item} onClick={() => jump2detail(false, item.name, item.repeat)} />
             </Carousel.Slide>)
         }
       </Carousel>

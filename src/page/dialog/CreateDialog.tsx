@@ -66,7 +66,7 @@ function CreateDialog(props: createDialogProps) {
             setLoading(true);
             api.add_concept(props.imageset_name, conceptName, repeat, props.type, loadDirectory).then((cnt) => {
               // 跳转到新建的concept
-              navigate('/detail', { state: { imageset_name: props.imageset_name, isRegular: props.type === 'regular', concept: conceptName, } });
+              navigate('/detail', { state: { imageset_name: props.imageset_name, isRegular: props.type === 'regular', concept: conceptName, repeat } });
             }).catch((error: any) => {
               console.error(error);
             }).finally(() => {

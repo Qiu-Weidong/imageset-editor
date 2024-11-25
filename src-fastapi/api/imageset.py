@@ -7,6 +7,13 @@ import os
 api_imageset = APIRouter()
 
 
+'''
+  所有的 path 都从 imageset-xxx/src/8_xxx 开始
+  绝对路径直接使用 repo_dir/{path} 即可
+  图片的url则直接 http://{config.host}:{config.port}/image/{path}即可
+  图片的缩略图url则直接 http://{config.host}:{config.port}/image/thumbnail/{path}即可
+'''
+
 
 @api_imageset.get('/metadata')
 async def get_imageset_metadata(name: str):
@@ -179,8 +186,61 @@ async def add_concept(
   return image_count
   
 @api_imageset.get("/load")  
-async def load():
-  pass
+async def load(imageset_name: str, is_regular: bool):
+  '''
+    加载数据集中的所有图片元信息
+  {
+    "name": imageset_name, 
+    "type": 'regular',
+    "filters": [{
+      "name": "1_katana", 
+      "concept": { "name": "katana", "repeat": 1, },   
+      "images": [],
+    }],
+  }
+  '''
+  imageset_dir = os.path.join(config.repo_dir, 'imageset-' + imageset_name)
+  if is_regular:
+    imageset_dir = os.path.join(imageset_dir, 'reg')
+  else:
+    imageset_dir = os.path.join(imageset_dir, 'src')
+    
+    
+  # 传入文件夹的名称, 保证满足 8_xxx 这样的格式
+  def load_concept(name: str, repeat: int):
+    concept_dir = os.path.join(imageset_dir, f"{repeat}_{name}")
+    result = {
+      "name": f"{repeat}_{name}", 
+      "concept": { "name": name, "repeat": repeat, },
+      "images": [], 
+    }
+    
+    # 遍历下方的所有图片, 并添加到 result 中去
+    
+    return result
+    
+  
+  result = {
+    "name": imageset_name, 
+    "type": 'regular' if is_regular else 'train',
+    "filters": [],
+  }
+  
+  
+  # 接下来加载所有concept
+  pattern = r'^(?P<repeat>\d+)_(?P<concept>.+)$'
+  import re
+  for name in os.listdir(imageset_dir):
+    match = re.match(pattern, name)
+    if not match:
+      continue
+    # 获取当前concept的重复次数
+    repeat: int = int(match.group('repeat'))
+    concept_name: str = match.group('concept')
+    concept = load_concept(concept_name, repeat)
+    result['filters'].append(concept)
+  
+  return result
 
 
 

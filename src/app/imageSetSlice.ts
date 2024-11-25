@@ -14,10 +14,11 @@ export interface ImageState {
 };
 
 
-export interface ConceptState {
-  name: string, // <all>
+export interface FilterState {
+  name: string, // id, 对于Concept而言是 8_xxx, 对于临时集合而言是 <all>, 
   images: ImageState[],
-  repeat: number | null,  // 简单一点, 通过是否存在repeat来判断是否是临时选择
+
+  concept: { name: string, repeat: number },  // 简单一点, 通过是否存在repeat来判断是否是临时选择
 };
 
 
@@ -29,14 +30,14 @@ export interface ImageSetState {
   // dirty: boolean, // 是否需要写回到文件
   type: 'regular' | 'train' | null, // 类型 数据集还是正则集合
 
-  concepts: ConceptState[], // 概念
+  filters: FilterState[], // 概念
 };
 
 const initialState: ImageSetState = {
   name: "<uninitiated>",
   // dirty: false, 
   type: null,
-  concepts: [],
+  filters: [],
 };
 
 
@@ -52,25 +53,25 @@ export const imageSetSlice = createSlice({
       state.type = action.payload;
     },
 
-    setConcepts: (state, action: PayloadAction<ConceptState[]>) => {
-      state.concepts = action.payload;
+    setFilters: (state, action: PayloadAction<FilterState[]>) => {
+      state.filters = action.payload;
     },
 
 
-    addConcept: (state, action: PayloadAction<ConceptState>) => {
-      state.concepts = [...state.concepts, action.payload];
+    addFilters: (state, action: PayloadAction<FilterState>) => {
+      state.filters = [...state.filters, action.payload];
     },
 
-    removeConcept: (state, action: PayloadAction<string>) => {
-      state.concepts = state.concepts.filter((concept) => concept.name != action.payload);
+    removeFilters: (state, action: PayloadAction<string>) => {
+      state.filters = state.filters.filter((concept) => concept.name != action.payload);
     },
 
-    addOrUpdateConcept: (state, action: PayloadAction<ConceptState>) => {
-      if (state.concepts.find((item) => item.name == action.payload.name) == undefined) {
+    addOrUpdateFilters: (state, action: PayloadAction<FilterState>) => {
+      if (state.filters.find((item) => item.name == action.payload.name) == undefined) {
         // 直接添加
-        state.concepts = [...state.concepts, action.payload];
+        state.filters = [...state.filters, action.payload];
       } else {
-        state.concepts = state.concepts.map((item) => item.name == action.payload.name ? action.payload : item);
+        state.filters = state.filters.map((item) => item.name == action.payload.name ? action.payload : item);
       }
     }
 
@@ -78,5 +79,5 @@ export const imageSetSlice = createSlice({
 });
 
 export default imageSetSlice.reducer;
-export const { setImageSetName, setImageSetType, addConcept, removeConcept, addOrUpdateConcept } = imageSetSlice.actions;
+export const { setImageSetName, setImageSetType, addFilters: addConcept, removeFilters: removeConcept, addOrUpdateFilters: addOrUpdateConcept } = imageSetSlice.actions;
 
