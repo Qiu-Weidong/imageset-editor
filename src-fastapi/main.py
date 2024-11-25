@@ -16,11 +16,11 @@ origins = [
 
 # 添加 CORS 中间件
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,  # 允许的来源列表
-    allow_credentials=True,  # 是否允许发送凭证（如 Cookies）
-    allow_methods=["*"],     # 允许的请求方法（例如 GET, POST, OPTIONS）
-    allow_headers=["*"],     # 允许的请求头
+  CORSMiddleware,
+  allow_origins=origins,   # 允许的来源列表
+  allow_credentials=True,  # 是否允许发送凭证（如 Cookies）
+  allow_methods=["*"],     # 允许的请求方法（例如 GET, POST, OPTIONS）
+  allow_headers=["*"],     # 允许的请求头
 )
 
 

@@ -9,6 +9,7 @@ import Header from "../header/Header";
 function Detail() {
   // imageset name, train/reg
   const location = useLocation();
+  // 进入 detail 的时候一定是进入某个 concept
   const { imageset_name, isRegular, concept } = location.state;
 
   const navigate = useNavigate();

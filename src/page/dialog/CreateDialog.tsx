@@ -1,11 +1,15 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid2 as Grid, TextField } from "@mui/material";
+import { Backdrop, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Grid2 as Grid, TextField } from "@mui/material";
 
 
 import '@mantine/dropzone/styles.css';
+import api from "../../api";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 
 interface createDialogProps {
   open: boolean,
+  imageset_name: string,
   type: 'train' | 'regular',
   onClose: () => void,
 };
@@ -16,55 +20,72 @@ function capitalizeFirstLetter(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-
 function CreateDialog(props: createDialogProps) {
+  const [conceptName, setConceptName] = useState('');
+  const [repeat, setRepeat] = useState(1);
+  const [loadDirectory, setLoadDirectory] = useState('');
+  const navigate = useNavigate();
 
-
-
+  const [loading, setLoading] = useState(false);
 
   return (
-    <Dialog open={props.open} onClose={props.onClose}
-      PaperProps={{
-        component: 'form',
-        onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
-          event.preventDefault();
-          // 创建
+    <>
+      <Dialog open={props.open} onClose={props.onClose}>
+        <DialogTitle>Add {capitalizeFirstLetter(props.type)} Concept for <b>{props.imageset_name}</b></DialogTitle>
 
-          // 关闭对话框并跳转
-          props.onClose();
-        },
-      }}
-    >
-      <DialogTitle>Add {capitalizeFirstLetter(props.type)} Concept</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+            {/* 输入名称和重复次数 */}
+            <Grid size={8}>
+              <TextField variant="standard" fullWidth label="concept name" size="small" value={conceptName} onChange={(event) => { setConceptName(event.target.value) }} /></Grid>
+            <Grid size={4}>
+              <TextField
+                variant="standard"
+                aria-label="repeat"
+                label="repeat"
+                size="small"
+                value={repeat}
+                onChange={(event) => setRepeat(parseInt(event.target.value))}
+                inputProps={{
+                  step: 1,
+                  min: 1,
+                  max: 0xffffffff,
+                  type: 'number',
+                }}
+              /></Grid>
+            <Grid size={12}>
+              <TextField variant="standard" fullWidth label="load images from directory" size="small" value={loadDirectory} onChange={(event) => setLoadDirectory(event.target.value)} />
+            </Grid>
+          </Grid>
 
-      <DialogContent>
-        <Grid container spacing={2} sx={{ alignItems: 'center' }}>
-          {/* 输入名称和重复次数 */}
-          <Grid size={8}>
-            <TextField variant="standard" fullWidth label="concept name" size="small" /></Grid>
-          <Grid size={4}>
-            <TextField
-              variant="standard"
-              aria-label="repeat"
-              label="repeat"
-              size="small"
-              inputProps={{
-                step: 1,
-                min: 1,
-                max: 0xffffffff,
-                type: 'number',
-              }}
-            /></Grid>
+        </DialogContent>
 
-          
-        </Grid>
+        <DialogActions>
+          <Button onClick={() => { props.onClose() }}>Cancel</Button>
+          <Button disabled={loading} onClick={() => {
+            setLoading(true);
+            api.add_concept(props.imageset_name, conceptName, repeat, props.type, loadDirectory).then((cnt) => {
+              // 跳转到新建的concept
+              navigate('/detail', { state: { imageset_name: props.imageset_name, isRegular: props.type === 'regular', concept: conceptName, } });
+            }).catch((error: any) => {
+              console.error(error);
+            }).finally(() => {
+              setLoading(false);
+              props.onClose()
+            });
+          }}>Finish
+          </Button>
 
-      </DialogContent>
+        </DialogActions>
+      </Dialog>
 
-      <DialogActions>
-        <Button>Finish</Button>
-      </DialogActions>
-    </Dialog>
+      <Backdrop
+        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}
+        open={loading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+    </>
   );
 }
 

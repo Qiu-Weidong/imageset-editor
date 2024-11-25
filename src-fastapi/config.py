@@ -12,6 +12,7 @@ class Config:
     self.repo_dir = os.path.normpath(os.path.abspath('../tmp')).replace('\\', '/')
     self.port = 1420
     self.host = "localhost"
+    self.image_ext = "jpg"
     
     
     
