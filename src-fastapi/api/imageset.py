@@ -178,6 +178,12 @@ async def add_concept(
   image_count = convert_and_copy_images(concept_name, load_directory, concept_dir)
   return image_count
   
+@api_imageset.get("/load")  
+async def load():
+  pass
+
+
+
 
 @api_imageset.get("/")
 async def get_imageset_list():
