@@ -4,13 +4,53 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../header/Header";
-import { Backdrop, Box, CircularProgress, FormControl, Grid2 as Grid, ImageList, ImageListItem, MenuItem, Select, Slider, Toolbar } from "@mui/material";
+import { Backdrop, Box, Chip, CircularProgress, FormControl, Grid2 as Grid, ImageList, ImageListItem, MenuItem, Select, Slider, Toolbar } from "@mui/material";
 import { useEffect, useState } from "react";
 import api from "../../api";
 import { useDispatch } from "react-redux";
-import { setImageSet } from "../../app/imageSetSlice";
+import { ImageState, setImageSet } from "../../app/imageSetSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+
+
+
+function ImageCard(props: { image: ImageState }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+
+    <ImageListItem key={props.image.path}>
+      <img src={props.image.src}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        loading="lazy"
+      />
+      {
+        hovered ? <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(to bottom,  rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.25) 30%, rgba(0,0,0,0) 75%)',
+          pointerEvents: 'none',
+          border: "3px solid purple",
+        }}>
+          <Grid spacing={1} container sx={{ margin: 1 }}>
+            <Chip label={ props.image.filename } size="small" variant="filled" color="success" />
+            <Chip label={ props.image.concept } size="small" variant="filled" color="primary" />
+            <Chip label={ props.image.repeat } size="small" variant="filled" color="secondary" />
+          </Grid>
+          
+        </div> : <></>
+      }
+    </ImageListItem>
+  );
+}
+
+
+
+
 
 // 这个页面展示图片预览, 以及操作按钮, 点击操作按钮会跳转到对应的操作页面
 function Detail() {
@@ -21,7 +61,7 @@ function Detail() {
   // concept 的名称和重复次数共同定位到某个目录
   const { imageset_name, isRegular, concept, repeat }: { imageset_name: string, isRegular: boolean, concept: string, repeat: number } = location.state;
 
-  
+
   const filterNameList = useSelector((state: RootState) => state.imageSet.filters.map(item => item.name));
   const [filterName, setFilterName] = useState(`${repeat}_${concept}`);
   const [column, setColumn] = useState(12);
@@ -94,7 +134,7 @@ function Detail() {
             size="small"
             defaultValue={column}
             value={column}
-            onChange={(_, value) => setColumn(value as number) }
+            onChange={(_, value) => setColumn(value as number)}
             valueLabelDisplay="off"
             sx={{ maxWidth: 360 }}
             max={16}
@@ -102,21 +142,13 @@ function Detail() {
           />
         </Box>
 
-
-
-
-
-
-          {
-            images ? <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0 }} >
-              {
-                images.images?.map(image =>
-                  <ImageListItem key={image.path}>
-                    <img src={image.src} />
-                  </ImageListItem>)
-              }
-            </ImageList> : <></>
-          }
+        {
+          images ? <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0 }} >
+            {
+              images.images?.map(image => <ImageCard image={image} />)
+            }
+          </ImageList> : <></>
+        }
       </Grid>
       <Grid size={2}>
 

@@ -180,7 +180,7 @@ function Overview() {
         {
           regularDataset.concepts.map((item: ConceptMetadata, index: number) =>
             <Carousel.Slide key={index} style={{ height: '100%', backgroundImage: `url('${item.cover}')`, backgroundSize: 'cover' }}>
-              <ConceptCover concept={item} onClick={() => jump2detail(false, item.name, item.repeat)} />
+              <ConceptCover concept={item} onClick={() => jump2detail(true, item.name, item.repeat)} />
             </Carousel.Slide>)
         }
       </Carousel>
