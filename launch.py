@@ -21,6 +21,9 @@ from api.imageset import api_imageset
 # 定义允许的来源, 发布的时候可以注释掉,
 origins = [
   "http://localhost:3000",  # 允许的来源（例如前端的地址）
+  "http://localhost:1420",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:1420",
 ]
 # 添加 CORS 中间件
 app.add_middleware(
@@ -55,13 +58,23 @@ async def index():
 
 
 if __name__ == "__main__":
+  # 就在这里写, 不影响
   import argparse
   parser = argparse.ArgumentParser(description="imageset editor")
-  parser.add_argument('--reload', action='store_true', help='重新加载配置')
+  parser.add_argument('--reload', action='store_true')
+  parser.add_argument('--desktop', action='store_true', help='启动桌面程序')
   args = parser.parse_args()
   
-  # 需要的参数包含 前端项目的路径, 端口, 图片仓库路径
-  uvicorn.run("launch:app", host=CONF_HOST, port=CONF_PORT, reload=args.reload)
+  if args.desktop:
+    import webview, subprocess
+    p = subprocess.Popen(f"uvicorn launch:app --port {CONF_PORT} --host {CONF_HOST}")
+    window = webview.create_window("imageset editor", url=f"http://{CONF_HOST}:{CONF_PORT}/web", width=1200, height=800, confirm_close=True)
+    webview.start()
+    # 一些首尾工作
+    p.kill()
+    
+  else:
+    uvicorn.run("launch:app", host=CONF_HOST, port=CONF_PORT, reload=args.reload)
 
 
 

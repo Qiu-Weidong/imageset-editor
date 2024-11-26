@@ -4,7 +4,7 @@
 
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../header/Header";
-import { Backdrop, Box, Chip, CircularProgress, FormControl, Grid2 as Grid, ImageList, ImageListItem, MenuItem, Select, Slider, Toolbar } from "@mui/material";
+import { Backdrop, Box, Button, Chip, CircularProgress, FormControl, Grid2 as Grid, ImageList, ImageListItem, MenuItem, Paper, Select, Slider, Toolbar } from "@mui/material";
 import { useEffect, useState } from "react";
 import api from "../../api";
 import { useDispatch } from "react-redux";
@@ -34,16 +34,18 @@ function ImageCard(props: { image: ImageState }) {
           height: '100%',
           background: 'linear-gradient(to bottom,  rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.25) 30%, rgba(0,0,0,0) 75%)',
           pointerEvents: 'none',
-          border: "3px solid purple",
+          // border: "3px solid purple",
         }}>
-          <Grid spacing={1} container sx={{ margin: 1 }}>
-            <Chip label={ props.image.filename } size="small" variant="filled" color="success" />
-            <Chip label={ props.image.concept } size="small" variant="filled" color="primary" />
-            <Chip label={ props.image.repeat } size="small" variant="filled" color="secondary" />
+          <Grid spacing={1} container sx={{ margin: 1, }}>
+            <Chip label={props.image.filename} size="small" variant="filled" color="success" />
+            <Chip label={props.image.concept} size="small" variant="filled" color="primary" />
+            <Chip label={props.image.repeat} size="small" variant="filled" color="secondary" />
           </Grid>
-          
+
         </div> : <></>
       }
+
+
     </ImageListItem>
   );
 }
@@ -100,8 +102,7 @@ function Detail() {
       onLoad={load}
     />
 
-    {/* 先占位 */}
-    <Toolbar></Toolbar>
+
     <Backdrop
       sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}
       open={loading}
@@ -109,9 +110,13 @@ function Detail() {
       <CircularProgress color="inherit" />
     </Backdrop>
 
+
+    {/* 先占位 */}
+    <Toolbar />
+
     {/* 正式内容 */}
-    <Grid container spacing={2}>
-      <Grid size={10} >
+    <Grid container spacing={2} sx={{  display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Grid size={10}>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Select
             labelId="demo-simple-select-standard-label"
@@ -142,15 +147,38 @@ function Detail() {
           />
         </Box>
 
-        {
-          images ? <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0 }} >
-            {
-              images.images?.map(image => <ImageCard image={image} />)
-            }
-          </ImageList> : <></>
-        }
+        <Paper elevation={3} sx={{ maxHeight: '88vh', overflow: 'scroll', backgroundColor: "rgba(255, 255, 255, 0.7)" }} >
+          {
+            images ? <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0 }} >
+              {
+                images.images?.map(image => <ImageCard image={image} />)
+              }
+            </ImageList> : <></>
+          }
+        </Paper>
+
       </Grid>
-      <Grid size={2}>
+
+
+
+      <Grid size={2} sx={{ height: '100%' }}>
+        {/* 在这里定义相关按钮 */}
+        <Grid container spacing={1} sx={{  display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Button variant="contained">select</Button>
+          <Button variant="contained">cut</Button>
+          <Button variant="contained">tagger</Button>
+          <Button variant="contained">edit tag</Button>
+          <Button variant="contained">resize</Button>
+          <Button variant="contained">move</Button>
+          <Button variant="contained">remove background</Button>
+          <Button variant="contained">add background</Button>
+          <Button variant="contained">flip</Button>
+          <Button variant="contained">rotate</Button>
+          <Button variant="contained">convert</Button>
+          <Button variant="contained">rename</Button>
+          <Button variant="contained">detect similar images</Button>
+          
+        </Grid>
 
       </Grid>
     </Grid>
