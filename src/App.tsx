@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes, } from 'react-router-dom';
+import { HashRouter as Router, Navigate, Route, Routes, } from 'react-router-dom';
 import './App.css';
 import Start from './page/start/Start';
 import Settings from './page/settings/Settings';
@@ -13,7 +13,7 @@ import Debug from './page/debug/Debug';
 export function App() {
   return (
     <>
-      <BrowserRouter>
+      <Router>
         <Routes>
           <Route path='/home' element={<Start />} />
           <Route path='/overview' element={<Overview />} />
@@ -23,7 +23,7 @@ export function App() {
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="*" element={"404"}></Route>
         </Routes>
-      </BrowserRouter>
+      </Router>
       {/* 背景图片 */}
       <img src="https://images.unsplash.com/photo-1549388604-817d15aa0110"
         style={{

@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { ImageSetMetadata } from "../page/imageset/Overview";
+import { ImageSetState, ImageState } from "../app/imageSetSlice";
 
 
 const port = window.api_port || 1420;
@@ -48,6 +49,24 @@ async function add_concept(
   return result;
 }
 
+
+async function load(imageset_name: string, is_regular: boolean): Promise<ImageSetState> {
+  let result: ImageSetState = (await axios.get("/imageset/load", {
+    params: { imageset_name, is_regular }
+  })).data;
+  // 记得添加一个 <all> 的标识
+  const all_images: ImageState[] = []
+  for(const filter of result.filters) {
+    all_images.push(...filter.images);
+  }
+  result.filters.push({
+    name: '<all>', 
+    images: all_images,
+    concept: null,
+  });
+  return result;
+}
+
 const api = {
   delete_imageset,
   create_imageset,
@@ -55,6 +74,7 @@ const api = {
   rename_imageset,
   get_imageset_metadata,
   add_concept,
+  load,
 };
 
 

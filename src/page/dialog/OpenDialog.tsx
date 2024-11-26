@@ -17,6 +17,7 @@ function OpenDialog(props: OpenDialogProps) {
     if (props.open) {
       setImagesetNames(null);
       api.find_imageset_list().then((names: string[]) => {
+        // console.log('names = ', names);
         setImagesetNames(names);
       }).catch((err: any) => {
         setImagesetNames([]);

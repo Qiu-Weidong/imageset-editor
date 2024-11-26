@@ -4,6 +4,7 @@ export interface ImageState {
   src: string,                // 图片的url
   thumbnail: string,          // 缩略图url
   filename: string,           // 文件名称(不包含扩展名)
+  basename: string,           // 文件名称(包含扩展名)
   path: string,               // 准确路径, path 也可以唯一标识, 从 src/reg 目录下开始
   captions: string[],         // 字幕
   width: number,              // 宽度
@@ -18,7 +19,7 @@ export interface FilterState {
   name: string, // id, 对于Concept而言是 8_xxx, 对于临时集合而言是 <all>, 
   images: ImageState[],
 
-  concept: { name: string, repeat: number },  // 简单一点, 通过是否存在repeat来判断是否是临时选择
+  concept: { name: string, repeat: number } | null,  // 简单一点, 通过是否存在repeat来判断是否是临时选择
 };
 
 
@@ -53,6 +54,12 @@ export const imageSetSlice = createSlice({
       state.type = action.payload;
     },
 
+    setImageSet: (state, action: PayloadAction<ImageSetState>) => {
+      state.name = action.payload.name;
+      state.type = action.payload.type;
+      state.filters = action.payload.filters;
+    },
+
     setFilters: (state, action: PayloadAction<FilterState[]>) => {
       state.filters = action.payload;
     },
@@ -79,5 +86,5 @@ export const imageSetSlice = createSlice({
 });
 
 export default imageSetSlice.reducer;
-export const { setImageSetName, setImageSetType, addFilters: addConcept, removeFilters: removeConcept, addOrUpdateFilters: addOrUpdateConcept } = imageSetSlice.actions;
+export const { setImageSetName, setImageSetType, addFilters, removeFilters, addOrUpdateFilters, setImageSet } = imageSetSlice.actions;
 
