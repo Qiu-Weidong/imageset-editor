@@ -6,10 +6,11 @@ import { ImageSetState, ImageState } from "../app/imageSetSlice";
 
 
 const port = window.api_port || 1420;
+const host = window.api_host || 'localhost'
 
 
 // 设置后端路径
-axios.defaults.baseURL = `http://localhost:${port}`
+axios.defaults.baseURL = `http://${host}:${port}`
 
 
 async function delete_imageset(imageset_name: string) {
