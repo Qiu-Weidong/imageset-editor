@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Box, Button, Card, CardContent, CircularProgress, Container, Fab, IconButton, Paper, Toolbar, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, CircularProgress, Container, Fab, Toolbar, Typography } from "@mui/material";
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
 import Header from "../header/Header";
@@ -141,7 +141,7 @@ function Overview() {
         </Button>
       </CardContent>
 
-      <Carousel withIndicators height={carousel_height} loop >
+      <Carousel withIndicators height={carousel_height} loop>
         {
           trainDataset.concepts.map((item: ConceptMetadata, index: number) =>
             <Carousel.Slide key={index}>
