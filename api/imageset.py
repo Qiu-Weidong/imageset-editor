@@ -286,8 +286,27 @@ async def load(imageset_name: str, is_regular: bool):
   
   return result
 
+@api_imageset.get("/open_in_file_explore")
+async def open_in_file_explore(imageset_name: str):
+  dir = os.path.join(CONF_REPO_DIR, 'imageset-' + imageset_name)
+  import platform, subprocess
+  info = platform.system()
+  if info == 'Windows':
+    os.startfile(dir)
+  elif info == 'Darwin':
+    subprocess.run(['open', dir])
+  elif info == 'Linux':
+    subprocess.run(['xdg-open', dir])
 
-
+@api_imageset.delete("/delete_concept")
+async def delete_concept(imageset_name: str, is_regular: bool, concept_folder: str):
+  if is_regular:
+    dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, 'reg', concept_folder)
+  else:
+    dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, 'src', concept_folder)
+  import shutil
+  shutil.rmtree(dir)
+  
 
 @api_imageset.get("/")
 async def get_imageset_list():

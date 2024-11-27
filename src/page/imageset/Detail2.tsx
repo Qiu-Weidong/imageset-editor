@@ -3,22 +3,19 @@
 // 包含一个header, header中包含数据集名称, 刷新按钮, 新建按钮, 保存按钮, 设置按钮, 帮助按钮
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { Box, Button, Chip, Divider, Grid2 as Grid, ImageList, ImageListItem, MenuItem, Paper, Select, Slider, Stack } from "@mui/material";
+import Header from "../header/Header";
+import { Backdrop, Box, Button, Chip, CircularProgress, Divider, FormControl, Grid2 as Grid, ImageList, ImageListItem, MenuItem, Paper, Select, Slider, Stack, Toolbar } from "@mui/material";
 import { useEffect, useState } from "react";
+import api from "../../api";
 import { useDispatch } from "react-redux";
-import { addFilter, FilterState, ImageState, removeFilter } from "../../app/imageSetSlice";
+import { ImageState, setImageSet } from "../../app/imageSetSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import api from "../../api";
-import CreateDialog from "../dialog/CreateDialog";
 
 
 
 function ImageCard(props: { image: ImageState }) {
   const [hovered, setHovered] = useState(false);
-  const location = useLocation();
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   return (
 
@@ -27,12 +24,6 @@ function ImageCard(props: { image: ImageState }) {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         loading="lazy"
-        onDoubleClick={() => {
-          // 双击会创建一个包含这一张图片的选择集合, 首先需要判断是否存在
-          const filter: FilterState = { name: `<${props.image.filename}>`, images: [props.image], concept: null };
-          dispatch(addFilter(filter));
-          navigate("/imageset/detail", { state: { ...location.state, filter_name: filter.name } });
-        }}
       />
       {
         hovered ? <div style={{
@@ -64,37 +55,67 @@ function ImageCard(props: { image: ImageState }) {
 
 
 // 这个页面展示图片预览, 以及操作按钮, 点击操作按钮会跳转到对应的操作页面
-function Detail(props: {
-  onReload: () => void,
-}) {
+function Detail() {
   // imageset name, train/reg
   const location = useLocation();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   // concept 的名称和重复次数共同定位到某个目录
-  const { imageset_name, is_regular, filter_name, }: { imageset_name: string, is_regular: boolean, filter_name: string } = location.state;
+  const { imageset_name, isRegular, concept, repeat }: { imageset_name: string, isRegular: boolean, concept: string, repeat: number } = location.state;
 
 
   const filterNameList = useSelector((state: RootState) => state.imageSet.filters.map(item => item.name));
-  const [filterName, setFilterName] = useState(filter_name);
+  const [filterName, setFilterName] = useState(`${repeat}_${concept}`);
   const [column, setColumn] = useState(12);
 
   // 渲染这里的 filter 中的所有图片即可
   const images = useSelector((state: RootState) => {
     return state.imageSet.filters.find((item) => item.name === filterName)
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setFilterName(filter_name);
-  }, [filter_name]);
+    // 加载 ImageSet
+    load();
+  }, [imageset_name, isRegular]);
 
+  const navigate = useNavigate();
 
+  async function load() {
+    // 加载数据
+    setLoading(true);
+    api.load(imageset_name, isRegular).then((result) => {
+      // 设置 redux
+      dispatch(setImageSet(result));
+    }).catch((error: any) => {
+      console.error(error);
+    }).finally(() => {
+      setLoading(false);
+    });
 
-  const [createDialog, setCreateDialog] = useState(false);
+  }
+
   return (<>
+    <Header onRenameImageset={(_, new_name) => {
+      navigate('/detail', { replace: true, state: { ...location.state, imageset_name: new_name, } })
+    }}
+      onLoad={load}
+    />
+
+
+    <Backdrop
+      sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}
+      open={loading}
+    >
+      <CircularProgress color="inherit" />
+    </Backdrop>
+
+
+    {/* 先占位 */}
+    <Toolbar />
+
     {/* 正式内容 */}
-    <Grid container spacing={2} >
+    <Grid container spacing={2} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <Grid size={10}>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Select
@@ -106,14 +127,11 @@ function Detail(props: {
             value={filterName}
             sx={{ m: 1, minWidth: 240 }}
             onChange={(event) => {
-              setFilterName(event.target.value);
-              location.state.filter_name = event.target.value;
+              setFilterName(event.target.value)
             }}
           >
             {
-              filterNameList.map(name => <MenuItem value={name}>
-                {name}
-              </MenuItem>)
+              filterNameList.map(name => <MenuItem value={name}>{name}</MenuItem>)
             }
           </Select>
           <div style={{ flex: 1 }}></div>
@@ -146,33 +164,8 @@ function Detail(props: {
       <Grid size={2} sx={{ height: '100%' }}>
         {/* 在这里定义相关按钮 */}
         <Stack spacing={1} divider={<Divider flexItem />}>
-          <Grid container spacing={1}>
+          <Grid container>
             <Button variant="contained" color="secondary">edit selection</Button>
-            <Button variant="contained" color="secondary" onClick={() => setCreateDialog(true) }>add concept</Button>
-            {
-              filterName === '<all>' ? <></> : filterName.startsWith('<') ? 
-                <Button variant="contained" color="secondary"
-                  onClick={() => {
-                    // 直接删除对应的 selection 即可
-                    dispatch(removeFilter(filterName));
-                    navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: filterNameList[0],  } });
-                  }}
-                >remove selection</Button> : 
-                <Button variant="contained" color="secondary"
-                  onClick={() => {
-                    const response = window.confirm(`this operation will delete the ${filterName} folder!`);
-                    if(response) {
-                      // 删除概念
-                      api.delete_concept(imageset_name, is_regular, filterName).finally(() => {
-                        // 已经将概念删除了, 我需要
-                        dispatch(removeFilter(filterName));
-                        navigate('/imageset/detail', { replace: true, state: { ...location.state, filter_name: '<all>' } });
-                        props.onReload();
-                      });
-                    }
-                  }}
-                >remove concept</Button>
-            }
           </Grid>
           <Grid spacing={1} container>
             <Button variant="contained">tagger</Button>
@@ -202,11 +195,6 @@ function Detail(props: {
       </Grid>
     </Grid>
 
-
-
-    {/* 对话框 */}
-    <CreateDialog open={createDialog} imageset_name={imageset_name} type={ is_regular ? 'regular' : 'train' } 
-      onClose={() => {setCreateDialog(false); props.onReload() } } />
   </>);
 }
 

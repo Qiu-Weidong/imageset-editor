@@ -9,8 +9,8 @@ export interface ImageState {
   captions: string[],         // 字幕
   width: number,              // 宽度
   height: number,             // 高度
-  
-  concept: string, 
+
+  concept: string,
   repeat: number,
 };
 
@@ -60,16 +60,32 @@ export const imageSetSlice = createSlice({
       state.filters = action.payload.filters;
     },
 
+    reloadImageSet: (state, action: PayloadAction<ImageSetState>) => {
+      // 给一点智能, 如果name和type相同, 则保留selection, 否则直接set
+      if (state.name == action.payload.name && state.type == action.payload.type) {
+        // 保留 state.filters 中的所有非 <all> 的 selection
+        const selection = state.filters.filter(item => item.name.startsWith('<') && item.name !== '<all>');
+        console.log(selection);
+        state.filters = [...action.payload.filters, ...selection];
+      } else {
+        state.name = action.payload.name;
+        state.type = action.payload.type;
+        state.filters = action.payload.filters;
+      }
+
+    },
+
     setFilters: (state, action: PayloadAction<FilterState[]>) => {
       state.filters = action.payload;
     },
 
 
-    addFilters: (state, action: PayloadAction<FilterState>) => {
-      state.filters = [...state.filters, action.payload];
+    addFilter: (state, action: PayloadAction<FilterState>) => {
+      const t = state.filters.filter(item => item.name !== action.payload.name);
+      state.filters = [...t, action.payload];
     },
 
-    removeFilters: (state, action: PayloadAction<string>) => {
+    removeFilter: (state, action: PayloadAction<string>) => {
       state.filters = state.filters.filter((concept) => concept.name != action.payload);
     },
 
@@ -86,5 +102,5 @@ export const imageSetSlice = createSlice({
 });
 
 export default imageSetSlice.reducer;
-export const { setImageSetName, setImageSetType, addFilters, removeFilters, addOrUpdateFilters, setImageSet } = imageSetSlice.actions;
+export const { setImageSetName, setImageSetType, addFilter, removeFilter, addOrUpdateFilters, setImageSet, reloadImageSet } = imageSetSlice.actions;
 

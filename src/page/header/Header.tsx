@@ -1,5 +1,6 @@
 import { AppBar, IconButton, InputAdornment, TextField, Toolbar, Typography } from "@mui/material";
 import RefreshIcon from '@mui/icons-material/Refresh';
+import FolderIcon from '@mui/icons-material/Folder';
 import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -151,11 +152,13 @@ export default function Header(props: HeaderProps) {
 
       <IconButton onClick={() => setNewDialog(true)}><CreateNewFolderIcon /></IconButton>
       <IconButton onClick={() => setOpenDialog(true)}><FolderOpenIcon /></IconButton>
+      <IconButton onClick={() => { api.open_in_file_explore(imagesetName) }}><FolderIcon /></IconButton>
       <IconButton onClick={() => { navigate("/settings"); }}><SaveIcon /></IconButton>
       <IconButton onClick={() => { navigate("/settings"); }}><FileDownloadIcon /></IconButton>
 
       <IconButton onClick={() => { navigate("/settings"); }}><SettingsIcon /></IconButton>
-      <IconButton onClick={() => { navigate("/help"); }}> <HelpIcon /> </IconButton>
+      
+      <IconButton href="https://github.com/Qiu-Weidong/imageset-editor.git"> <HelpIcon /> </IconButton>
       <IconButton onClick={() => {
         // 主页之前要先将没有加载完成的stop了
         stoploading();

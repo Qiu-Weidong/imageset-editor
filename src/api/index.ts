@@ -68,6 +68,16 @@ async function load(imageset_name: string, is_regular: boolean): Promise<ImageSe
   return result;
 }
 
+
+async function open_in_file_explore(imageset_name:string) {
+  await axios.get("/imageset/open_in_file_explore", { params: { imageset_name } });
+}
+
+async function delete_concept(imageset_name: string, is_regular: boolean, concept_folder: string) {
+  await axios.delete("/imageset/delete_concept", { params: { imageset_name, is_regular, concept_folder } });
+}
+
+
 const api = {
   delete_imageset,
   create_imageset,
@@ -76,6 +86,8 @@ const api = {
   get_imageset_metadata,
   add_concept,
   load,
+  open_in_file_explore,
+  delete_concept,
 };
 
 

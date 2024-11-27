@@ -105,9 +105,9 @@ function Overview() {
   }, [imageset_name]);
 
   // 还需要添加一个 concept 参数
-  const jump2detail = (isRegular: boolean, concept: string, repeat: number) => {
+  const jump2detail = (is_regular: boolean, concept: string, repeat: number) => {
     // 设置类型为 train | regular
-    navigate("/detail", { state: { imageset_name, isRegular, concept, repeat } });
+    navigate("/imageset/detail", { state: { imageset_name, is_regular, filter_name: `${repeat}_${concept}` } });
   };
 
 

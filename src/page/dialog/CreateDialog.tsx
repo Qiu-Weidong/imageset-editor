@@ -66,7 +66,7 @@ function CreateDialog(props: createDialogProps) {
             setLoading(true);
             api.add_concept(props.imageset_name, conceptName, repeat, props.type, loadDirectory).then((cnt) => {
               // 跳转到新建的concept
-              navigate('/detail', { state: { imageset_name: props.imageset_name, isRegular: props.type === 'regular', concept: conceptName, repeat } });
+              navigate('/imageset', { state: { imageset_name: props.imageset_name, is_regular: props.type === 'regular', filter_name: `${repeat}_${conceptName}` } });
             }).catch((error: any) => {
               console.error(error);
             }).finally(() => {
@@ -77,14 +77,15 @@ function CreateDialog(props: createDialogProps) {
           </Button>
 
         </DialogActions>
+        <Backdrop
+          sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}
+          open={loading}
+        >
+          <CircularProgress color="inherit" />
+        </Backdrop>
       </Dialog>
 
-      <Backdrop
-        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}
-        open={loading}
-      >
-        <CircularProgress color="inherit" />
-      </Backdrop>
+
     </>
   );
 }
