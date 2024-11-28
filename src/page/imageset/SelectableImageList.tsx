@@ -174,19 +174,15 @@ function SelectableImageList({
         }
 
       </Carousel>
-      <div id="close-button" style={{ position: 'absolute', top: 0, right: 0, }} >
+      <div style={{ position: 'absolute', top: 0, right: 0, }} >
         <IconButton color="error" size="small" onClick={() => setOpenImageIndex(-1)}> <CloseFullscreen /> </IconButton>
       </div>
     </div>
   );
 
-  return (<>
-    <Box>
+  return (<Box>
       {enableFullscreen ? (openImageIndex >= 0 ? carousel : paper) : paper}
-    </Box>
-
-
-  </>);
+    </Box>);
 }
 
 export default SelectableImageList;
