@@ -11,6 +11,8 @@ import api from "../../api";
 import CreateDialog from "../dialog/CreateDialog";
 
 import SelectableImageList from "./SelectableImageList";
+import ZoomableImageList from "./ZoomableImageList";
+
 
 
 // 这个页面展示图片预览, 以及操作按钮, 点击操作按钮会跳转到对应的操作页面
@@ -37,8 +39,10 @@ function Detail(props: {
     <Grid container spacing={2} >
       
       <Grid size={10}>
-        <SelectableImageList height={height} selectable enableFullscreen filter_name={ filterName } onFilterNameChange={(name) => setFilterName(name) }
-        ></SelectableImageList>
+        {/* <SelectableImageList height={height} enableFullscreen filter_name={ filterName } onFilterNameChange={(name) => setFilterName(name) }
+        ></SelectableImageList> */}
+
+        <ZoomableImageList height={height} enableFullscreen filter_name={ filterName }  onFilterNameChange={(name) => setFilterName(name) } />
       </Grid>
 
 

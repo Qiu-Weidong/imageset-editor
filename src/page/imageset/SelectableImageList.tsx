@@ -226,7 +226,28 @@ function SelectableImageList({
       <Carousel loop height={height} withIndicators initialSlide={openImageIndex}>
         {
           seletableImages.map((image, index) => 
-            <ImageSlider image={image} index={index} selectable={selectable} />
+          <Carousel.Slide key={index}>
+          <div style={{
+            height: '100%', backgroundImage: `url('${image.image.src}')`,
+            backgroundSize: 'cover', position: 'relative',
+          }}>
+    
+            <img src={image.image.src} style={{
+              objectFit: 'contain', width: '100%', height: '100%',
+              background: 'rgba(255, 255, 255, .47)',
+              backdropFilter: 'blur(48px)',
+            }}
+              onClick={() => {
+              }}
+            />
+    
+            {
+              selectable ? (
+                image.is_selected ? <IconButton onClick={() => { }} sx={{
+                  position: 'absolute', top: 0, left: 0,
+                }} color="error" size="small"> <CheckCircle /> </IconButton> : <></>) : <></>
+            }
+          </div></Carousel.Slide>
 
           )
         }
