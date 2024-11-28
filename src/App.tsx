@@ -18,7 +18,7 @@ export function App() {
         <Routes>
           <Route path='/home' element={<Start />} />
           <Route path='/overview' element={<Overview />} />
-          <Route path='/detail' element={<Detail />} />
+          <Route path='/detail' element={<Detail onReload={() => {}}/>} />
           <Route path='/debug' element={<Debug />} />
           <Route path='/imageset/*' element={ <ImageSet /> } />
           <Route path="/" element={<Navigate to="/home" replace />} />

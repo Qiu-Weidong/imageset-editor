@@ -17,7 +17,6 @@ function OpenDialog(props: OpenDialogProps) {
     if (props.open) {
       setImagesetNames(null);
       api.find_imageset_list().then((names: string[]) => {
-        // console.log('names = ', names);
         setImagesetNames(names);
       }).catch((err: any) => {
         setImagesetNames([]);
@@ -33,7 +32,6 @@ function OpenDialog(props: OpenDialogProps) {
     {
       imagesetNames.map((name) => <ListItem disablePadding key={name}>
         <ListItemButton onClick={() => {
-          // console.log('open ', name);
           navigate(`/overview`, { state: { imageset_name: name } });
           // 不如强制刷新
         }}>

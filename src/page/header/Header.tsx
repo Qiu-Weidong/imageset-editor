@@ -95,7 +95,6 @@ export default function Header(props: HeaderProps) {
         setImagesetName(event.target.value.trim());
       }}
       onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
-        // console.log(event.key);
         if (event.key.toLowerCase() == 'enter') {
           renameImageset(imagesetName)
         }

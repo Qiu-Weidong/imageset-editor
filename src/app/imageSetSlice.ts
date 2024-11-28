@@ -65,7 +65,6 @@ export const imageSetSlice = createSlice({
       if (state.name == action.payload.name && state.type == action.payload.type) {
         // 保留 state.filters 中的所有非 <all> 的 selection
         const selection = state.filters.filter(item => item.name.startsWith('<') && item.name !== '<all>');
-        console.log(selection);
         state.filters = [...action.payload.filters, ...selection];
       } else {
         state.name = action.payload.name;
