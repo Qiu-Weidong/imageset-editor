@@ -11,6 +11,8 @@ function SelectionEditor() {
 
   const { imageset_name, is_regular, filter_name } : { imageset_name: string, is_regular: boolean, filter_name: string }  = location.state;
 
+
+  
 }
 
 

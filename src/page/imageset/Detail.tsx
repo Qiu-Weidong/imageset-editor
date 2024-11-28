@@ -3,7 +3,7 @@
 // 包含一个header, header中包含数据集名称, 刷新按钮, 新建按钮, 保存按钮, 设置按钮, 帮助按钮
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { Box, Button, Chip, Divider, Grid2 as Grid, ImageListItem, MenuItem, Select, Slider, Stack } from "@mui/material";
+import { Box, Button, Divider, Grid2 as Grid, ImageListItem, MenuItem, Select, Slider, Stack } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { removeFilter } from "../../app/imageSetSlice";
@@ -65,6 +65,10 @@ function Detail(props: {
   return (<>
     {/* 正式内容 */}
     <Grid container spacing={2} >
+
+
+
+      
       <Grid size={10}>
 
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -99,12 +103,8 @@ function Detail(props: {
             min={4}
           />
         </Box>
-
-
-        <SelectableImageList height={height} column={column} badge enableFullscreen images={images} selectable
+        <SelectableImageList height={height} column={column} badge enableFullscreen images={images}
         ></SelectableImageList>
-
-
       </Grid>
 
 
@@ -113,7 +113,9 @@ function Detail(props: {
         {/* 在这里定义相关按钮 */}
         <Stack spacing={1} divider={<Divider flexItem />}>
           <Grid container spacing={1}>
-            <Button variant="contained" color="secondary">edit selection</Button>
+            <Button variant="contained" color="secondary"
+              onClick={() => { navigate("/imageset/selection-editor", { state: { imageset_name, is_regular, filter_name } }) }}
+            >edit selection</Button>
             <Button variant="contained" color="secondary" onClick={() => setCreateDialog(true)}>add concept</Button>
             {
               filterName === '<all>' ? <></> : filterName.startsWith('<') ?
