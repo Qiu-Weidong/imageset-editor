@@ -22,7 +22,7 @@ async def get_thumbnail(image_name: str):
   elif os.path.exists(image_path) and os.path.isfile(image_path):
     with Image.open(image_path) as img:
       img: Image = img.convert('RGB')
-      img.thumbnail(size=(320, 320))
+      img.thumbnail(size=(512, 1024))
       parent_dir = os.path.dirname(thumbnail_path)
       if not os.path.exists(parent_dir):
         os.makedirs(parent_dir)

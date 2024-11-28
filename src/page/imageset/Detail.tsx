@@ -3,107 +3,41 @@
 // 包含一个header, header中包含数据集名称, 刷新按钮, 新建按钮, 保存按钮, 设置按钮, 帮助按钮
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { Box, Button, Divider, Grid2 as Grid, ImageListItem, MenuItem, Select, Slider, Stack } from "@mui/material";
+import { Button, Divider, Grid2 as Grid, Stack } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { removeFilter } from "../../app/imageSetSlice";
-import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
 import api from "../../api";
 import CreateDialog from "../dialog/CreateDialog";
 
 import SelectableImageList from "./SelectableImageList";
-import { createSelector } from "@reduxjs/toolkit";
-
-
-const selectFilterNameList = createSelector(
-  (state: RootState) => state.imageSet.filters,
-  (filters) => filters.map(item => item.name)
-);
-
-
-const selectImagesByFilterName = (filterName: string) =>
-  createSelector(
-    (state: RootState) => state.imageSet.filters,
-    (filters) => {
-      const filter = filters.find(item => item.name === filterName);
-      return filter ? filter.images : [];
-    }
-  );
-
 
 
 // 这个页面展示图片预览, 以及操作按钮, 点击操作按钮会跳转到对应的操作页面
 function Detail(props: {
   onReload: () => void,
 }) {
-
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   // concept 的名称和重复次数共同定位到某个目录
   const { imageset_name, is_regular, filter_name, }: { imageset_name: string, is_regular: boolean, filter_name: string } = location.state;
-
-
-  const filterNameList = useSelector(selectFilterNameList);
   const [filterName, setFilterName] = useState(filter_name);
-
-
-  const selectImages = selectImagesByFilterName(filterName);
-  const images = useSelector(selectImages);
-
-  const [column, setColumn] = useState(8);
 
   useEffect(() => {
     setFilterName(filter_name);
   }, [filter_name]);
 
   const [createDialog, setCreateDialog] = useState(false);
-  const height = '88vh';
+  const height = '83vh';
 
   return (<>
     {/* 正式内容 */}
     <Grid container spacing={2} >
-
-
-
       
       <Grid size={10}>
-
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Select
-            labelId="demo-simple-select-standard-label"
-            id="demo-simple-select-standard"
-            label="concept or selection"
-            variant="standard"
-            size="small"
-            value={filterName}
-            sx={{ m: 1, minWidth: 240 }}
-            onChange={(event) => {
-              setFilterName(event.target.value);
-              location.state.filter_name = event.target.value;
-            }}
-          >
-            {
-              filterNameList.map(name => <MenuItem value={name}>
-                {name}
-              </MenuItem>)
-            }
-          </Select>
-          <div style={{ flex: 1 }}></div>
-          <Slider
-            size="small"
-            defaultValue={column}
-            value={column}
-            onChange={(_, value) => setColumn(value as number)}
-            valueLabelDisplay="off"
-            sx={{ maxWidth: 360 }}
-            max={16}
-            min={4}
-          />
-        </Box>
-        <SelectableImageList height={height} column={column} badge enableFullscreen images={images}
+        <SelectableImageList height={height} selectable enableFullscreen filter_name={ filterName } onFilterNameChange={(name) => setFilterName(name) }
         ></SelectableImageList>
       </Grid>
 
@@ -123,7 +57,7 @@ function Detail(props: {
                   onClick={() => {
                     // 直接删除对应的 selection 即可
                     dispatch(removeFilter(filterName));
-                    navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: filterNameList[0], } });
+                    navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: '<all>', } });
                   }}
                 >remove selection</Button> :
                 <Button variant="contained" color="secondary"
