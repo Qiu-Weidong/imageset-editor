@@ -114,10 +114,10 @@ function ZoomableImageList({
     </ImageList>
   );
 
-
-  const carousel = (
-    <div style={{ position: 'absolute', top: 0, left: 0 }}>
-      <Carousel loop height={height} withIndicators initialSlide={openImageIndex}>
+  function ImageCarousel({ images, openSlide }: { images: ImageState[], openSlide: number }) {
+    return (
+      <div style={{ position: 'absolute', top: 0, left: 0 }}>
+      <Carousel loop height={height} initialSlide={openSlide}>
         {
           images.map((image, index) => 
           <Carousel.Slide key={index}>
@@ -132,17 +132,20 @@ function ZoomableImageList({
               backdropFilter: 'blur(48px)',
             }}
             />
-    
           </div></Carousel.Slide>
-
           )
         }
-
       </Carousel>
       <div style={{ position: 'absolute', top: 0, right: 0, }} >
         <IconButton color="error" size="small" onClick={() => setOpenImageIndex(-1)}> <CloseFullscreen /> </IconButton>
       </div>
     </div>
+    );
+  }
+
+
+  const carousel = (
+    <ImageCarousel images={images} openSlide={openImageIndex} />
   );
 
   return (
@@ -186,7 +189,6 @@ function ZoomableImageList({
         {/* 应该将 carousel 盖在 paper 上面 */}
         <Paper elevation={3} sx={{ maxHeight: height, overflow: 'scroll', backgroundColor: "rgba(255, 255, 255, 0.7)", }} >
           {imagelist}
-
         </Paper>
         {enableFullscreen && openImageIndex >= 0 ? carousel : <></>}
 
