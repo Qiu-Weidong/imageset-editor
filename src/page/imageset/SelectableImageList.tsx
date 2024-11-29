@@ -2,9 +2,9 @@
 
 // 包含一个header, header中包含数据集名称, 刷新按钮, 新建按钮, 保存按钮, 设置按钮, 帮助按钮
 
-import { Box, Chip, Grid2 as Grid, IconButton, ImageList, ImageListItem, MenuItem, Paper, Select, Slider } from "@mui/material";
-import { useEffect, useState } from "react";
-import { ImageState } from "../../app/imageSetSlice";
+import { Box, Button, Chip, Grid2 as Grid, IconButton, ImageList, ImageListItem, MenuItem, Paper, Select, Slider } from "@mui/material";
+import { useState } from "react";
+import { addFilter, ImageState } from "../../app/imageSetSlice";
 
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
@@ -12,6 +12,14 @@ import { CheckCircle, CloseFullscreen, Fullscreen } from "@mui/icons-material";
 import { RootState } from "../../app/store";
 import { createSelector } from "@reduxjs/toolkit";
 import { useSelector } from "react-redux";
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import SelectAllIcon from '@mui/icons-material/SelectAll';
+import TabUnselectedIcon from '@mui/icons-material/TabUnselected';
+import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
 
 const selectFilterNameList = createSelector(
@@ -19,7 +27,7 @@ const selectFilterNameList = createSelector(
   (filters) => filters.map(item => item.name)
 );
 
-
+// 可以将这个选择器放到外面的页面中，将对应的 filter_name 的图片作为属性传入进来
 const selectAllImages = createSelector(
   (state: RootState) => state.imageSet.filters,
   (filters) => {
@@ -63,20 +71,22 @@ function SelectableImageList({
   enableFullscreen = false,
   badge = false,
   filter_name,
-  onChange = (_, __) => { },
-  onFilterNameChange = (_: string) => { },
 }: {
   height: string | number,
   selectable?: boolean,
   enableFullscreen?: boolean,
   badge?: boolean,
   filter_name: string,
-  onChange?: (clicked_image: number, all_selected_image: SelectableImageState[]) => void,
   onFilterNameChange?: (newName: string) => void
 }) {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // 获取到了所有的 concept 和 selection
   const filterNameList = useSelector(selectFilterNameList);
+  const [filterName, setFilterName] = useState(filter_name);
+
+
   const [column, setColumn] = useState(8);
 
   // 第一步，构建图片的 map
@@ -98,166 +108,113 @@ function SelectableImageList({
 
 
   // 这个是用来显示的过滤的图片
-  const [seletableImages, setSelectableImages] = useState<SelectableImageState[]>(
+  const [selectableImages, setSelectableImages] = useState<SelectableImageState[]>(
     image_list_map.get(filter_name) || []
   );
 
 
   const [openImageIndex, setOpenImageIndex] = useState(
-    seletableImages.length <= 1 ? 0 : -1
+    selectableImages.length <= 1 ? 0 : -1
   );
 
 
   function ImageCard(props: { image: SelectableImageState, index: number, selectable: boolean, }) {
     const [selected, setSelected] = useState(props.image.is_selected);
     const [hovered, setHovered] = useState(false);
+
     function click_handler() {
       if (!props.selectable) { return; }
-      // 改不改无所谓
       props.image.is_selected = !props.image.is_selected;
-
       // 这是修改自己的状态
       setSelected(props.image.is_selected);
-      // console.log(image_list_map);
-      // 通知父组件
     }
 
     return (
-      <>
-        <ImageListItem key={props.image.image.path}
-        >
-          <img src={props.image.image.thumbnail} // 显示缩略图算了
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            loading="lazy"
-            onClick={click_handler}
-          />
-
-          {/* 蒙版就只是蒙版 */}
-          {
-            hovered ? <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: 'linear-gradient(to bottom,  rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.25) 30%, rgba(0,0,0,0) 75%)',
-              pointerEvents: 'none',
-            }} /> : <></>
-          }
-          {
-            props.selectable && selected ? <IconButton onClick={click_handler}
-              sx={{ position: 'absolute', top: 0, left: 0, }}
-              size="small" color="error" > <CheckCircle /> </IconButton> : <></>
-          }
-          {
-            enableFullscreen ? <IconButton sx={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-            }}
-              size="small" color="info" onClick={() => {
-                setOpenImageIndex(props.index)
-              }}> <Fullscreen /> </IconButton> : <></>
-          }
-
-          {
-            badge ?
-              <Grid spacing={1} container sx={{ margin: 1, position: 'absolute', bottom: 0, left: 0, }}>
-                <Chip label={props.image.image.filename} size="small" variant="filled" color="success" />
-                <Chip label={props.image.image.concept} size="small" variant="filled" color="primary" />
-                <Chip label={props.image.image.repeat} size="small" variant="filled" color="secondary" />
-              </Grid> : <></>
-          }
-
-
-
-        </ImageListItem>
-      </>
-    );
-  }
-
-  const imagelist = (
-    <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0 }} >
-      {
-        seletableImages.map((image, index) => <ImageCard key={index} image={image} index={index} selectable={selectable} />)
-      }
-    </ImageList>
-  );
-
-  function ImageSlider(props: { image: SelectableImageState, index: number, selectable: boolean, }) {
-    const [selected, setSelected] = useState(props.image.is_selected);
-
-    return (<Carousel.Slide key={props.index}>
-      <div style={{
-        height: '100%', backgroundImage: `url('${props.image.image.src}')`,
-        backgroundSize: 'cover', position: 'relative',
-      }}>
-
-        <img src={props.image.image.src} style={{
-          objectFit: 'contain', width: '100%', height: '100%',
-          background: 'rgba(255, 255, 255, .47)',
-          backdropFilter: 'blur(48px)',
-        }}
-          onClick={() => {
-            if (!props.selectable) { return; }
-            // 改不改无所谓
-            props.image.is_selected = !props.image.is_selected;
-
-            // 这是修改自己的状态
-            setSelected(props.image.is_selected);
-            // console.log(image_list_map);
-            // 通知父组件
-          }}
+      <ImageListItem key={props.image.image.path}
+      >
+        <img src={props.image.image.thumbnail} // 显示缩略图算了
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          loading="lazy"
+          onClick={click_handler}
+          onDoubleClick={() => setOpenImageIndex(props.index)}
         />
 
+        {/* 蒙版就只是蒙版 */}
         {
-          selectable ? (
-            selected ? <IconButton onClick={() => { }} sx={{
-              position: 'absolute', top: 0, left: 0,
-            }} color="error" size="small"> <CheckCircle /> </IconButton> : <></>) : <></>
+          hovered ? <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(to bottom,  rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.25) 30%, rgba(0,0,0,0) 75%)',
+            pointerEvents: 'none',
+          }} >
+          </div> : <></>
         }
-      </div></Carousel.Slide>
+
+        {
+          badge ?
+            <Grid spacing={1} container sx={{ margin: 1, position: 'absolute', bottom: 0, left: 0, }}>
+              <Chip label={props.image.image.filename} size="small" variant="filled" color="success" />
+              <Chip label={props.image.image.concept} size="small" variant="filled" color="primary" />
+              <Chip label={props.image.image.repeat} size="small" variant="filled" color="secondary" />
+            </Grid> : <></>
+        }
+
+        {
+          props.selectable && selected ? <IconButton onClick={click_handler}
+            sx={{ position: 'absolute', top: 0, left: 0, }}
+            size="small" color="error" > <CheckCircle /> </IconButton> : <></>
+        }
+      </ImageListItem>
     );
   }
 
-  const carousel = (
-    <div style={{ position: 'absolute', top: 0, left: 0 }}>
-      <Carousel loop height={height} withIndicators initialSlide={openImageIndex}>
-        {
-          seletableImages.map((image, index) => 
-          <Carousel.Slide key={index}>
-          <div style={{
-            height: '100%', backgroundImage: `url('${image.image.src}')`,
-            backgroundSize: 'cover', position: 'relative',
-          }}>
-    
-            <img src={image.image.src} style={{
+
+  function ImageSlider({ image, index }: { image: SelectableImageState, index: number }) {
+    const [selected, setSelected] = useState(image.is_selected);
+    return (
+      <Carousel.Slide key={index}>
+        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+          <img src={image.image.src}
+            style={{
               objectFit: 'contain', width: '100%', height: '100%',
-              background: 'rgba(255, 255, 255, .47)',
-              backdropFilter: 'blur(48px)',
+              background: 'rgba(255, 255, 255, .27)',
+              backdropFilter: 'blur(7px)',
             }}
-              onClick={() => {
-              }}
-            />
-    
-            {
-              selectable ? (
-                image.is_selected ? <IconButton onClick={() => { }} sx={{
-                  position: 'absolute', top: 0, left: 0,
-                }} color="error" size="small"> <CheckCircle /> </IconButton> : <></>) : <></>
-            }
-          </div></Carousel.Slide>
+            onClick={() => {
+              image.is_selected = !image.is_selected;
+              setSelected(image.is_selected);
+            }}
+            onDoubleClick={() => setOpenImageIndex(-1)}
+          />
+          {selected ? <IconButton sx={{ position: 'absolute', top: 0, left: 0, }} color="error"> <CheckCircle /> </IconButton> : <></>}
+        </div>
 
-          )
-        }
+      </Carousel.Slide>
+    );
+  }
 
-      </Carousel>
-      <div style={{ position: 'absolute', top: 0, right: 0, }} >
-        <IconButton color="error" size="small" onClick={() => setOpenImageIndex(-1)}> <CloseFullscreen /> </IconButton>
+
+  function ImageCarousel({ images, openSlide }: { images: SelectableImageState[], openSlide: number }) {
+    return (
+      <div style={{ position: 'relative' }}>
+        <Carousel loop height={height} initialSlide={openSlide} withIndicators style={{ marginTop: `-${height}` }}
+        >
+          {
+            images.map((image, index) =>
+              <ImageSlider image={image} index={index} />
+            )
+          }
+        </Carousel>
+
+        {/* 添加一个缩小按钮 */}
+        <IconButton sx={{ position: 'absolute', top: 0, right: 0 }} color="success" onClick={() => setOpenImageIndex(-1)}> <CloseFullscreen /> </IconButton>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <>
@@ -268,11 +225,11 @@ function SelectableImageList({
           label="concept or selection"
           variant="standard"
           size="small"
-          value={filter_name}
+          value={filterName}
           sx={{ m: 1, minWidth: 240 }}
           onChange={(event) => {
 
-            onFilterNameChange(event.target.value);
+            setFilterName(event.target.value);
 
             // 记得切换 selectedImages
             setSelectableImages(
@@ -286,7 +243,67 @@ function SelectableImageList({
             </MenuItem>)
           }
         </Select>
-        <div style={{ flex: 1 }}></div>
+        <div style={{ flex: 1 }}>
+          <Grid container spacing={1}>
+            <Button variant="contained" size="small" startIcon={<VisibilityIcon />}
+              onClick={() => {
+                const selected_images = image_list_map.get('<all>')?.filter(image => image.is_selected) || [];
+                setSelectableImages(selected_images);
+                setFilterName('[selected images]');
+              }}
+            >查看已选图片</Button>
+            <Button variant="contained" size="small" startIcon={<SelectAllIcon />}
+              onClick={() => {
+                const selected_images = selectableImages.map(image => {
+                  image.is_selected = true;
+                  return image;
+                });
+                setSelectableImages(selected_images);
+              }}
+            >全选以下图片</Button>
+
+            <Button variant="contained" size="small" startIcon={<TabUnselectedIcon />}
+              onClick={() => {
+                const selected_images = selectableImages.map(image => {
+                  image.is_selected = false;
+                  return image;
+                });
+                setSelectableImages(selected_images);
+              }}
+            >将以下图片全部取消选择</Button>
+
+            <Button variant="contained" size="small" startIcon={<FlipCameraAndroidIcon />}
+              onClick={() => {
+                const selected_images = selectableImages.map(image => {
+                  image.is_selected = !image.is_selected;
+                  return image;
+                });
+                setSelectableImages(selected_images);
+              }}
+            >反转选择</Button>
+
+            <Button variant="contained" size="small" color="error" startIcon={<RestartAltIcon />}
+              onClick={() => {
+                image_list_map.get('<all>')?.forEach(image => image.is_selected = false);
+                setFilterName('<all>');
+                setSelectableImages(image_list_map.get('<all>') || []);
+              }}
+            >重置</Button>
+            <Button variant="contained" size="small" color="success" startIcon={<AddCircleIcon />}
+              onClick={() => {
+                const images = image_list_map.get('<all>')?.filter(image => image.is_selected).map(image => image.image) || [];
+                dispatch(addFilter({
+                  name: '<hello>',
+                  images,
+                  concept: null,
+                }));
+                // navigate("/imageset/detail", {  });
+                navigate(-1);
+              }}
+            >创建</Button>
+          </Grid>
+
+        </div>
         <Slider
           size="small"
           defaultValue={column}
@@ -300,15 +317,17 @@ function SelectableImageList({
       </Box>
 
 
-      <Box sx={{ position: 'relative' }}>
+      <Box>
         {/* 应该将 carousel 盖在 paper 上面 */}
-
-        {/* {enableFullscreen ? (openImageIndex >= 0 ? carousel : paper) : paper} */}
         <Paper elevation={3} sx={{ maxHeight: height, overflow: 'scroll', backgroundColor: "rgba(255, 255, 255, 0.7)", }} >
-          {imagelist}
-
+          <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0 }} >
+            {
+              selectableImages.map((image, index) => <ImageCard key={index} image={image} index={index} selectable={selectable} />)
+            }
+          </ImageList>
         </Paper>
-        {enableFullscreen && openImageIndex >= 0 ? carousel : <></>}
+
+        {enableFullscreen && openImageIndex >= 0 ? <ImageCarousel images={selectableImages} openSlide={openImageIndex} /> : <></>}
 
       </Box></>
   );

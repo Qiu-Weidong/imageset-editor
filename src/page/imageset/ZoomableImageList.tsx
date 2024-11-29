@@ -74,6 +74,7 @@ function ZoomableImageList({
             onMouseLeave={() => setHovered(false)}
             loading="lazy"
             onClick={click_handler}
+            onDoubleClick={() => console.log('double clicked.') }
           />
 
           {/* 蒙版就只是蒙版 */}
@@ -106,7 +107,7 @@ function ZoomableImageList({
   }
 
   const imagelist = (
-    <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0,  }} >
+    <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0, }} >
       {
         images.map((image, index) => <ImageCard key={index} image={image} index={index} />)
       }
@@ -115,8 +116,7 @@ function ZoomableImageList({
 
   function ImageCarousel({ images, openSlide }: { images: ImageState[], openSlide: number }) {
     return (
-
-      <Carousel loop height={height} initialSlide={openSlide} style={{ marginTop: `-${height}` }} withIndicators
+      <Carousel loop height={height} initialSlide={openSlide}  withIndicators style={{ marginTop: `-${height}` }}
       >
         {
           images.map((image, index) =>
@@ -177,13 +177,17 @@ function ZoomableImageList({
       </Box>
 
 
-      <Box sx={{ position: 'relative' }}>
+      <Box >
         {/* 应该将 carousel 盖在 paper 上面 */}
         <Paper elevation={3} sx={{
           maxHeight: height, height: height, overflow: 'scroll', backgroundColor: "rgba(255, 255, 255, 0.7)", 
+          
+          // 可以通过将imagelist设置为absolute来定位
+          // position: 'absolute', top: 0, left: 0,
         }} >
           {imagelist}
         </Paper>
+
         {enableFullscreen && openImageIndex >= 0 ? carousel : <></>}
       </Box></>
   );

@@ -10,7 +10,6 @@ import { removeFilter } from "../../app/imageSetSlice";
 import api from "../../api";
 import CreateDialog from "../dialog/CreateDialog";
 
-import SelectableImageList from "./SelectableImageList";
 import ZoomableImageList from "./ZoomableImageList";
 
 
@@ -39,8 +38,6 @@ function Detail(props: {
     <Grid container spacing={2} >
       
       <Grid size={10}>
-        {/* <SelectableImageList height={height} enableFullscreen filter_name={ filterName } onFilterNameChange={(name) => setFilterName(name) }
-        ></SelectableImageList> */}
 
         <ZoomableImageList height={height} enableFullscreen filter_name={ filterName }  onFilterNameChange={(name) => setFilterName(name) } />
       </Grid>
@@ -52,7 +49,7 @@ function Detail(props: {
         <Stack spacing={1} divider={<Divider flexItem />}>
           <Grid container spacing={1}>
             <Button variant="contained" color="secondary"
-              onClick={() => { navigate("/imageset/selection-editor", { state: { imageset_name, is_regular, filter_name } }) }}
+              onClick={() => { navigate("/imageset/selection-editor", { state: { imageset_name, is_regular, filter_name: filterName } }) }}
             >edit selection</Button>
             <Button variant="contained" color="secondary" onClick={() => setCreateDialog(true)}>add concept</Button>
             {

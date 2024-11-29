@@ -1,17 +1,23 @@
 import { useLocation } from "react-router-dom";
-
-
-
-
+import SelectableImageList from "./SelectableImageList";
 
 
 function SelectionEditor() {
-  // 通过路由传入 selectionName
   const location = useLocation();
 
-  const { imageset_name, is_regular, filter_name } : { imageset_name: string, is_regular: boolean, filter_name: string }  = location.state;
+  const {  filter_name } : { imageset_name: string, is_regular: boolean, filter_name: string }  = location.state;
 
 
+
+
+  const height = '80vh';
+
+
+  return (
+    <SelectableImageList height={height} 
+      enableFullscreen selectable filter_name={ filter_name }  
+    ></SelectableImageList>
+  );
   
 }
 

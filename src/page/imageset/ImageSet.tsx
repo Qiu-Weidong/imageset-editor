@@ -7,6 +7,7 @@ import { Backdrop, CircularProgress, Toolbar } from "@mui/material";
 import NotFound from "../notfound/NotFound";
 import { useDispatch } from "react-redux";
 import Detail from "./Detail";
+import SelectionEditor from "./SelectionEditor";
 
 
 
@@ -61,7 +62,7 @@ function ImageSet() {
     
     <Routes>
       <Route path="/detail" element={ <Detail onReload={load} /> } /> {/**默认是跳转到详情页面 */}
-      <Route path="/selection-editor" element={"selection-editor"} />
+      <Route path="/selection-editor" element={ <SelectionEditor /> } />
 
       <Route path="/" element={<Navigate to="/imageset/detail" replace state={location.state} />} />
       <Route path="*" element={ <NotFound /> }></Route>
