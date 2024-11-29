@@ -106,7 +106,7 @@ function ZoomableImageList({
   }
 
   const imagelist = (
-    <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0 }} >
+    <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0,  }} >
       {
         images.map((image, index) => <ImageCard key={index} image={image} index={index} />)
       }
@@ -115,14 +115,16 @@ function ZoomableImageList({
 
   function ImageCarousel({ images, openSlide }: { images: ImageState[], openSlide: number }) {
     return (
-      <Carousel loop height={height} initialSlide={openSlide} style={{ marginTop: `-${height}` }}>
+
+      <Carousel loop height={height} initialSlide={openSlide} style={{ marginTop: `-${height}` }} withIndicators
+      >
         {
           images.map((image, index) =>
             <Carousel.Slide key={index}>
               <img src={image.src} style={{
                 objectFit: 'contain', width: '100%', height: '100%',
                 background: 'rgba(255, 255, 255, .2)',
-                backdropFilter: 'blur(4px)',
+                backdropFilter: 'blur(7px)',
               }}
                 onClick={() => setOpenImageIndex(-1)}
               />
@@ -130,7 +132,6 @@ function ZoomableImageList({
           )
         }
       </Carousel>
-
     );
   }
 
@@ -178,11 +179,12 @@ function ZoomableImageList({
 
       <Box sx={{ position: 'relative' }}>
         {/* 应该将 carousel 盖在 paper 上面 */}
-        <Paper elevation={3} sx={{ maxHeight: height, overflow: 'scroll', backgroundColor: "rgba(255, 255, 255, 0.7)", }} >
+        <Paper elevation={3} sx={{
+          maxHeight: height, height: height, overflow: 'scroll', backgroundColor: "rgba(255, 255, 255, 0.7)", 
+        }} >
           {imagelist}
         </Paper>
         {enableFullscreen && openImageIndex >= 0 ? carousel : <></>}
-
       </Box></>
   );
 }
