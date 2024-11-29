@@ -2,13 +2,12 @@
 
 // 包含一个header, header中包含数据集名称, 刷新按钮, 新建按钮, 保存按钮, 设置按钮, 帮助按钮
 
-import { Box, Chip, Grid2 as Grid, IconButton, ImageList, ImageListItem, MenuItem, Paper, Select, Slider } from "@mui/material";
+import { Box, Chip, Grid2 as Grid, ImageList, ImageListItem, MenuItem, Paper, Select, Slider } from "@mui/material";
 import { useState } from "react";
 import { ImageState } from "../../app/imageSetSlice";
 
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
-import { CloseFullscreen } from "@mui/icons-material";
 import { RootState } from "../../app/store";
 import { createSelector } from "@reduxjs/toolkit";
 import { useSelector } from "react-redux";
@@ -60,7 +59,7 @@ function ZoomableImageList({
   );
 
 
-  function ImageCard(props: { image: ImageState, index: number,  }) {
+  function ImageCard(props: { image: ImageState, index: number, }) {
     const [hovered, setHovered] = useState(false);
     function click_handler() {
       setOpenImageIndex(props.index);
@@ -109,37 +108,29 @@ function ZoomableImageList({
   const imagelist = (
     <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0 }} >
       {
-        images.map((image, index) => <ImageCard key={index} image={image} index={index}  />)
+        images.map((image, index) => <ImageCard key={index} image={image} index={index} />)
       }
     </ImageList>
   );
 
   function ImageCarousel({ images, openSlide }: { images: ImageState[], openSlide: number }) {
     return (
-      <div style={{ position: 'absolute', top: 0, left: 0 }}>
-      <Carousel loop height={height} initialSlide={openSlide}>
+      <Carousel loop height={height} initialSlide={openSlide} style={{ marginTop: `-${height}` }}>
         {
-          images.map((image, index) => 
-          <Carousel.Slide key={index}>
-          <div style={{
-            height: '100%', backgroundImage: `url('${image.src}')`,
-            backgroundSize: 'cover', position: 'relative',
-          }}>
-    
-            <img src={image.src} style={{
-              objectFit: 'contain', width: '100%', height: '100%',
-              background: 'rgba(255, 255, 255, .47)',
-              backdropFilter: 'blur(48px)',
-            }}
-            />
-          </div></Carousel.Slide>
+          images.map((image, index) =>
+            <Carousel.Slide key={index}>
+              <img src={image.src} style={{
+                objectFit: 'contain', width: '100%', height: '100%',
+                background: 'rgba(255, 255, 255, .2)',
+                backdropFilter: 'blur(4px)',
+              }}
+                onClick={() => setOpenImageIndex(-1)}
+              />
+            </Carousel.Slide>
           )
         }
       </Carousel>
-      <div style={{ position: 'absolute', top: 0, right: 0, }} >
-        <IconButton color="error" size="small" onClick={() => setOpenImageIndex(-1)}> <CloseFullscreen /> </IconButton>
-      </div>
-    </div>
+
     );
   }
 

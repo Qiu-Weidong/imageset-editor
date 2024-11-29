@@ -32,7 +32,7 @@ function Detail(props: {
   }, [filter_name]);
 
   const [createDialog, setCreateDialog] = useState(false);
-  const height = '83vh';
+  const height = '80vh';
 
   return (<>
     {/* 正式内容 */}
