@@ -16,7 +16,7 @@ app = FastAPI()
 
 from api.image import api_image
 from api.imageset import api_imageset
-
+from api.tag import api_tag
 
 # 定义允许的来源, 发布的时候可以注释掉,
 origins = [
@@ -38,7 +38,7 @@ app.add_middleware(
 
 app.include_router(api_image, prefix="/image", tags=['图片接口'])
 app.include_router(api_imageset, prefix="/imageset", tags=["数据集接口"])  
-
+app.include_router(api_tag, prefix="/tag", tags=["标签"])
 
 
 

@@ -15,7 +15,7 @@ function SelectionEditor() {
 
   return (
     <SelectableImageList height={height} 
-      enableFullscreen selectable filter_name={ filter_name }  
+      enableFullscreen selectable filter_name={ filter_name } badge 
     ></SelectableImageList>
   );
   

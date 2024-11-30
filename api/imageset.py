@@ -117,15 +117,7 @@ async def get_imageset_metadata(name: str):
     # 如果存在正则集, 那么获取正则集的相关元信息
     result['regular'] = get_metadata(reg_dir)
   return result
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
 @api_imageset.post("/create")  
 async def create_imageset(name: str):
   origin_name = name

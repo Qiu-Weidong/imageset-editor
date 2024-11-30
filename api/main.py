@@ -1,56 +1,55 @@
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
-import uvicorn
-from fastapi.middleware.cors import CORSMiddleware
+
+
+'''
+options:
+  -h, --help            show this help message and exit
+  --dir DIR             Predictions for all images in the directory
+  --file FILE           Predictions for one file
+  --threshold THRESHOLD
+                        Prediction threshold (default is 0.35)
+  --ext EXT             Extension to add to caption file in case of dir option (default is .txt)
+  --overwrite           Overwrite caption file if it exists
+  --cpu                 Use CPU only
+  --rawtag              Use the raw output of the model
+  --recursive           Enable recursive file search
+  --exclude-tag t1,t2,t3
+                        Specify tags to exclude (Need comma-separated list)
+  --model {wd14-vit.v1,wd14-vit.v2,wd14-convnext.v1,wd14-convnext.v2,wd14-convnextv2.v1,wd14-swinv2-v1,wd-v1-4-moat-tagger.v2,wd-v1-4-vit-tagger.v3,wd-v1-4-convnext-tagger.v3,wd-v1-4-swinv2-tagger.v3,wd-vit-large-tagger-v3,wd-eva02-large-tagger-v3,z3d-e621-convnext-toynya,z3d-e621-convnext-silveroxides,mld-caformer.dec-5-97527,mld-tresnetd.6-30000}
+                        modelname to use for prediction (default is wd14-convnextv2.v1)
+'''
+
+
+from tagger.interrogator import Interrogator
+from PIL import Image
+from pathlib import Path
+
+from tagger.interrogators import interrogators
 
 
 
 
-from api.image import api_image
-from api.imageset import api_imageset
 
-
-app = FastAPI()
-
-# 用于直接在前端渲染图片, 而无需转换为base64格式
-app.include_router(api_image, prefix="/image", tags=['图片接口'])
-app.include_router(api_imageset, prefix="/imageset", tags=["数据集接口"])  
-
-
-# app.mount("/web", StaticFiles(directory="../build"), name="web")
-# @app.get("/")
-# def index():
-#   return FileResponse("../build/index.html")
-
-FRONTEND_DIST = '../build'
-@app.get('/web/{path:path}')
-async def web_handler(path: str):
-  import os
-  fp = f"{FRONTEND_DIST}/{path}"
-  if (not os.path.exists(fp)) or (not os.path.isfile(fp)):
-    fp = f"{FRONTEND_DIST}/index.html" 
-  return FileResponse(fp)
-
-  
-  
-if __name__ == "__main__":
-  from config import config
-  
-  # 定义允许的来源
-  origins = [
-    "http://localhost:3000",  # 允许的来源（例如前端的地址）
-  ]
-
-  # 添加 CORS 中间件
-  app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,   # 允许的来源列表
-    allow_credentials=True,  # 是否允许发送凭证（如 Cookies）
-    allow_methods=["*"],     # 允许的请求方法（例如 GET, POST, OPTIONS）
-    allow_headers=["*"],     # 允许的请求头
+def image_interrogate(image_path: Path, model_name: str, threshold: float) -> dict[str, float]:
+  interrogator = interrogators[model_name]
+  im = Image.open(image_path)
+  _, result = interrogator.interrogate(im)
+  return Interrogator.postprocess_tags(
+    result,
+    threshold=threshold,
+    additional_tags=[], # 要添加的标签
+    exclude_tags=[], # 要排除的标签, 给出一个标签的列表即可
   )
-  
-  uvicorn.run("main:app", host=config.host, port=config.port, reload=True)
+
+
+if __name__ == "__main__":
+  tags = image_interrogate(
+    Path("C:\\Users\\Qiu-Weidong\\Documents\\imageset-editor\\tmp\\imageset-accordion\\src\\1_realistica\\realistica_000000.jpg"),
+    'wd14-convnextv2.v1', 
+    0.35
+  )
+  print('-----------------------------------------------')
+  tags_str = ', '.join(tags.keys())
+  print(tags_str)
 
 
 

@@ -54,7 +54,7 @@ function CreateDialog(props: createDialogProps) {
                 }}
               /></Grid>
             <Grid size={12}>
-              <TextField variant="standard" fullWidth label="load images from directory" size="small" value={loadDirectory} onChange={(event) => setLoadDirectory(event.target.value)} />
+              <TextField variant="standard" fullWidth label="load images from directory(leave it empty if you want add images later)" size="small" value={loadDirectory} onChange={(event) => setLoadDirectory(event.target.value)} />
             </Grid>
           </Grid>
 

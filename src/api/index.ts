@@ -77,6 +77,18 @@ async function delete_concept(imageset_name: string, is_regular: boolean, concep
   await axios.delete("/imageset/delete_concept", { params: { imageset_name, is_regular, concept_folder } });
 }
 
+async function interrogate(
+  images: ImageState[], 
+  model_name: string, 
+  threshold: number, 
+  additional_tags: string[] = [], 
+  exclude_tags: string[] = []) {
+  return (await axios.post("/tag/interrogate", {
+    images: images.map(image => image.path), 
+    model_name, 
+    threshold,  additional_tags, exclude_tags, 
+  })).data
+}
 
 const api = {
   delete_imageset,
@@ -88,6 +100,7 @@ const api = {
   load,
   open_in_file_explore,
   delete_concept,
+  interrogate,
 };
 
 

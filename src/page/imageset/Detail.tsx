@@ -5,12 +5,25 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Divider, Grid2 as Grid, Stack } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { removeFilter } from "../../app/imageSetSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { ImageState, removeFilter } from "../../app/imageSetSlice";
 import api from "../../api";
 import CreateDialog from "../dialog/CreateDialog";
-
+import { createSelector } from "@reduxjs/toolkit";
+import { RootState } from "../../app/store";
 import ZoomableImageList from "./ZoomableImageList";
+
+const selectAllImages = createSelector(
+  (state: RootState) => state.imageSet.filters,
+  (filters) => {
+    const image_list_map = new Map<string, ImageState[]>();
+    for (const filter of filters) {
+      // 第一步，根据所有的 concept 构造出 SelectableImageState.
+      image_list_map.set(filter.name, filter.images);
+    }
+    return image_list_map;
+  }
+);
 
 
 
@@ -25,21 +38,30 @@ function Detail(props: {
   // concept 的名称和重复次数共同定位到某个目录
   const { imageset_name, is_regular, filter_name, }: { imageset_name: string, is_regular: boolean, filter_name: string } = location.state;
   const [filterName, setFilterName] = useState(filter_name);
+  
+  const all_images = useSelector(selectAllImages);
+
+  const [images, setImages] = useState(all_images.get(filter_name) || []);
 
   useEffect(() => {
     setFilterName(filter_name);
+    setImages(all_images.get(filter_name) || []);
   }, [filter_name]);
 
+  // 对话框
   const [createDialog, setCreateDialog] = useState(false);
   const height = '80vh';
 
   return (<>
     {/* 正式内容 */}
     <Grid container spacing={2} >
-      
+
       <Grid size={10}>
 
-        <ZoomableImageList height={height} enableFullscreen filter_name={ filterName }  onFilterNameChange={(name) => setFilterName(name) } />
+        <ZoomableImageList images={images} height={height} enableFullscreen badge filter_name={filterName} onFilterNameChange={(name) => {
+          setFilterName(name); 
+          setImages(all_images.get(name) || []);
+        } } />
       </Grid>
 
 
@@ -50,15 +72,20 @@ function Detail(props: {
           <Grid container spacing={1}>
             <Button variant="contained" color="secondary"
               onClick={() => { navigate("/imageset/selection-editor", { state: { imageset_name, is_regular, filter_name: filterName } }) }}
-            >edit selection</Button>
+            >create selection</Button>
             <Button variant="contained" color="secondary" onClick={() => setCreateDialog(true)}>add concept</Button>
             {
               filterName === '<all>' ? <></> : filterName.startsWith('<') ?
                 <Button variant="contained" color="secondary"
                   onClick={() => {
-                    // 直接删除对应的 selection 即可
-                    dispatch(removeFilter(filterName));
-                    navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: '<all>', } });
+                    const respone = window.confirm(`do you want delete selection ${filterName}`);
+                    if (respone) {
+                      // 直接删除对应的 selection 即可
+                      dispatch(removeFilter(filterName));
+                      setFilterName('<all>');
+                      setImages(all_images.get('<all>') || []);
+                    }
+
                   }}
                 >remove selection</Button> :
                 <Button variant="contained" color="secondary"
@@ -78,7 +105,9 @@ function Detail(props: {
             }
           </Grid>
           <Grid spacing={1} container>
-            <Button variant="contained">tagger</Button>
+            <Button variant="contained" onClick={() => {
+              api.interrogate(images, 'wd14-convnextv2.v1', 0.35 ).then((result) => console.log(result));
+            }}>tagger</Button>
             <Button variant="contained">edit tag</Button>
             <Button variant="contained">detect similar images</Button>
           </Grid>

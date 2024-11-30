@@ -18,15 +18,7 @@ const selectFilterNameList = createSelector(
   (filters) => filters.map(item => item.name)
 );
 
-// 创建 memoized 选择器
-const selectImagesByFilterName = (filterName: string) =>
-  createSelector(
-    (state: RootState) => state.imageSet.filters,
-    (filters) => {
-      const filter = filters.find(item => item.name === filterName);
-      return filter ? filter.images : [];
-    }
-  );
+
 
 
 
@@ -36,23 +28,20 @@ function ZoomableImageList({
   enableFullscreen = false,
   badge = false,
   filter_name,
+  images,
   onFilterNameChange = (_: string) => { },
 }: {
   height: string | number,
-
   enableFullscreen?: boolean,
   badge?: boolean,
   filter_name: string,
-
+  images: ImageState[],
   onFilterNameChange?: (newName: string) => void
 }) {
 
   // 获取到了所有的 concept 和 selection
   const filterNameList = useSelector(selectFilterNameList);
   const [column, setColumn] = useState(8);
-
-  const images = useSelector(selectImagesByFilterName(filter_name));
-
 
   const [openImageIndex, setOpenImageIndex] = useState(
     images.length <= 1 ? 0 : -1
@@ -74,7 +63,7 @@ function ZoomableImageList({
             onMouseLeave={() => setHovered(false)}
             loading="lazy"
             onClick={click_handler}
-            onDoubleClick={() => console.log('double clicked.') }
+            onDoubleClick={() => console.log('double clicked.')}
           />
 
           {/* 蒙版就只是蒙版 */}
@@ -87,17 +76,19 @@ function ZoomableImageList({
               height: '100%',
               background: 'linear-gradient(to bottom,  rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.25) 30%, rgba(0,0,0,0) 75%)',
               pointerEvents: 'none',
-            }} /> : <></>
+            }} >
+              {
+                badge ?
+                  <Grid spacing={1} container sx={{ margin: 1, position: 'absolute', bottom: 0, left: 0, }}>
+                    <Chip label={props.image.filename} size="small" variant="filled" color="success" />
+                    <Chip label={props.image.concept} size="small" variant="filled" color="primary" />
+                    <Chip label={props.image.repeat} size="small" variant="filled" color="secondary" />
+                  </Grid> : <></>
+              }
+            </div> : <></>
           }
 
-          {
-            badge ?
-              <Grid spacing={1} container sx={{ margin: 1, position: 'absolute', bottom: 0, left: 0, }}>
-                <Chip label={props.image.filename} size="small" variant="filled" color="success" />
-                <Chip label={props.image.concept} size="small" variant="filled" color="primary" />
-                <Chip label={props.image.repeat} size="small" variant="filled" color="secondary" />
-              </Grid> : <></>
-          }
+
 
 
 
@@ -116,7 +107,7 @@ function ZoomableImageList({
 
   function ImageCarousel({ images, openSlide }: { images: ImageState[], openSlide: number }) {
     return (
-      <Carousel loop height={height} initialSlide={openSlide}  withIndicators style={{ marginTop: `-${height}` }}
+      <Carousel loop height={height} initialSlide={openSlide} withIndicators style={{ marginTop: `-${height}` }}
       >
         {
           images.map((image, index) =>
@@ -180,10 +171,7 @@ function ZoomableImageList({
       <Box >
         {/* 应该将 carousel 盖在 paper 上面 */}
         <Paper elevation={3} sx={{
-          maxHeight: height, height: height, overflow: 'scroll', backgroundColor: "rgba(255, 255, 255, 0.7)", 
-          
-          // 可以通过将imagelist设置为absolute来定位
-          // position: 'absolute', top: 0, left: 0,
+          maxHeight: height, height: height, overflow: 'scroll', backgroundColor: "rgba(255, 255, 255, 0.7)",
         }} >
           {imagelist}
         </Paper>
