@@ -18,7 +18,6 @@ import CheckIcon from '@mui/icons-material/Check';
 import { setImageSetName as setImageSetNameRedux } from "../../app/imageSetSlice";
 import NewDialog from "../dialog/NewDialog";
 import OpenDialog from "../dialog/OpenDialog";
-import DeleteDialog from "../dialog/DeleteDialog";
 import api from "../../api";
 
 
@@ -26,7 +25,7 @@ interface HeaderProps {
   onRenameImageset: (origin_name: string, new_name: string) => void,
   onLoad: () => Promise<void>,
   onStop?: () => Promise<void>,
-  concept?: { name: string, repeat: number, type: 'regular' | 'train', }, // 应该将整个 concept 全部传给 delete dialog
+  onDelete?: () => Promise<void>,
 };
 
 
@@ -37,7 +36,6 @@ export default function Header(props: HeaderProps) {
 
   const [newDialog, setNewDialog] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [deleteDialog, setDeleteDialog] = useState(false);
 
   // header 需要selector到imageset.name和concept, 并且需要具备修改concept名称的能力
   const navigate = useNavigate();
@@ -95,7 +93,7 @@ export default function Header(props: HeaderProps) {
         setImagesetName(event.target.value.trim());
       }}
       onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (event.key.toLowerCase() == 'enter') {
+        if (event.key.toLowerCase() === 'enter') {
           renameImageset(imagesetName)
         }
       }}
@@ -134,10 +132,7 @@ export default function Header(props: HeaderProps) {
       {imageset_name_ui}
 
 
-      <div style={{ flexGrow: 1, }}>
-        {/* 在这里放置 concept 信息 */}
-
-      </div>
+      <div style={{ flexGrow: 1, }} />
 
 
       {
@@ -165,7 +160,9 @@ export default function Header(props: HeaderProps) {
       }}>
         <HomeIcon />
       </IconButton>
-      <IconButton onClick={() => setDeleteDialog(true) }> <DeleteIcon /> </IconButton>
+      <IconButton onClick={() => {
+        props.onDelete?.().catch((error: any) => console.error(error));
+      } }> <DeleteIcon /> </IconButton>
 
     </Toolbar>
 
@@ -173,7 +170,7 @@ export default function Header(props: HeaderProps) {
 
     <NewDialog open={newDialog} onClose={() => setNewDialog(false)} />
     <OpenDialog open={openDialog} onClose={() => setOpenDialog(false)} />
-    <DeleteDialog open={deleteDialog} onClose={() => setDeleteDialog(false)} concept={props.concept} imagesetName={imagesetName} />
+    {/* <DeleteDialog open={deleteDialog} onClose={() => setDeleteDialog(false)} concept={props.concept} imagesetName={imagesetName} /> */}
   </AppBar>);
 }
 

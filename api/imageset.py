@@ -147,6 +147,20 @@ async def delete_imageset(name: str):
   import shutil
   shutil.rmtree(imageset_dir)
 
+@api_imageset.delete("/delete/src")
+async def delete_train(name: str):
+  imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'src')
+  import shutil
+  shutil.rmtree(imageset_dir)
+
+@api_imageset.delete("/delete/reg")
+async def delete_regular(name: str):
+  imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'reg')
+  import shutil
+  shutil.rmtree(imageset_dir)
+  
+
+
 
 
 def convert_and_copy_images(concept_name: str, source_dir, target_dir):

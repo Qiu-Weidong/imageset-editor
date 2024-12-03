@@ -6,15 +6,23 @@ import { ImageSetState, ImageState } from "../app/imageSetSlice";
 
 
 const port = window.api_port || 1420;
-const host = window.api_host || 'localhost'
+const host = window.api_host || 'localhost';
 
 
 // 设置后端路径
-axios.defaults.baseURL = `http://${host}:${port}`
+axios.defaults.baseURL = `http://${host}:${port}`;
 
 
 async function delete_imageset(imageset_name: string) {
   await axios.delete('/imageset/delete', { params: { name: imageset_name } })
+}
+
+async function delete_train(imageset_name: string) {
+  await axios.delete('/imageset/delete/src', { params: { name: imageset_name } })
+}
+
+async function delete_regular(imageset_name: string) {
+  await axios.delete('/imageset/delete/reg', { params: { name: imageset_name } })
 }
 
 async function create_imageset(imageset_name: string) {
@@ -101,6 +109,8 @@ const api = {
   open_in_file_explore,
   delete_concept,
   interrogate,
+  delete_train, 
+  delete_regular,
 };
 
 

@@ -27,16 +27,25 @@ function ImageSet() {
   async function load() {
     // 加载数据
     setLoading(true);
-    api.load(imageset_name, is_regular).then((result) => {
-      // 设置 redux
-      // 这里的result是带有 all 的.
-      dispatch(reloadImageSet(result));
-    }).catch((error: any) => {
-      console.error(error);
-    }).finally(() => {
-      setLoading(false);
-    });
+    let result = await api.load(imageset_name, is_regular);
+    dispatch(reloadImageSet(result));
+    setLoading(false);
+  }
 
+  async function _delete() {
+    if(is_regular) {
+      let result = window.confirm(`Do you want to delete regular set for ${imageset_name}`);
+      if(result) {
+        await api.delete_regular(imageset_name);
+      }
+    } else {
+      let result = window.confirm(`Do you want to delete train set for ${imageset_name}`);
+      if(result) {
+        await api.delete_train(imageset_name);
+      }
+    }
+
+    navigate("/overview", { state: { imageset_name } });
   }
 
   useEffect(() => {
@@ -49,6 +58,7 @@ function ImageSet() {
       navigate('/imageset', { replace: true, state: { ...location.state, imageset_name: new_name, } })
     }}
       onLoad={load}
+      onDelete={_delete}
     />
 
     <Backdrop
@@ -60,10 +70,14 @@ function ImageSet() {
 
     <Toolbar />
     
+
+
+
     <Routes>
       <Route path="/detail" element={ <Detail onReload={load} /> } /> {/**默认是跳转到详情页面 */}
       <Route path="/selection-editor" element={ <SelectionEditor /> } />
 
+      {/* 注意 redirect 需要写完整路径 */}
       <Route path="/" element={<Navigate to="/imageset/detail" replace state={location.state} />} />
       <Route path="*" element={ <NotFound /> }></Route>
     </Routes>

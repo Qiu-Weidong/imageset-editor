@@ -46,7 +46,7 @@ function Detail(props: {
   useEffect(() => {
     setFilterName(filter_name);
     setImages(all_images.get(filter_name) || []);
-  }, [filter_name]);
+  }, [filter_name, all_images]);
 
   // 对话框
   const [createDialog, setCreateDialog] = useState(false);

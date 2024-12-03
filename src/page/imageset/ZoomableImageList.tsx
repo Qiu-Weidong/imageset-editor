@@ -58,7 +58,7 @@ function ZoomableImageList({
       <>
         <ImageListItem key={props.image.path}
         >
-          <img src={props.image.thumbnail} // 显示缩略图算了
+          <img alt="fail to load" src={props.image.thumbnail} // 显示缩略图算了
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             loading="lazy"
@@ -112,7 +112,7 @@ function ZoomableImageList({
         {
           images.map((image, index) =>
             <Carousel.Slide key={index}>
-              <img src={image.src} style={{
+              <img src={image.src} alt="fail to load" style={{
                 objectFit: 'contain', width: '100%', height: '100%',
                 background: 'rgba(255, 255, 255, .2)',
                 backdropFilter: 'blur(7px)',

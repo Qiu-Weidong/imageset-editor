@@ -98,6 +98,16 @@ function Overview() {
     }
   }
 
+  async function _delete() {
+    const result = window.confirm(`Do you want to delete the whole imageset ${imageset_name}`);
+    if(result) {
+      await api.delete_imageset(imageset_name);
+    }
+
+    // 记得跳转到首页
+    navigate("/");
+  }
+
 
 
   useEffect(() => {
@@ -198,6 +208,7 @@ function Overview() {
         navigate('/overview', { replace: true, state: { imageset_name: new_name } });
       }}
         onLoad={load}
+        onDelete={_delete}
       ></Header>
 
       {/* tool bar 占位 */}
