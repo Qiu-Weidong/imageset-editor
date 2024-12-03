@@ -94,17 +94,30 @@ async function delete_concept(imageset_name: string, is_regular: boolean, concep
   await axios.delete("/imageset/delete_concept", { params: { imageset_name, is_regular, concept_folder } });
 }
 
-async function interrogate(
+async function image_list_interrogate(
   images: ImageState[],
   model_name: string,
   threshold: number,
   additional_tags: string[] = [],
   exclude_tags: string[] = []) {
-  return (await axios.post("/tag/interrogate", {
+  return (await axios.post("/tag/image_list_interrogate", {
     images: images.map(image => image.path),
     model_name,
     threshold, additional_tags, exclude_tags,
   })).data
+}
+
+async function interrogate(
+  image: ImageState, 
+  model_name: string = 'wd14-convnextv2.v1', 
+  threshold: number = 0.35, 
+  additional_tags: string[] = [],
+  exclude_tags: string[] = []
+) {
+  return (await axios.post("/tag/interrogate", {
+    image: image.path,
+    model_name, threshold, additional_tags, exclude_tags,
+  })).data;
 }
 
 async function upload_images(files: FileWithPath[], imageset_name: string, is_regular: boolean, concept_folder: string) {
@@ -136,11 +149,12 @@ const api = {
   load,
   open_in_file_explore,
   delete_concept,
-  interrogate,
+  image_list_interrogate,
   delete_train,
   delete_regular,
   delete_images,
   upload_images,
+  interrogate,
 };
 
 

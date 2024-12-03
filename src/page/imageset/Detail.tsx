@@ -14,7 +14,8 @@ import { RootState } from "../../app/store";
 import { selectFilterNameList } from "./SelectableImageList";
 import '@mantine/carousel/styles.css';
 import ZoomableImageList from "./ZoomableImageList";
-import AddImageDialog from "../dialog/AddImages";
+import AddImageDialog from "../dialog/AddImagesDialog";
+import TaggerDialog from "../dialog/TaggerDialog";
 
 
 const selectAllImages = createSelector(
@@ -55,6 +56,7 @@ function Detail(props: {
   // 对话框
   const [createDialog, setCreateDialog] = useState(false);
   const [addImageDialog, setAddImageDialog] = useState(false);
+  const [taggerDialog, setTaggerDialog] = useState(false);
   const [column, setColumn] = useState(8);
   const height = '80vh';
 
@@ -172,9 +174,7 @@ function Detail(props: {
 
           {/* 打标 */}
           <Grid spacing={1} container>
-            <Button variant="contained" onClick={() => {
-              api.interrogate(images, 'wd14-convnextv2.v1', 0.35).then((result) => console.log(result));
-            }}>tagger</Button>
+            <Button variant="contained" onClick={() => setTaggerDialog(true) }>tagger</Button>
             <Button variant="contained">edit tag</Button>
             <Button variant="contained">detect similar images</Button>
           </Grid>
@@ -207,8 +207,13 @@ function Detail(props: {
     <CreateDialog open={createDialog} imageset_name={imageset_name} type={is_regular ? 'regular' : 'train'}
       onClose={() => { setCreateDialog(false); }} onSubmit={props.onReload} />
     <AddImageDialog open={addImageDialog} imageset_name={imageset_name} is_regular={is_regular} concept_folder={filterName}
-      onClose={() => { setAddImageDialog(false); }} onSubmit={props.onReload}
-    />
+      onClose={() => { setAddImageDialog(false); }} onSubmit={props.onReload}/>
+
+    <TaggerDialog open={taggerDialog} filter_name={filterName} images={images}
+      onClose={() => { setTaggerDialog(false); }} onSubmit={() => {
+        props.onReload();
+        navigate("/imageset/detail", { replace: true, state: {...location.state, filter_name: filterName} });
+      }}/>
   </>);
 }
 

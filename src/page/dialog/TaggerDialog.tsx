@@ -1,0 +1,133 @@
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, InputLabel, LinearProgress, MenuItem, Select, Slider, Stack, TextField } from "@mui/material";
+import { useRef, useState } from "react";
+import { ImageState } from "../../app/imageSetSlice";
+import api from "../../api";
+
+
+
+interface taggerDialogProps {
+  open: boolean;
+  filter_name: string,
+  images: ImageState[],
+  onClose: () => void,
+  onSubmit?: () => void,
+};
+
+
+// 配置thredhold, additional_tags,
+function TaggerDialog(props: taggerDialogProps) {
+  const default_model_name = 'wd14-convnextv2.v1';
+  const all_model_name = [
+    'wd14-vit.v1', 'wd14-vit.v2', 'wd14-convnext.v1', 'wd14-convnext.v2', 'wd14-convnextv2.v1', 'wd14-swinv2-v1,wd-v1-4-moat-tagger.v2',
+    'wd-v1-4-vit-tagger.v3', 'wd-v1-4-convnext-tagger.v3', 'wd-v1-4-swinv2-tagger.v3', 'wd-vit-large-tagger-v3',
+    'wd-eva02-large-tagger-v3', 'z3d-e621-convnext-toynya', 'z3d-e621-convnext-silveroxides', 'mld-caformer.dec-5-97527', 'mld-tresnetd.6-30000',
+  ];
+
+
+  const [modelName, setModelName] = useState(default_model_name);
+  const [threshold, setThreshold] = useState(0.35);
+  const [additionalTags, setAdditionalTags] = useState('');
+  const [excludeTags, setExcludeTags] = useState('');
+
+
+  const [loading, setLoading] = useState(false);
+  // const [stop, setStop] = useState(false);
+  // const ctl = useRef<{ stop: boolean }>({ stop: false });
+  const stop = useRef(false);
+  const [progress, setProgress] = useState(0);
+
+
+  async function tagger() {
+    setLoading(true);
+    stop.current = false;
+    const additional_tags = additionalTags.split(',').map(tag => tag.trim());
+    const exclude_tags = excludeTags.split(',').map(tag => tag.trim());
+
+    for (const [index, image] of props.images.entries()) {
+      if (stop.current) { break; }
+      const tags = await api.interrogate(image, modelName, threshold, additional_tags, exclude_tags);
+      setProgress(index * 100 / props.images.length);
+      console.log(tags);
+    }
+
+    setLoading(false);
+
+  }
+
+  return (<>
+    <Dialog
+      open={props.open}
+      onClose={props.onClose}
+    >
+      <DialogTitle>tagger for <b>{props.filter_name}</b></DialogTitle>
+      <DialogContent>
+        {/* 模型选择器 */}
+        <Stack spacing={2}>
+          <FormControl variant="standard" sx={{ m: 1, minWidth: 360 }} >
+            <InputLabel id="demo-simple-select-standard-label">model name</InputLabel>
+            <Select
+              labelId="demo-simple-select-standard-label"
+              id="demo-simple-select-standard"
+              value={modelName}
+              defaultValue={default_model_name}
+              onChange={(event) => setModelName(event.target.value)}
+              label="model name"
+            >
+              {
+                all_model_name.map(name => <MenuItem value={name}>{name}</MenuItem>)
+              }
+            </Select>
+          </FormControl>
+          <FormControl variant="standard" sx={{ m: 1, minWidth: 360 }} >
+            <InputLabel >threshold</InputLabel>
+            <Slider
+              size="small"
+              defaultValue={threshold}
+              value={threshold}
+              onChange={(_, value) => setThreshold(value as number)}
+              aria-label="Small"
+              valueLabelDisplay="auto"
+              step={0.01}
+              max={1}
+              min={0}
+            />
+          </FormControl>
+
+          {/* 直接使用 text input 即可 */}
+          <TextField id="additional tags" label="additional tags(split by ',')" size="small" variant="standard"
+            value={additionalTags} onChange={(event) => setAdditionalTags(event.target.value)}
+          />
+          <TextField id="exclude tags" label="exclude tags(split by ',')" size="small" variant="standard"
+            value={excludeTags} onChange={(event) => setExcludeTags(event.target.value)}
+          />
+          {
+            loading ? <LinearProgress variant="determinate" value={progress} /> : <></>
+          }
+
+        </Stack>
+
+      </DialogContent>
+      <DialogActions>
+        {
+          loading ? 
+          <Button onClick={() => stop.current = true }>stop</Button> : 
+          <Button onClick={() => {
+            // 开始打标
+            tagger().finally(() => {
+              props.onClose();
+              props.onSubmit?.();
+            });
+          }}>tagger</Button>
+        }
+
+      </DialogActions>
+    </Dialog>
+  </>);
+}
+
+export default TaggerDialog;
+
+
+
+
+
