@@ -103,39 +103,48 @@ function Detail(props: {
       <Grid size={2} sx={{ height: '100%' }}>
         {/* 在这里定义相关按钮 */}
         <Stack spacing={1} divider={<Divider flexItem />}>
+        
+          {/* selection */}
           <Grid container spacing={1}>
-            <Button variant="contained" color="secondary"
+            <Button variant="contained" color="info"
               onClick={() => { navigate("/imageset/selection-editor", { state: { imageset_name, is_regular, filter_name: filterName } }) }}
             >create selection</Button>
+            {
+              filterName.startsWith("<") && filterName !== '<all>' ? <>
+                <Button variant="contained" color="info"
+                  onClick={() => {
+                    const respone = window.confirm(`do you want to delete selection ${filterName}`);
+                    if (respone) {
+                      // 直接删除对应的 selection 即可
+                      const name = filterName;
+                      dispatch(removeFilter(name));
+                      navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: '<all>' } });
+                    }
+                  }}
+                >remove selection</Button>
+                <Button variant="contained" color="info"
+                  onClick={() => {
+                    const response = window.confirm(`do you want to delete all images in ${filterName}`);
+                    if (response) {
+                      const name = filterName;
+                      dispatch(removeFilter(name));
+                      // 删除图片
+                      api.delete_images(images).then((result) => console.log(result)).finally(() => props.onReload());
+                      navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: '<all>' } });
+                    }
+                  }}
+                >delete images</Button>
+              </> : <></>
+            }
+          </Grid>
+
+          {/* concept */}
+          <Grid container spacing={1}>
+
             <Button variant="contained" color="secondary" onClick={() => setCreateDialog(true)}>add concept</Button>
 
             {
-              filterName === '<all>' ? <></> : filterName.startsWith('<') ?
-                (<>
-                  <Button variant="contained" color="secondary"
-                    onClick={() => {
-                      const respone = window.confirm(`do you want to delete selection ${filterName}`);
-                      if (respone) {
-                        // 直接删除对应的 selection 即可
-                        const name = filterName;
-                        dispatch(removeFilter(name));
-                        navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: '<all>' } });
-                      }
-                    }}
-                  >remove selection</Button>
-                  <Button variant="contained" color="secondary"
-                    onClick={() => {
-                      const response = window.confirm(`do you want to delete all images in ${filterName}`);
-                      if(response) {
-                        const name = filterName;
-                        dispatch(removeFilter(name));
-                        // 删除图片
-                        api.delete_images(images).then((result) => console.log(result)).finally(() => props.onReload());
-                        navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: '<all>' } });
-                      }
-                    }}
-                  >delete images</Button>
-                </>) :
+              filterName.startsWith("<") ? <></> :
                 <>
                   <Button variant="contained" color="secondary"
                     onClick={() => {
@@ -155,9 +164,13 @@ function Detail(props: {
                   <Button variant="contained" color="secondary" onClick={() => {
                     setAddImageDialog(true);
                   }}>add images</Button>
-                </>
+                </> 
             }
           </Grid>
+
+
+
+          {/* 打标 */}
           <Grid spacing={1} container>
             <Button variant="contained" onClick={() => {
               api.interrogate(images, 'wd14-convnextv2.v1', 0.35).then((result) => console.log(result));
@@ -166,12 +179,14 @@ function Detail(props: {
             <Button variant="contained">detect similar images</Button>
           </Grid>
 
+          {/* 文件操作 */}
           <Grid spacing={1} container>
             <Button variant="contained" color="warning">convert</Button>
             <Button variant="contained" color="warning">rename</Button>
             <Button variant="contained" color="warning">move</Button>
           </Grid>
 
+          {/* 图片操作 */}
           <Grid spacing={1} container>
             <Button variant="contained" color="error">cut</Button>
             <Button variant="contained" color="error">resize</Button>
@@ -191,7 +206,7 @@ function Detail(props: {
     {/* 对话框 */}
     <CreateDialog open={createDialog} imageset_name={imageset_name} type={is_regular ? 'regular' : 'train'}
       onClose={() => { setCreateDialog(false); }} onSubmit={props.onReload} />
-    <AddImageDialog open={addImageDialog} imageset_name={imageset_name} is_regular={is_regular} concept_folder={filterName} 
+    <AddImageDialog open={addImageDialog} imageset_name={imageset_name} is_regular={is_regular} concept_folder={filterName}
       onClose={() => { setAddImageDialog(false); }} onSubmit={props.onReload}
     />
   </>);

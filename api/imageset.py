@@ -336,19 +336,32 @@ async def rename_imageset(origin_name: str, new_name: str):
 async def delete_imageset(name: str):
   imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name)
   import shutil
-  shutil.rmtree(imageset_dir)
+  if os.path.exists(imageset_dir):
+    shutil.rmtree(imageset_dir)
+  # 同时删除整个缩略图的缓存
+  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail')
+  if os.path.exists(thumbnail_dir):
+    shutil.rmtree(thumbnail_dir)
 
 @api_imageset.delete("/delete/src")
 async def delete_train(name: str):
   imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'src')
   import shutil
-  shutil.rmtree(imageset_dir)
+  if os.path.exists(imageset_dir):
+    shutil.rmtree(imageset_dir)
+  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail')
+  if os.path.exists(thumbnail_dir):
+    shutil.rmtree(thumbnail_dir)
 
 @api_imageset.delete("/delete/reg")
 async def delete_regular(name: str):
   imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'reg')
   import shutil
-  shutil.rmtree(imageset_dir)
+  if os.path.exists(imageset_dir):
+    shutil.rmtree(imageset_dir)
+  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail')
+  if os.path.exists(thumbnail_dir):
+    shutil.rmtree(thumbnail_dir)
 
 class DeleteImageRequest(BaseModel):
   filenames: List[str]
@@ -364,6 +377,10 @@ async def delete_images(request: DeleteImageRequest):
     except:
       continue
     deleted_names.append(filename)
+  import shutil
+  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail')
+  if os.path.exists(thumbnail_dir):
+    shutil.rmtree(thumbnail_dir)
   return deleted_names
   
 @api_imageset.delete("/delete_concept")
@@ -373,7 +390,11 @@ async def delete_concept(imageset_name: str, is_regular: bool, concept_folder: s
   else:
     dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, 'src', concept_folder)
   import shutil
-  shutil.rmtree(dir)
+  if os.path.exists(dir):
+    shutil.rmtree(dir)
+  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail')
+  if os.path.exists(thumbnail_dir):
+    shutil.rmtree(thumbnail_dir)
   
 
 

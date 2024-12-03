@@ -4,6 +4,8 @@ import os
 from .config import CONF_REPO_DIR
 
 
+from pyexiv2 import Image
+
 api_tag = APIRouter()
 
 
@@ -25,8 +27,8 @@ class InterrogateRequest(BaseModel):
   exclude_tags: List[str] = []
   model_name: str                 # 模型名称
   threshold: float                # 可选的阈值
-@api_tag.post('/interrogate')
-async def image_interrogate(request_body: InterrogateRequest):
+@api_tag.post('/image_list_interrogate')
+async def image_list_interrogate(request_body: InterrogateRequest):
   from tqdm import tqdm
   interrogator = interrogators[request_body.model_name]
   ret = {}
@@ -46,6 +48,19 @@ async def image_interrogate(request_body: InterrogateRequest):
   return ret
 
 
+@api_tag.post("/interrogate")
+async def image_interrogate():
+  pass
+
+
+
+
 async def save_tags():
+  '''
+    i = Image(image_path)
+    i.read_comment()
+    i.modity_comment('')
+    i.close()
+  '''
   pass
 
