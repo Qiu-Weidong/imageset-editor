@@ -1,6 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException,  File, UploadFile, Form
+from pydantic import BaseModel
 from .config import CONF_REPO_DIR, CONF_HOST, CONF_PORT
 import os
+from typing import List
+from tqdm import tqdm
+from PIL import Image
 
 
 api_imageset = APIRouter()
@@ -12,6 +16,19 @@ api_imageset = APIRouter()
   图片的url则直接 http://{config.host}:{config.port}/image/{path}即可
   图片的缩略图url则直接 http://{config.host}:{config.port}/image/thumbnail/{path}即可
 '''
+
+def get_next_image_count(target_dir: str):
+    result = 0
+    # 列出目标目录中的所有文件
+    for file_name in os.listdir(target_dir):
+      name, _ = os.path.splitext(file_name)
+      try:
+        number = int(name) + 1
+        if number > result:
+          result = number
+      except:
+        continue
+    return result  # 返回下一个可用的序号
 
 def get_concept_folder_list(train_or_regular_dir: str):
   '''
@@ -46,7 +63,42 @@ def get_image_list(concept_dir: str):
     if os.path.isfile(os.path.join(CONF_REPO_DIR, concept_dir, imagefilename)) and os.path.splitext(imagefilename)[1].lower() in image_extensions]
   imagefilenames = [os.path.normpath(imagefilename).replace('\\', '/') for imagefilename in imagefilenames]
   return imagefilenames
+
+def convert_and_copy_images(source_dir, target_dir):  
   
+  valid_image_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp'}
+  
+  # 获取源目录下的所有图片文件
+  files = [os.path.join(source_dir, filename) for filename in os.listdir(source_dir)]
+  files = [filename for filename in files if os.path.isfile(filename) and os.path.splitext(filename)[1].lower() in valid_image_extensions]
+  
+  # image_count 应该初始化为已有图片的序号的最大值
+  index = get_next_image_count(target_dir)
+  image_count = 0
+  
+  from tqdm import tqdm
+  
+  for file_name in tqdm(files):
+    source_path = os.path.join(source_dir, file_name)
+    try:
+      with Image.open(source_path) as img:
+        img = img.convert("RGB")
+        # 生成新的文件名
+        new_file_name = f"{index:06d}.jpg"
+        target_path = os.path.join(target_dir, new_file_name)
+        # 保存为 JPG 格式
+        img.save(target_path, "JPEG")
+        # 增加计数器
+        index += 1
+        image_count += 1
+    except Exception:
+      continue
+  return image_count
+
+
+
+
+
 
 @api_imageset.get('/metadata')
 async def get_imageset_metadata(name: str):
@@ -117,121 +169,6 @@ async def get_imageset_metadata(name: str):
     # 如果存在正则集, 那么获取正则集的相关元信息
     result['regular'] = get_metadata(reg_dir)
   return result
-
-@api_imageset.post("/create")  
-async def create_imageset(name: str):
-  origin_name = name
-  name = 'imageset-' + name
-  imageset_path = os.path.join(CONF_REPO_DIR, name)
-  if not os.path.exists(imageset_path):
-    os.mkdir(imageset_path)
-    return origin_name
-  # 创建失败
-  raise HTTPException(status_code=400, detail=f"imageset {origin_name} is already exists.")
-
-@api_imageset.put("/rename")  
-async def rename_imageset(origin_name: str, new_name: str): 
-  new_name = 'imageset-' + new_name
-  origin_name = 'imageset-' + origin_name
-  new_path = os.path.join(CONF_REPO_DIR, new_name)
-  origin_path = os.path.join(CONF_REPO_DIR, origin_name)
-  try:
-    os.rename(origin_path, new_path)  
-  except Exception as e:
-    raise HTTPException(status_code=400, detail=str(e))
-  return new_name
-
-@api_imageset.delete("/delete")
-async def delete_imageset(name: str):
-  imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name)
-  import shutil
-  shutil.rmtree(imageset_dir)
-
-@api_imageset.delete("/delete/src")
-async def delete_train(name: str):
-  imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'src')
-  import shutil
-  shutil.rmtree(imageset_dir)
-
-@api_imageset.delete("/delete/reg")
-async def delete_regular(name: str):
-  imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'reg')
-  import shutil
-  shutil.rmtree(imageset_dir)
-  
-
-
-
-
-def convert_and_copy_images(concept_name: str, source_dir, target_dir):
-  # print('convert_and_copy_images', concept_name, source_dir, target_dir)
-  
-  def get_next_image_count(target_dir):
-    import re
-    max_count = -1
-    pattern = re.compile(f'{concept_name}_(\\d{6})\\.jpg')
-    
-    # 列出目标目录中的所有文件
-    for file_name in os.listdir(target_dir):
-      match = pattern.match(file_name)
-      if match:
-        count = int(match.group(1))
-        max_count = max(max_count, count)
-    return max_count + 1  # 返回下一个可用的序号
-  from PIL import Image
-  
-  valid_image_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp'}
-  
-  # 获取源目录下的所有图片文件
-  files = [os.path.join(source_dir, filename) for filename in os.listdir(source_dir)]
-  files = [filename for filename in files if os.path.isfile(filename) and os.path.splitext(filename)[1].lower() in valid_image_extensions]
-  # print(files)
-  
-  # image_count 应该初始化为已有图片的序号的最大值
-  image_count = get_next_image_count(target_dir)
-  from tqdm import tqdm
-  
-  for file_name in tqdm(files):
-    source_path = os.path.join(source_dir, file_name)
-    try:
-      with Image.open(source_path) as img:
-        img = img.convert("RGB")
-        # 生成新的文件名
-        new_file_name = f"{concept_name}_{image_count:06d}.jpg"
-        target_path = os.path.join(target_dir, new_file_name)
-        # 保存为 JPG 格式
-        img.save(target_path, "JPEG")
-        # 增加计数器
-        image_count += 1
-    except Exception as e:
-      pass
-  return image_count
-              
-@api_imageset.post("/add_concept")
-async def add_concept(
-  imageset_name: str, 
-  concept_name: str, 
-  repeat: int, 
-  type: str, 
-  load_directory: str):
-  # load_directory 需要是绝对路径
-  dir = os.path.join(CONF_REPO_DIR, 'imageset-' + imageset_name)
-  if type == 'train':
-    dir = os.path.join(dir, "src")
-  elif type == "regular":
-    dir = os.path.join(dir, "reg")
-  else:
-    raise HTTPException(status_code=400, detail=f"unknown type {type}")
-  
-  concept_dir = os.path.join(dir, f"{repeat}_{concept_name.strip()}")
-  # 如果不存在，则创建目录, 创建目录功能正常
-  if not os.path.exists(concept_dir):
-    os.makedirs(concept_dir)
-  # 将 load_directory 目录下的所有图片全部复制到concept目录下, 并全部转换为统一格式, 统一命名
-  image_count = convert_and_copy_images(concept_name, load_directory, concept_dir)
-  return image_count
-
-
 
 @api_imageset.get("/load")  
 async def load(imageset_name: str, is_regular: bool):
@@ -305,16 +242,6 @@ async def open_in_file_explore(imageset_name: str):
   elif info == 'Linux':
     subprocess.run(['xdg-open', dir])
 
-@api_imageset.delete("/delete_concept")
-async def delete_concept(imageset_name: str, is_regular: bool, concept_folder: str):
-  if is_regular:
-    dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, 'reg', concept_folder)
-  else:
-    dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, 'src', concept_folder)
-  import shutil
-  shutil.rmtree(dir)
-  
-
 @api_imageset.get("/")
 async def get_imageset_list():
   '''
@@ -325,6 +252,129 @@ async def get_imageset_list():
   imageset_names = [name[9:] for name in imageset_names if name.startswith('imageset-')]
   return imageset_names
 
+
+
+
+
+
+@api_imageset.post("/create")  
+async def create_imageset(name: str):
+  origin_name = name
+  name = 'imageset-' + name
+  imageset_path = os.path.join(CONF_REPO_DIR, name)
+  if not os.path.exists(imageset_path):
+    os.mkdir(imageset_path)
+    return origin_name
+  # 创建失败
+  raise HTTPException(status_code=400, detail=f"imageset {origin_name} is already exists.")
+
+@api_imageset.post("/add_concept")
+async def add_concept(
+  imageset_name: str, 
+  concept_name: str, 
+  repeat: int, 
+  type: str, 
+  load_directory: str):
+  # load_directory 需要是绝对路径
+  dir = os.path.join(CONF_REPO_DIR, 'imageset-' + imageset_name)
+  if type == 'train':
+    dir = os.path.join(dir, "src")
+  elif type == "regular":
+    dir = os.path.join(dir, "reg")
+  else:
+    raise HTTPException(status_code=400, detail=f"unknown type {type}")
+  
+  concept_dir = os.path.join(dir, f"{repeat}_{concept_name.strip()}")
+  # 如果不存在，则创建目录, 创建目录功能正常
+  if not os.path.exists(concept_dir):
+    os.makedirs(concept_dir, exist_ok=True)
+  if not os.path.exists(load_directory):
+    return 0
+  
+  # 将 load_directory 目录下的所有图片全部复制到concept目录下, 并全部转换为统一格式, 统一命名
+  image_count = convert_and_copy_images(load_directory, concept_dir)
+  return image_count
+
+@api_imageset.post("/uploadimages")
+async def upload_images(files: List[UploadFile] = File(...), 
+                        imageset_name: str = Form(...),
+                        type: str = Form(...),
+                        concept_folder: str = Form(...),
+                        ):
+  subdir = 'reg' if type == "regular" else "src"
+  dest_dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, subdir, concept_folder)
+  if not os.path.exists(dest_dir):
+    os.makedirs(dest_dir, exist_ok=True)
+  
+  index = get_next_image_count(dest_dir)
+  
+  for file in tqdm(files):
+    contents = await file.read()
+    import io
+    image = Image.open(io.BytesIO(contents))
+    file_path = os.path.join(dest_dir, f'{index:06d}.jpg')
+    index += 1
+    image.convert("RGB").save(file_path, "JPEG")
+  
+
+@api_imageset.put("/rename")  
+async def rename_imageset(origin_name: str, new_name: str): 
+  new_name = 'imageset-' + new_name
+  origin_name = 'imageset-' + origin_name
+  new_path = os.path.join(CONF_REPO_DIR, new_name)
+  origin_path = os.path.join(CONF_REPO_DIR, origin_name)
+  try:
+    os.rename(origin_path, new_path)  
+  except Exception as e:
+    raise HTTPException(status_code=400, detail=str(e))
+  return new_name
+
+
+
+
+@api_imageset.delete("/delete")
+async def delete_imageset(name: str):
+  imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name)
+  import shutil
+  shutil.rmtree(imageset_dir)
+
+@api_imageset.delete("/delete/src")
+async def delete_train(name: str):
+  imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'src')
+  import shutil
+  shutil.rmtree(imageset_dir)
+
+@api_imageset.delete("/delete/reg")
+async def delete_regular(name: str):
+  imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'reg')
+  import shutil
+  shutil.rmtree(imageset_dir)
+
+class DeleteImageRequest(BaseModel):
+  filenames: List[str]
+
+@api_imageset.delete("/delete/images")
+async def delete_images(request: DeleteImageRequest):
+  deleted_names = []
+  from tqdm import tqdm
+  for filename in tqdm(request.filenames):
+    abs_filename = os.path.join(CONF_REPO_DIR, filename)
+    try:
+      os.remove(abs_filename)
+    except:
+      continue
+    deleted_names.append(filename)
+  return deleted_names
+  
+@api_imageset.delete("/delete_concept")
+async def delete_concept(imageset_name: str, is_regular: bool, concept_folder: str):
+  if is_regular:
+    dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, 'reg', concept_folder)
+  else:
+    dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, 'src', concept_folder)
+  import shutil
+  shutil.rmtree(dir)
+  
 
 
 

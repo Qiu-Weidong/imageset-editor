@@ -12,6 +12,7 @@ interface createDialogProps {
   imageset_name: string,
   type: 'train' | 'regular',
   onClose: () => void,
+  onSubmit?: () => void,
 };
 
 
@@ -64,7 +65,10 @@ function CreateDialog(props: createDialogProps) {
           <Button onClick={() => { props.onClose() }}>Cancel</Button>
           <Button disabled={loading} onClick={() => {
             setLoading(true);
-            api.add_concept(props.imageset_name, conceptName, repeat, props.type, loadDirectory).then((cnt) => {
+            api.add_concept(props.imageset_name, conceptName, repeat, props.type, loadDirectory).then((_) => {
+              // 需要先 submit
+              props.onSubmit?.();
+              
               // 跳转到新建的concept
               navigate('/imageset', { state: { imageset_name: props.imageset_name, is_regular: props.type === 'regular', filter_name: `${repeat}_${conceptName}` } });
             }).catch((error: any) => {

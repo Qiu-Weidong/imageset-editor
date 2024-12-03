@@ -1,12 +1,14 @@
+
+import { Backdrop, Button, IconButton, ImageList, ImageListItem, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { Group, Text } from '@mantine/core';
 import { Dropzone, DropzoneProps, FileWithPath, IMAGE_MIME_TYPE } from '@mantine/dropzone';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ImageIcon from '@mui/icons-material/Image';
 import ErrorIcon from '@mui/icons-material/Error';
 import { useState } from 'react';
-import { Button, IconButton, ImageList, ImageListItem } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import api from '../../api';
+
 
 function ImageUploader({
   onChange,
@@ -22,12 +24,12 @@ function ImageUploader({
     <>
       <Dropzone
         // 这里的 file 是带数据的
-        onDrop={(_files) => { 
+        onDrop={(_files) => {
           const __files = [...files, ..._files];
           setFiles(__files);
           onChange?.(__files);
         }}
-        maxSize={5 * 1024 ** 2}
+        // maxSize={1 * 1024 ** 3}
         accept={IMAGE_MIME_TYPE} // 接受图片类型
         {...dropZoneProps}
       >
@@ -78,22 +80,49 @@ function ImageUploader({
   );
 }
 
+interface addImageDialogProps {
+  open: boolean,
+  imageset_name: string,
+  concept_folder: string,
+  is_regular: boolean,
+  onClose: () => void,
+  onSubmit?: () => void,
+};
 
-
-
-export function Debug() {
+function AddImageDialog(props: addImageDialogProps) {
+  const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<FileWithPath[]>([]);
-  return (
-    <>
+
+  return (<><Dialog open={props.open} onClose={props.onClose}>
+    <DialogTitle>Add images for <b>{props.concept_folder}</b></DialogTitle>
+    <DialogContent>
       <ImageUploader preview onChange={(files) => setFiles(files)}></ImageUploader>
-      <Button onClick={() => {
-        api.upload_images(files, 'mikasa', false, '1_cloak').then((result) => {
-          console.log(result);
-        })
-      }}>upload</Button>
-    </>
-  );
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={() => { props.onClose() }}>Cancel</Button>
+      <Button disabled={loading} onClick={() => {
+        setLoading(true);
+        api.upload_images(files, props.imageset_name, props.is_regular, props.concept_folder).then((result) => {
+          props.onSubmit?.();
+        }).finally(() => {
+          setLoading(false);
+          props.onClose();
+        });
+      }}>Finish
+      </Button>
+
+    </DialogActions>
+
+    <Backdrop
+      sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}
+      open={loading}
+    >
+      <CircularProgress color="inherit" />
+    </Backdrop>
+  </Dialog>
+  </>);
 }
 
 
-export default Debug;
+export default AddImageDialog;
+

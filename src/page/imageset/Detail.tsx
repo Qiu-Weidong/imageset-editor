@@ -14,6 +14,7 @@ import { RootState } from "../../app/store";
 import { selectFilterNameList } from "./SelectableImageList";
 import '@mantine/carousel/styles.css';
 import ZoomableImageList from "./ZoomableImageList";
+import AddImageDialog from "../dialog/AddImages";
 
 
 const selectAllImages = createSelector(
@@ -53,6 +54,7 @@ function Detail(props: {
 
   // 对话框
   const [createDialog, setCreateDialog] = useState(false);
+  const [addImageDialog, setAddImageDialog] = useState(false);
   const [column, setColumn] = useState(8);
   const height = '80vh';
 
@@ -106,33 +108,54 @@ function Detail(props: {
               onClick={() => { navigate("/imageset/selection-editor", { state: { imageset_name, is_regular, filter_name: filterName } }) }}
             >create selection</Button>
             <Button variant="contained" color="secondary" onClick={() => setCreateDialog(true)}>add concept</Button>
+
             {
               filterName === '<all>' ? <></> : filterName.startsWith('<') ?
-                <Button variant="contained" color="secondary"
-                  onClick={() => {
-                    const respone = window.confirm(`do you want delete selection ${filterName}`);
-                    if (respone) {
-                      // 直接删除对应的 selection 即可
-                      const name = filterName;
-                      dispatch(removeFilter(name));
-                      navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: '<all>' } });
-                    }
-                  }}
-                >remove selection</Button> :
-                <Button variant="contained" color="secondary"
-                  onClick={() => {
-                    const response = window.confirm(`this operation will delete the ${filterName} folder!`);
-                    if (response) {
-                      // 删除概念
-                      api.delete_concept(imageset_name, is_regular, filterName).finally(() => {
-                        // 已经将概念删除了, 我需要
-                        dispatch(removeFilter(filterName));
-                        navigate('/imageset/detail', { replace: true, state: { ...location.state, filter_name: '<all>' } });
-                        props.onReload();
-                      });
-                    }
-                  }}
-                >remove concept</Button>
+                (<>
+                  <Button variant="contained" color="secondary"
+                    onClick={() => {
+                      const respone = window.confirm(`do you want to delete selection ${filterName}`);
+                      if (respone) {
+                        // 直接删除对应的 selection 即可
+                        const name = filterName;
+                        dispatch(removeFilter(name));
+                        navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: '<all>' } });
+                      }
+                    }}
+                  >remove selection</Button>
+                  <Button variant="contained" color="secondary"
+                    onClick={() => {
+                      const response = window.confirm(`do you want to delete all images in ${filterName}`);
+                      if(response) {
+                        const name = filterName;
+                        dispatch(removeFilter(name));
+                        // 删除图片
+                        api.delete_images(images).then((result) => console.log(result)).finally(() => props.onReload());
+                        navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: '<all>' } });
+                      }
+                    }}
+                  >delete images</Button>
+                </>) :
+                <>
+                  <Button variant="contained" color="secondary"
+                    onClick={() => {
+                      const response = window.confirm(`this operation will delete the ${filterName} folder!`);
+                      if (response) {
+                        // 删除概念
+                        api.delete_concept(imageset_name, is_regular, filterName).finally(() => {
+                          // 已经将概念删除了, 我需要
+                          dispatch(removeFilter(filterName));
+                          navigate('/imageset/detail', { replace: true, state: { ...location.state, filter_name: '<all>' } });
+                          props.onReload();
+                        });
+                      }
+                    }}
+                  >remove concept</Button>
+
+                  <Button variant="contained" color="secondary" onClick={() => {
+                    setAddImageDialog(true);
+                  }}>add images</Button>
+                </>
             }
           </Grid>
           <Grid spacing={1} container>
@@ -167,7 +190,10 @@ function Detail(props: {
 
     {/* 对话框 */}
     <CreateDialog open={createDialog} imageset_name={imageset_name} type={is_regular ? 'regular' : 'train'}
-      onClose={() => { setCreateDialog(false); props.onReload() }} />
+      onClose={() => { setCreateDialog(false); }} onSubmit={props.onReload} />
+    <AddImageDialog open={addImageDialog} imageset_name={imageset_name} is_regular={is_regular} concept_folder={filterName} 
+      onClose={() => { setAddImageDialog(false); }} onSubmit={props.onReload}
+    />
   </>);
 }
 

@@ -3,6 +3,7 @@
 import axios from "axios";
 import { ImageSetMetadata } from "../page/imageset/Overview";
 import { ImageSetState, ImageState } from "../app/imageSetSlice";
+import { FileWithPath } from "@mantine/dropzone";
 
 
 const port = window.api_port || 1420;
@@ -30,6 +31,14 @@ async function create_imageset(imageset_name: string) {
   await axios.post('/imageset/create', {}, { params: { name: imageset_name } })
 }
 
+async function delete_images(images: ImageState[]) {
+  return (await axios.delete("/imageset/delete/images", {
+    data: {
+      filenames: images.map(image => image.path),
+    }
+  })).data;
+}
+
 async function find_imageset_list(): Promise<string[]> {
   let result: string[] = (await axios.get("/imageset")).data;
   return result;
@@ -46,14 +55,14 @@ async function get_imageset_metadata(name: string): Promise<Metadata> {
 }
 
 async function add_concept(
-  imageset_name: string, 
-  concept_name: string, 
-  repeat: number, 
+  imageset_name: string,
+  concept_name: string,
+  repeat: number,
   type: 'train' | 'regular',
   load_directory: string,
 ) {
   let result: number = (await axios.post("/imageset/add_concept", {}, {
-    params: {imageset_name, concept_name, repeat, type, load_directory}
+    params: { imageset_name, concept_name, repeat, type, load_directory: load_directory.trim() }
   })).data;
   return result;
 }
@@ -65,11 +74,11 @@ async function load(imageset_name: string, is_regular: boolean): Promise<ImageSe
   })).data;
   // 记得添加一个 <all> 的标识
   const all_images: ImageState[] = []
-  for(const filter of result.filters) {
+  for (const filter of result.filters) {
     all_images.push(...filter.images);
   }
   result.filters.push({
-    name: '<all>', 
+    name: '<all>',
     images: all_images,
     concept: null,
   });
@@ -77,7 +86,7 @@ async function load(imageset_name: string, is_regular: boolean): Promise<ImageSe
 }
 
 
-async function open_in_file_explore(imageset_name:string) {
+async function open_in_file_explore(imageset_name: string) {
   await axios.get("/imageset/open_in_file_explore", { params: { imageset_name } });
 }
 
@@ -86,17 +95,36 @@ async function delete_concept(imageset_name: string, is_regular: boolean, concep
 }
 
 async function interrogate(
-  images: ImageState[], 
-  model_name: string, 
-  threshold: number, 
-  additional_tags: string[] = [], 
+  images: ImageState[],
+  model_name: string,
+  threshold: number,
+  additional_tags: string[] = [],
   exclude_tags: string[] = []) {
   return (await axios.post("/tag/interrogate", {
-    images: images.map(image => image.path), 
-    model_name, 
-    threshold,  additional_tags, exclude_tags, 
+    images: images.map(image => image.path),
+    model_name,
+    threshold, additional_tags, exclude_tags,
   })).data
 }
+
+async function upload_images(files: FileWithPath[], imageset_name: string, is_regular: boolean, concept_folder: string) {
+  if(files.length <= 0) {
+    return;
+  }
+  
+  const form_data = new FormData();
+  files.forEach((file, index) => {
+    form_data.append("files", file, `image${index}`);
+  });
+  form_data.append("imageset_name", imageset_name);
+  form_data.append("type", is_regular ? "regular" : "train");
+  form_data.append("concept_folder", concept_folder);
+
+  return (await axios.post("/imageset/uploadimages", form_data, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })).data;
+}
+
 
 const api = {
   delete_imageset,
@@ -109,8 +137,10 @@ const api = {
   open_in_file_explore,
   delete_concept,
   interrogate,
-  delete_train, 
+  delete_train,
   delete_regular,
+  delete_images,
+  upload_images,
 };
 
 
