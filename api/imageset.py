@@ -97,7 +97,7 @@ async def get_imageset_metadata(name: str):
       count = len(concept_image_filenames)
       ret['concepts'].append({
         'name': concept['name'], 
-        'cover': f"http://{CONF_HOST}:{CONF_PORT}/image/{cover}",
+        'cover': f"http://{CONF_HOST}:{CONF_PORT}/image/{cover}" if cover is not None else None ,
         'repeat': concept['repeat'], 
         'image_count': count,
       })
@@ -189,8 +189,9 @@ def convert_and_copy_images(concept_name: str, source_dir, target_dir):
   
   # image_count 应该初始化为已有图片的序号的最大值
   image_count = get_next_image_count(target_dir)
-
-  for file_name in files:
+  from tqdm import tqdm
+  
+  for file_name in tqdm(files):
     source_path = os.path.join(source_dir, file_name)
     try:
       with Image.open(source_path) as img:

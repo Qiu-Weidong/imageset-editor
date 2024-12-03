@@ -26,13 +26,17 @@ export interface ImageSetMetadata {
 
 
 function ConceptCover(props: { concept: ConceptMetadata, onClick: () => void }) {
+  const image_url = props.concept.cover || '/web/No-Image-Found-400x264.png';
+
+  
   return (<div style={{
-    height: '100%', backgroundImage: `url('${props.concept.cover}')`,
+    height: '100%', backgroundImage: `url('${image_url}')`,
     backgroundSize: 'cover', position: 'relative',
   }}
     onClick={props.onClick}>
+
     <img
-      src={props.concept.cover || ''}
+      src={image_url}
       alt="img" style={{
         objectFit: 'contain',
         width: '100%',
@@ -100,7 +104,7 @@ function Overview() {
 
   async function _delete() {
     const result = window.confirm(`Do you want to delete the whole imageset ${imageset_name}`);
-    if(result) {
+    if (result) {
       await api.delete_imageset(imageset_name);
     }
 
@@ -138,15 +142,15 @@ function Overview() {
       <CardContent sx={{ display: 'flex' }}>
         <div style={{ flex: 1 }}>
           <Typography gutterBottom variant="h5" component="div">
-          Train Dataset
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {trainDataset.concepts.length} concepts, {trainDataset.image_count} images, {trainDataset.total_repeat} repeat.
-        </Typography>
+            Train Dataset
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {trainDataset.concepts.length} concepts, {trainDataset.image_count} images, {trainDataset.total_repeat} repeat.
+          </Typography>
         </div>
-        
 
-        <Button variant="text" startIcon={<AddCircleIcon />} size="small" color="primary" onClick={() => setCreateTrainsetDialog(true) }>
+
+        <Button variant="text" startIcon={<AddCircleIcon />} size="small" color="primary" onClick={() => setCreateTrainsetDialog(true)}>
           add concept
         </Button>
       </CardContent>
@@ -178,7 +182,7 @@ function Overview() {
             {regularDataset.concepts.length} concepts, {regularDataset.image_count} images, {regularDataset.total_repeat} repeat.
           </Typography>
         </div>
-        <Button variant="text" startIcon={<AddCircleIcon />} size="small" color="secondary" onClick={() => setCreateRegularsetDialog(true) }>
+        <Button variant="text" startIcon={<AddCircleIcon />} size="small" color="secondary" onClick={() => setCreateRegularsetDialog(true)}>
           add concept
         </Button>
 

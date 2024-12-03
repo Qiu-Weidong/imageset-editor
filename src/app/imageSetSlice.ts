@@ -62,7 +62,7 @@ export const imageSetSlice = createSlice({
 
     reloadImageSet: (state, action: PayloadAction<ImageSetState>) => {
       // 给一点智能, 如果name和type相同, 则保留selection, 否则直接set
-      if (state.name == action.payload.name && state.type == action.payload.type) {
+      if (state.name === action.payload.name && state.type === action.payload.type) {
         // 保留 state.filters 中的所有非 <all> 的 selection
         const selection = state.filters.filter(item => item.name.startsWith('<') && item.name !== '<all>');
         state.filters = [...action.payload.filters, ...selection];
@@ -85,15 +85,15 @@ export const imageSetSlice = createSlice({
     },
 
     removeFilter: (state, action: PayloadAction<string>) => {
-      state.filters = state.filters.filter((concept) => concept.name != action.payload);
+      state.filters = state.filters.filter((concept) => concept.name !== action.payload);
     },
 
     addOrUpdateFilters: (state, action: PayloadAction<FilterState>) => {
-      if (state.filters.find((item) => item.name == action.payload.name) == undefined) {
+      if (state.filters.find((item) => item.name === action.payload.name) === undefined) {
         // 直接添加
         state.filters = [...state.filters, action.payload];
       } else {
-        state.filters = state.filters.map((item) => item.name == action.payload.name ? action.payload : item);
+        state.filters = state.filters.map((item) => item.name === action.payload.name ? action.payload : item);
       }
     }
 

@@ -55,7 +55,7 @@ function ImageUploader({
             files.map((file, index) => {
               const imageUrl = URL.createObjectURL(file);
               return <ImageListItem>
-                <img key={index} src={imageUrl} alt="load image fail" onLoad={() => URL.revokeObjectURL(imageUrl)} />
+                <img key={index} src={imageUrl} alt="load fail" onLoad={() => URL.revokeObjectURL(imageUrl)} />
                 <IconButton size='small' sx={{ position: 'absolute', top: 0, right: 0, }}
                   onClick={() => {
                     const _files = files.filter(f => f !== file);

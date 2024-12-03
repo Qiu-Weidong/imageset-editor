@@ -8,7 +8,7 @@ import { addFilter, ImageState } from "../../app/imageSetSlice";
 
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
-import { CheckCircle, CloseFullscreen } from "@mui/icons-material";
+import { CheckCircle, CloseFullscreen, Fullscreen } from "@mui/icons-material";
 import { RootState } from "../../app/store";
 import { createSelector } from "@reduxjs/toolkit";
 import { useSelector } from "react-redux";
@@ -23,7 +23,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
 
-const selectFilterNameList = createSelector(
+export const selectFilterNameList = createSelector(
   (state: RootState) => state.imageSet.filters,
   (filters) => filters.map(item => item.name)
 );
@@ -140,7 +140,7 @@ function SelectableImageList({
           onMouseLeave={() => setHovered(false)}
           loading="lazy"
           onClick={click_handler}
-          onDoubleClick={() => setOpenImageIndex(props.index)}
+          // onDoubleClick={() => setOpenImageIndex(props.index)}
         />
 
         {/* 蒙版就只是蒙版 */}
@@ -173,6 +173,17 @@ function SelectableImageList({
             sx={{ position: 'absolute', top: 0, left: 0, }}
             size="small" color="error" > <CheckCircle /> </IconButton> : <></>
         }
+
+        {
+          enableFullscreen ? <IconButton 
+            onClick={() => setOpenImageIndex(props.index) } 
+            sx={{ position: 'absolute', top: 0, right: 0,  }} 
+            size="small" 
+            color="info"
+          >
+            <Fullscreen />
+          </IconButton> : <></>
+        }
       </ImageListItem>
     );
   }
@@ -194,7 +205,7 @@ function SelectableImageList({
               image.is_selected = !image.is_selected;
               setSelected(image.is_selected);
             }}
-            onDoubleClick={() => setOpenImageIndex(-1)}
+            // onDoubleClick={() => setOpenImageIndex(-1)}
           />
           {selected ? <IconButton sx={{ position: 'absolute', top: 0, left: 0, }} color="error"> <CheckCircle /> </IconButton> : <></>}
         </div>
@@ -309,7 +320,13 @@ function SelectableImageList({
                 window.alert('you have not select any images');
                 return;
               }
-              const input = window.prompt('create a new selection', 'input your selection name');
+
+              let input = window.prompt('create a new selection', 'input your selection name');
+              while(input && input === 'all') {
+                input = window.prompt('create a new selection', 'input your selection name, can not be "all"');
+              }
+              
+              
               if (input) {
                 const name = `<${input}>`;
 

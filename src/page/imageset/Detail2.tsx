@@ -47,16 +47,16 @@ function Detail(props: {
     return (
 
       <ImageListItem key={props.image.path}>
-        <img src={props.image.src}
+        <img src={props.image.src} alt="load fail"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           loading="lazy"
           onClick={() => {
-            {
-              console.log('clicked image at ', props.index);
-              setOpenImageIndex(props.index);
 
-            }
+            console.log('clicked image at ', props.index);
+            setOpenImageIndex(props.index);
+
+
           }}
         />
         {
@@ -120,7 +120,7 @@ function Detail(props: {
               height: '100%', backgroundImage: `url('${image.src}')`,
               backgroundSize: 'cover', position: 'relative',
             }}>
-              <img src={image.src} style={{
+              <img src={image.src} alt="load fail" style={{
                 objectFit: 'contain', width: '100%', height: '100%',
                 background: 'rgba(255, 255, 255, .47)',
                 backdropFilter: 'blur(48px)',

@@ -3,7 +3,7 @@
 // 包含一个header, header中包含数据集名称, 刷新按钮, 新建按钮, 保存按钮, 设置按钮, 帮助按钮
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Divider, Grid2 as Grid, Stack } from "@mui/material";
+import { Box, Button, Divider, Grid2 as Grid, MenuItem, Select, Slider, Stack } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { ImageState, removeFilter } from "../../app/imageSetSlice";
@@ -11,7 +11,10 @@ import api from "../../api";
 import CreateDialog from "../dialog/CreateDialog";
 import { createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
+import { selectFilterNameList } from "./SelectableImageList";
+import '@mantine/carousel/styles.css';
 import ZoomableImageList from "./ZoomableImageList";
+
 
 const selectAllImages = createSelector(
   (state: RootState) => state.imageSet.filters,
@@ -31,39 +34,68 @@ const selectAllImages = createSelector(
 function Detail(props: {
   onReload: () => void,
 }) {
+  const all_images = useSelector(selectAllImages);
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   // concept 的名称和重复次数共同定位到某个目录
   const { imageset_name, is_regular, filter_name, }: { imageset_name: string, is_regular: boolean, filter_name: string } = location.state;
-  const [filterName, setFilterName] = useState(filter_name);
-  
-  const all_images = useSelector(selectAllImages);
-
+  const filterNameList = useSelector(selectFilterNameList);
   const [images, setImages] = useState(all_images.get(filter_name) || []);
+  const [filterName, setFilterName] = useState(filter_name);
 
   useEffect(() => {
     setFilterName(filter_name);
     setImages(all_images.get(filter_name) || []);
   }, [filter_name, all_images]);
 
+
   // 对话框
   const [createDialog, setCreateDialog] = useState(false);
+  const [column, setColumn] = useState(8);
   const height = '80vh';
+
+
 
   return (<>
     {/* 正式内容 */}
     <Grid container spacing={2} >
-
       <Grid size={10}>
-
-        <ZoomableImageList images={images} height={height} enableFullscreen badge filter_name={filterName} onFilterNameChange={(name) => {
-          setFilterName(name); 
-          setImages(all_images.get(name) || []);
-        } } />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Select
+            labelId="demo-simple-select-standard-label"
+            id="demo-simple-select-standard"
+            label="concept or selection"
+            variant="standard"
+            size="small"
+            value={filterName}
+            sx={{ m: 1, minWidth: 240 }}
+            onChange={(event) => {
+              setFilterName(event.target.value);
+              setImages(all_images.get(event.target.value) || []);
+            }}
+          >
+            {
+              filterNameList.map((name, index) => <MenuItem key={index} value={name}>
+                {name}
+              </MenuItem>)
+            }
+          </Select>
+          <div style={{ flex: 1 }}></div>
+          <Slider
+            size="small"
+            defaultValue={column}
+            value={column}
+            onChange={(_, value) => setColumn(value as number)}
+            valueLabelDisplay="off"
+            sx={{ maxWidth: 360 }}
+            max={16}
+            min={4}
+          />
+        </Box>
+        <ZoomableImageList images={images} height={height} enableFullscreen badge column={column} />
       </Grid>
-
 
 
       <Grid size={2} sx={{ height: '100%' }}>
@@ -81,11 +113,10 @@ function Detail(props: {
                     const respone = window.confirm(`do you want delete selection ${filterName}`);
                     if (respone) {
                       // 直接删除对应的 selection 即可
-                      dispatch(removeFilter(filterName));
-                      setFilterName('<all>');
-                      setImages(all_images.get('<all>') || []);
+                      const name = filterName;
+                      dispatch(removeFilter(name));
+                      navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: '<all>' } });
                     }
-
                   }}
                 >remove selection</Button> :
                 <Button variant="contained" color="secondary"
@@ -106,7 +137,7 @@ function Detail(props: {
           </Grid>
           <Grid spacing={1} container>
             <Button variant="contained" onClick={() => {
-              api.interrogate(images, 'wd14-convnextv2.v1', 0.35 ).then((result) => console.log(result));
+              api.interrogate(images, 'wd14-convnextv2.v1', 0.35).then((result) => console.log(result));
             }}>tagger</Button>
             <Button variant="contained">edit tag</Button>
             <Button variant="contained">detect similar images</Button>
@@ -133,8 +164,6 @@ function Detail(props: {
 
       </Grid>
     </Grid>
-
-
 
     {/* 对话框 */}
     <CreateDialog open={createDialog} imageset_name={imageset_name} type={is_regular ? 'regular' : 'train'}
