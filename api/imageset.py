@@ -95,7 +95,19 @@ def convert_and_copy_images(source_dir, target_dir):
       continue
   return image_count
 
-
+def load_caption(image_path: str):
+  import pyexiv2, json
+  image_path = os.path.join(CONF_REPO_DIR, image_path)
+  metadata = pyexiv2.Image(image_path)
+  tags = metadata.read_comment()
+  metadata.close()
+  try: 
+    tags = json.loads(tags)
+  except:
+    tags = []
+  return tags
+  
+  
 
 
 
@@ -209,7 +221,7 @@ async def load(imageset_name: str, is_regular: bool):
         'thumbnail': f'http://{CONF_HOST}:{CONF_PORT}/image/thumbnail/{imagefilename}',
         'filename': filename,
         'basename': basename,
-        'captions': [],
+        'captions': load_caption(imagefilename),
         'concept': name, 
         'repeat': repeat,
         'path': imagefilename,

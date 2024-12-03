@@ -12,10 +12,10 @@ import '@mantine/carousel/styles.css';
 
 
 // 这个页面展示图片预览, 以及操作按钮, 点击操作按钮会跳转到对应的操作页面
-function ZoomableImageList({
+function ImageGallery({
   height,
   column = 8,
-  images,
+  images, // 图片需要从外面传递过来
   enableFullscreen = false,
   badge = false,
 }: {
@@ -115,6 +115,6 @@ function ZoomableImageList({
   );
 }
 
-export default ZoomableImageList;
+export default ImageGallery;
 
 

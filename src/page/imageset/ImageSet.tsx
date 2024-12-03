@@ -8,6 +8,7 @@ import NotFound from "../notfound/NotFound";
 import { useDispatch } from "react-redux";
 import Detail from "./Detail";
 import SelectionEditor from "./SelectionEditor";
+import CaptionEditor from "./CaptionEditor";
 
 
 
@@ -76,6 +77,7 @@ function ImageSet() {
     <Routes>
       <Route path="/detail" element={ <Detail onReload={load} /> } /> {/**默认是跳转到详情页面 */}
       <Route path="/selection-editor" element={ <SelectionEditor /> } />
+      <Route path="/caption-editor" element={ <CaptionEditor /> } />
 
       {/* 注意 redirect 需要写完整路径 */}
       <Route path="/" element={<Navigate to="/imageset/detail" replace state={location.state} />} />

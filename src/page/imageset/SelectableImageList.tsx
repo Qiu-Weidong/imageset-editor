@@ -89,7 +89,7 @@ function SelectableImageList({
   const [filterName, setFilterName] = useState(filter_name);
 
 
-  const [column, setColumn] = useState(8);
+  const [column, setColumn] = useState(12);
 
   // 第一步，构建图片的 map
 
@@ -243,13 +243,12 @@ function SelectableImageList({
           variant="standard"
           size="small"
           value={filterName}
-          sx={{ m: 1, minWidth: 240 }}
+          sx={{ m: 1, minWidth: 160 }}
           onChange={(event) => {
             setFilterName(event.target.value);
             // 记得切换 selectedImages
-            setSelectableImages(
-              image_list_map.get(event.target.value) || []
-            );
+            const _images = image_list_map.get(event.target.value) || [];
+            setSelectableImages(_images);
           }}
         >
           {
@@ -348,7 +347,7 @@ function SelectableImageList({
           value={column}
           onChange={(_, value) => setColumn(value as number)}
           valueLabelDisplay="off"
-          sx={{ maxWidth: 180 }}
+          sx={{ maxWidth: 120 }}
           max={16}
           min={4}
         />

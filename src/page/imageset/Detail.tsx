@@ -13,7 +13,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
 import { selectFilterNameList } from "./SelectableImageList";
 import '@mantine/carousel/styles.css';
-import ZoomableImageList from "./ZoomableImageList";
+import ImageGallery from "./ImageGallery";
 import AddImageDialog from "../dialog/AddImagesDialog";
 import TaggerDialog from "../dialog/TaggerDialog";
 
@@ -98,7 +98,7 @@ function Detail(props: {
             min={4}
           />
         </Box>
-        <ZoomableImageList images={images} height={height} enableFullscreen badge column={column} />
+        <ImageGallery images={images} height={height} enableFullscreen badge column={column} />
       </Grid>
 
 
@@ -175,7 +175,7 @@ function Detail(props: {
           {/* 打标 */}
           <Grid spacing={1} container>
             <Button variant="contained" onClick={() => setTaggerDialog(true) }>tagger</Button>
-            <Button variant="contained">edit tag</Button>
+            <Button variant="contained" onClick={() => navigate("/imageset/caption-editor", { state: { ...location.state, filter_name: filterName } }) }>edit tag</Button>
             <Button variant="contained">detect similar images</Button>
           </Grid>
 
