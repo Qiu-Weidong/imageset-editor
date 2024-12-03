@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, InputLabel, LinearProgress, MenuItem, Select, Slider, Stack, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, LinearProgress, MenuItem, Select, Slider, Stack, TextField } from "@mui/material";
 import { useRef, useState } from "react";
 import { ImageState } from "../../app/imageSetSlice";
 import api from "../../api";

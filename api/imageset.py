@@ -203,6 +203,7 @@ async def load(imageset_name: str, is_regular: bool):
     for imagefilename in imagefilenames:
       basename = os.path.basename(imagefilename)
       filename, _ = os.path.splitext(basename)
+      # 读取字幕/标签
       result['images'].append({
         'src': f'http://{CONF_HOST}:{CONF_PORT}/image/{imagefilename}',
         'thumbnail': f'http://{CONF_HOST}:{CONF_PORT}/image/thumbnail/{imagefilename}',
