@@ -1,4 +1,4 @@
-import { Card, CardContent, Chip, IconButton, TextField, Typography } from "@mui/material";
+import { Button, Card, CardActions, CardContent, Chip, IconButton, TextField, Typography } from "@mui/material";
 import { FilterState, ImageState } from "../../app/imageSetSlice";
 import { useEffect, useState } from "react";
 import DoneIcon from '@mui/icons-material/Done';
@@ -102,10 +102,10 @@ function CaptionEditorBox(props: {
     }} />
 
     <div style={{ maxHeight: '30vh', overflowY: 'auto', }}>
+
       {
         captionList
       }
-
       {
         // 只有当可以添加标签的时候才显示添加按钮
         props.addable ? (adding ? <EditableChip editable={true} color="info" caption="add new label"
@@ -116,6 +116,8 @@ function CaptionEditorBox(props: {
           }} />
           : <IconButton color="primary" size="small" onClick={() => setAdding(true)}><AddIcon /></IconButton>) : ''
       }
+
+
     </div>
   </div>);
 }
@@ -173,9 +175,6 @@ function CaptionEditor({
         }}
       >Tag Editor</Typography>
     </CardContent>
-    {/* 直接编辑 filter.images 的 caption 标签 */}
-
-
     {
       !openImage ? <><CardContent>
         <Typography
@@ -227,22 +226,31 @@ function CaptionEditor({
           ></CaptionEditorBox>
         </CardContent></> : <CardContent>
         <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{
-              mr: 2,
-              display: { xs: 'none', md: 'flex' },
-              fontFamily: 'monospace',
-              fontWeight: 400,
-              letterSpacing: '.1rem',
-              color: 'inherit',
-              textDecoration: 'none',
-            }}
-          >Image Tags</Typography>
+          variant="h6"
+          noWrap
+          component="div"
+          sx={{
+            mr: 2,
+            display: { xs: 'none', md: 'flex' },
+            fontFamily: 'monospace',
+            fontWeight: 400,
+            letterSpacing: '.1rem',
+            color: 'inherit',
+            textDecoration: 'none',
+          }}
+        >Image Tags</Typography>
         <CaptionEditorBox addable captions={openImage.captions}></CaptionEditorBox>
       </CardContent>
     }
+
+    <CardActions>
+      <Button size="small" color="primary" variant="contained">
+        Save
+      </Button>
+      <Button size="small" color="secondary" variant="contained">
+        Return
+      </Button>
+    </CardActions>
 
   </Card>);
 }
