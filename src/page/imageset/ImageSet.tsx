@@ -52,8 +52,8 @@ function ImageSet() {
     dispatch(reloadImageSet(result));
     setLoading(false);
     
-    // 有些需要跳转，有些不需要跳转
-    navigate('/imageset', { replace: true, state: { ...location.state, filter_name: filter.name } })
+    // 有些需要跳转，有些不需要跳转, 不要自动跳转
+    // navigate('/imageset', { replace: true, state: { ...location.state, filter_name: filter.name } });
   }
 
   async function _delete() {
@@ -68,7 +68,7 @@ function ImageSet() {
         await api.delete_train(imageset_name);
       }
     }
-
+    // 这里之际跳转即可
     navigate("/overview", { state: { imageset_name } });
   }
   useEffect(() => {
@@ -83,18 +83,19 @@ function ImageSet() {
 
 
   const [column, setColumn] = useState(10);
-  const height = '85vh';
+  const height = '80vh';
 
   const [openImage, setOpenImage] = useState<ImageState | null>(null);
   function onImageClose(_image: ImageState) { setOpenImage(null); }
   function onImageOpen(image: ImageState) { setOpenImage(image); }
 
-  console.log('render');
   return (<>
     <Header onRenameImageset={(_, new_name) => {
       navigate('/imageset', { replace: true, state: { ...location.state, imageset_name: new_name, filter_name: filter.name } })
     }}
-      onLoad={load}
+      onLoad={() => load().finally(() => 
+        navigate('/imageset', { replace: true, state: { ...location.state, filter_name: filter.name } })
+      ) }
       onDelete={_delete}
     />
 
@@ -158,6 +159,7 @@ function ImageSet() {
       <Grid size={2} sx={{ height: '100%' }}>
         {/* 在这里路由 */}
         <Routes>
+          {/* 这里就先不跳转, 在里面按照需要跳转 */}
           <Route path="/detail" element={<Editor filter={filter} onReload={load} />} />
           <Route path="/caption-editor" element={<CaptionEditor />} />
           <Route path="*" element={<Navigate to="/imageset/detail" replace state={location.state} />} />

@@ -32,26 +32,28 @@ export const selectFilterNameList = createSelector(
 const selectAllImages = createSelector(
   (state: RootState) => state.imageSet.filters,
   (filters) => {
+    // 目的是得到这样的一个 map
     const image_list_map = new Map<string, SelectableImageState[]>();
-    for (const filter of filters) {
-      // 第一步，根据所有的 concept 构造出 SelectableImageState.
-      if (!filter.name.startsWith('<')) {
-        const selectable_images = filter.images.map(item => ({ image: item, is_selected: false }));
-        image_list_map.set(filter.name, selectable_images);
-      }
-    }
+    // 首先需要建立一个 image map
+    const image_map = new Map<string, SelectableImageState>();
+    // 直接使用 <all> images 来构造
+    filters.find(item => item.name === '<all>')?.images.forEach(image => {
+      image_map.set(image.path, { image, is_selected: false });
+    });
+
 
     for (const filter of filters) {
-      if (filter.name.startsWith("<")) {
-        const selectable_images = [];
-        for (const image of filter.images) {
-          const selectable_image = image_list_map.get(`${image.repeat}_${image.concept}`)?.find(item => item.image === image);
-          if (selectable_image) {
-            selectable_images.push(selectable_image);
-          }
+
+      const selectable_images: SelectableImageState[] = [];
+
+      for (const image of filter.images) {
+        const selectable_image = image_map.get(image.path);
+        if (selectable_image) {
+          selectable_images.push(selectable_image);
         }
-        image_list_map.set(filter.name, selectable_images);
       }
+      image_list_map.set(filter.name, selectable_images);
+
     }
     // 并不会反复调用
     console.log('create image_list_map = ', image_list_map);
@@ -85,8 +87,8 @@ function SelectableImageList({
   const dispatch = useDispatch();
 
   // 获取到了所有的 concept 和 selection
-  const filterNameList = useSelector(selectFilterNameList);
   const image_list_map = useSelector(selectAllImages);
+  const filterNameList = Array.from(image_list_map.keys());
 
 
   const [filterName, setFilterName] = useState(filter_name);
@@ -123,7 +125,7 @@ function SelectableImageList({
           onMouseLeave={() => setHovered(false)}
           loading="lazy"
           onClick={click_handler}
-          // onDoubleClick={() => setOpenImageIndex(props.index)}
+        // onDoubleClick={() => setOpenImageIndex(props.index)}
         />
 
         {/* 蒙版就只是蒙版 */}
@@ -158,10 +160,10 @@ function SelectableImageList({
         }
 
         {
-          enableFullscreen ? <IconButton 
-            onClick={() => setOpenImageIndex(props.index) } 
-            sx={{ position: 'absolute', top: 0, right: 0,  }} 
-            size="small" 
+          enableFullscreen ? <IconButton
+            onClick={() => setOpenImageIndex(props.index)}
+            sx={{ position: 'absolute', top: 0, right: 0, }}
+            size="small"
             color="info"
           >
             <Fullscreen />
@@ -188,7 +190,7 @@ function SelectableImageList({
               image.is_selected = !image.is_selected;
               setSelected(image.is_selected);
             }}
-            // onDoubleClick={() => setOpenImageIndex(-1)}
+          // onDoubleClick={() => setOpenImageIndex(-1)}
           />
           {selected ? <IconButton sx={{ position: 'absolute', top: 0, left: 0, }} color="error"> <CheckCircle /> </IconButton> : <></>}
         </div>
@@ -243,7 +245,7 @@ function SelectableImageList({
           <MenuItem value="[selected images]" disabled key={filterName.length + 5}  >[selected images]</MenuItem>
         </Select>
 
-        <Grid container spacing={1} sx={ { flex: 1, } }>
+        <Grid container spacing={1} sx={{ flex: 1, }}>
           <Button variant="contained" size="small" startIcon={<VisibilityIcon />}
             onClick={() => {
               const selected_images = image_list_map.get('<all>')?.filter(image => image.is_selected) || [];
@@ -304,11 +306,11 @@ function SelectableImageList({
               }
 
               let input = window.prompt('create a new selection', 'input your selection name');
-              while(input && input === 'all') {
+              while (input && input === 'all') {
                 input = window.prompt('create a new selection', 'input your selection name, can not be "all"');
               }
-              
-              
+
+
               if (input) {
                 const name = `<${input}>`;
 

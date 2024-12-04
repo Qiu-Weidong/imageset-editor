@@ -330,6 +330,9 @@ async def upload_images(files: List[UploadFile] = File(...),
     image.convert("RGB").save(file_path, "JPEG")
   
 
+
+
+
 @api_imageset.put("/rename")  
 async def rename_imageset(origin_name: str, new_name: str): 
   new_name = 'imageset-' + new_name
@@ -347,35 +350,37 @@ async def rename_imageset(origin_name: str, new_name: str):
 
 @api_imageset.delete("/delete")
 async def delete_imageset(name: str):
-  imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name)
   import shutil
-  if os.path.exists(imageset_dir):
-    shutil.rmtree(imageset_dir)
-  # 同时删除整个缩略图的缓存
-  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail')
+
+  imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name)
+  # 注意先删除缩略图再删除原图
+  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail', 'imageset-'+name)
   if os.path.exists(thumbnail_dir):
     shutil.rmtree(thumbnail_dir)
+  if os.path.exists(imageset_dir):
+    shutil.rmtree(imageset_dir)
+  
 
 @api_imageset.delete("/delete/src")
 async def delete_train(name: str):
   imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'src')
   import shutil
-  if os.path.exists(imageset_dir):
-    shutil.rmtree(imageset_dir)
-  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail')
+  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail', 'imageset-' + name, 'src')
   if os.path.exists(thumbnail_dir):
     shutil.rmtree(thumbnail_dir)
-
+  if os.path.exists(imageset_dir):
+    shutil.rmtree(imageset_dir)
+  
 @api_imageset.delete("/delete/reg")
 async def delete_regular(name: str):
   imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'reg')
   import shutil
-  if os.path.exists(imageset_dir):
-    shutil.rmtree(imageset_dir)
-  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail')
+  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail', 'imageset-' + name, 'reg')
   if os.path.exists(thumbnail_dir):
     shutil.rmtree(thumbnail_dir)
-
+  if os.path.exists(imageset_dir):
+    shutil.rmtree(imageset_dir)
+  
 class DeleteImageRequest(BaseModel):
   filenames: List[str]
 
@@ -385,30 +390,28 @@ async def delete_images(request: DeleteImageRequest):
   from tqdm import tqdm
   for filename in tqdm(request.filenames):
     abs_filename = os.path.join(CONF_REPO_DIR, filename)
+    thumbnail_filename = os.path.join(CONF_REPO_DIR, '.thumbnail', filename)
     try:
+      os.remove(thumbnail_filename)
       os.remove(abs_filename)
     except:
       continue
     deleted_names.append(filename)
-  import shutil
-  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail')
-  if os.path.exists(thumbnail_dir):
-    shutil.rmtree(thumbnail_dir)
   return deleted_names
   
 @api_imageset.delete("/delete_concept")
 async def delete_concept(imageset_name: str, is_regular: bool, concept_folder: str):
   if is_regular:
-    dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, 'reg', concept_folder)
+    dir = os.path.join('imageset-'+imageset_name, 'reg', concept_folder)
   else:
-    dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, 'src', concept_folder)
+    dir = os.path.join('imageset-'+imageset_name, 'src', concept_folder)
+  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail', dir)
+  dir = os.path.join(CONF_REPO_DIR, dir)
   import shutil
-  if os.path.exists(dir):
-    shutil.rmtree(dir)
-  thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail')
   if os.path.exists(thumbnail_dir):
     shutil.rmtree(thumbnail_dir)
+  if os.path.exists(dir):
+    shutil.rmtree(dir)
   
-
 
 

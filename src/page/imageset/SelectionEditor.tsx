@@ -8,7 +8,7 @@ function SelectionEditor() {
 
   const { filter_name }: { imageset_name: string, is_regular: boolean, filter_name: string } = location.state;
 
-  const height = '80vh';
+  const height = '85vh';
   return (
     <Container fixed maxWidth="xl">
       <SelectableImageList height={height}

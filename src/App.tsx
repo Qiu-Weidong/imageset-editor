@@ -24,7 +24,7 @@ export function App() {
         </Routes>
       </Router>
       {/* 背景图片 */}
-      <img src="https://images.unsplash.com/photo-1549388604-817d15aa0110"
+      <img src="https://images.unsplash.com/photo-1549388604-817d15aa0110" alt='bg'
         style={{
           zIndex: -1,
           position: 'fixed',

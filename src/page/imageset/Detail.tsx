@@ -11,10 +11,9 @@ import api from "../../api";
 import CreateDialog from "../dialog/CreateDialog";
 import AddImageDialog from "../dialog/AddImagesDialog";
 import TaggerDialog from "../dialog/TaggerDialog";
-import ImageGalleryWithFilter from "./ImageGalleryWithFilter";
 
 
-export function Editor({ filter, onReload }: { filter: FilterState, onReload: () => void, }) {
+export function Editor({ filter, onReload }: { filter: FilterState, onReload: () => Promise<void>, }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,7 +55,9 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
                     dispatch(removeFilter(name));
                     // 删除图片, 需要跳转到 <all>
                     api.delete_images(filter.images).then((result) => console.log(result)).finally(() => {
-                      onReload()
+                      onReload().finally(() => {
+                        navigate('/imageset/detail', { replace: true, state: { ...location.state, filter_name: '<all>' } })
+                      });
                     });
                     
                   }
@@ -82,8 +83,9 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
                       api.delete_concept(imageset_name, is_regular, filter.name).finally(() => {
                         // 已经将概念删除了, 我需要
                         dispatch(removeFilter(filter.name));
-                        navigate('/imageset/detail', { replace: true, state: { ...location.state, filter_name: '<all>' } });
-                        onReload();
+                        onReload().finally(() => {
+                          navigate('/imageset/detail', { replace: true, state: { ...location.state, filter_name: '<all>' } });
+                        });
                       });
                     }
                   }}
@@ -140,42 +142,6 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
   );
 }
 
-
-// 这个页面展示图片预览, 以及操作按钮, 点击操作按钮会跳转到对应的操作页面
-function Detail(props: {
-  onReload: () => void,
-}) {
-  const location = useLocation();
-
-
-  // concept 的名称和重复次数共同定位到某个目录
-  const { filter_name, }: { imageset_name: string, is_regular: boolean, filter_name: string } = location.state;
-
-  // 这里先随便给一个初始值
-  const [filter, setFilter] = useState<FilterState>({ name: filter_name, images: [], concept: null, });
-
-
-
-
-  const height = '80vh';
-
-
-
-
-
-  return (
-    <Grid container spacing={2} >
-      <Grid size={10}>
-        <ImageGalleryWithFilter height={height} filter_name={filter.name}
-        />
-      </Grid>
-
-      <Grid size={2} sx={{ height: '100%' }}>
-        <Editor filter={filter} onReload={props.onReload} />
-      </Grid>
-    </Grid>);
-}
-
-export default Detail;
+export default Editor;
 
 
