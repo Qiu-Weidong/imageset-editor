@@ -18,12 +18,16 @@ function ImageGallery({
   images, // 图片需要从外面传递过来
   enableFullscreen = false,
   badge = false,
+  onImageOpen,
+  onImageClose,
 }: {
   height: string | number,
   column?: number,
   images: ImageState[],
   enableFullscreen?: boolean,
   badge?: boolean,
+  onImageOpen?: (image: ImageState) => void,
+  onImageClose?: (image: ImageState) => void,
 }) {
   const [openImageIndex, setOpenImageIndex] = useState(
     images.length <= 1 ? 0 : -1
@@ -32,6 +36,7 @@ function ImageGallery({
     const [hovered, setHovered] = useState(false);
     function click_handler() {
       setOpenImageIndex(props.index);
+      onImageOpen?.(props.image);
     }
 
     return (
@@ -90,7 +95,7 @@ function ImageGallery({
                 background: 'rgba(255, 255, 255, .2)',
                 backdropFilter: 'blur(7px)',
               }}
-                onClick={() => setOpenImageIndex(-1)}
+                onClick={() => {setOpenImageIndex(-1); onImageClose?.(image); }}
               />
             </Carousel.Slide>
           )

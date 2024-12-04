@@ -15,7 +15,7 @@ export interface ConceptMetadata {
   name: string,
   repeat: number,
   image_count: number,
-  cover: string | null, // 封面 base64
+  cover: string | null, 
 };
 
 export interface ImageSetMetadata {

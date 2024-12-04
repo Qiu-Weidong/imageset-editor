@@ -86,35 +86,17 @@ function SelectableImageList({
 
   // 获取到了所有的 concept 和 selection
   const filterNameList = useSelector(selectFilterNameList);
-  const [filterName, setFilterName] = useState(filter_name);
-
-
-  const [column, setColumn] = useState(12);
-
-  // 第一步，构建图片的 map
-
-  // 用一个 state 来保存所有图片的 SelectableImageState，保存为一个map
-  // 根据filter_name从map中选择当前要展示的图片，这是未过滤的 images
-  // 根据过滤器对 images 进行过滤
-  // 
-  // interface SelectableImageState { image: ImageState, is_selected: boolean, }
-  // 
-
-  // 首先用一个 state 来保存要展示的图片，即过滤得到的图片
-
-  // 使用这个来保存应该就可以了 ?
   const image_list_map = useSelector(selectAllImages);
 
 
-  // 离开的时候清除所有选择即可。
+  const [filterName, setFilterName] = useState(filter_name);
+  const [column, setColumn] = useState(12);
 
 
   // 这个是用来显示的过滤的图片
   const [selectableImages, setSelectableImages] = useState<SelectableImageState[]>(
     image_list_map.get(filter_name) || []
   );
-
-
   const [openImageIndex, setOpenImageIndex] = useState(
     selectableImages.length <= 1 ? 0 : -1
   );
@@ -129,6 +111,7 @@ function SelectableImageList({
       props.image.is_selected = !props.image.is_selected;
       // 这是修改自己的状态
       setSelected(props.image.is_selected);
+
     }
 
     return (
@@ -339,8 +322,6 @@ function SelectableImageList({
             }}
           >创建</Button>
         </Grid>
-
-
         <Slider
           size="small"
           defaultValue={column}

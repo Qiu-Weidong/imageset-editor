@@ -12,7 +12,7 @@ function SelectionEditor() {
   return (
     <Container fixed maxWidth="xl">
       <SelectableImageList height={height}
-        enableFullscreen selectable filter_name={filter_name} 
+        selectable filter_name={filter_name} 
       ></SelectableImageList></Container>
   );
 
