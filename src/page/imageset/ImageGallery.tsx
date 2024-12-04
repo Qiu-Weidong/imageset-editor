@@ -48,7 +48,7 @@ function ImageGallery({
             onMouseLeave={() => setHovered(false)}
             loading="lazy"
             onClick={click_handler}
-            onDoubleClick={() => console.log('double clicked.')}
+            // onDoubleClick={() => console.log('double clicked.')}
           />
 
           {/* 蒙版就只是蒙版 */}
@@ -109,11 +109,11 @@ function ImageGallery({
   return (
     <Box >
       {/* 应该将 carousel 盖在 paper 上面 */}
-      <Paper elevation={3} sx={{
-        maxHeight: height, height: height, overflow: 'scroll', backgroundColor: "rgba(255, 255, 255, 0.7)",
+      <Box sx={{
+        maxHeight: height, height: height, overflow: 'scroll',
       }} >
         {images.length > 0 ? imagelist : <>no image found</>}
-      </Paper>
+      </Box>
 
       {enableFullscreen && openImageIndex >= 0 ? carousel : <></>}
     </Box>

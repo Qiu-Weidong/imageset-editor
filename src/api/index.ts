@@ -138,6 +138,9 @@ async function upload_images(files: FileWithPath[], imageset_name: string, is_re
   })).data;
 }
 
+async function rename_and_convert(imageset_name: string, is_regular: boolean, concept_folder: string) {
+  await axios.put("/imageset/rename_and_convert", {}, { params: { imageset_name, is_regular, concept_folder } });
+}
 
 const api = {
   delete_imageset,
@@ -155,6 +158,7 @@ const api = {
   delete_images,
   upload_images,
   interrogate,
+  rename_and_convert,
 };
 
 

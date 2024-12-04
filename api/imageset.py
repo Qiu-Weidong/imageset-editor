@@ -17,20 +17,23 @@ api_imageset = APIRouter()
   图片的缩略图url则直接 http://{config.host}:{config.port}/image/thumbnail/{path}即可
 '''
 
-def get_next_image_count(target_dir: str):
-    result = 0
-    # 列出目标目录中的所有文件
-    for file_name in os.listdir(target_dir):
-      name, _ = os.path.splitext(file_name)
-      try:
-        number = int(name) + 1
-        if number > result:
-          result = number
-      except:
-        continue
-    return result  # 返回下一个可用的序号
+def get_next_image_count(target_dir: str) -> int:
+  '''
+    path 应该从 imageset-xxx 开始
+  '''
+  result = 0
+  # 列出目标目录中的所有文件
+  for file_name in os.listdir(os.path.join(CONF_REPO_DIR, target_dir)):
+    name, _ = os.path.splitext(file_name)
+    try:
+      number = int(name) + 1
+      if number > result:
+        result = number
+    except:
+      continue
+  return result  # 返回下一个可用的序号
 
-def get_concept_folder_list(train_or_regular_dir: str):
+def get_concept_folder_list(train_or_regular_dir: str) -> list[dict]:
   '''
     从 imageset-xxx/src 目录下获取所有的概念列表
     ret [{ 'name': 'katana', 'repeat': 8, 'path': 'imageset-xx/src/8_katana' }, ...]
@@ -53,7 +56,7 @@ def get_concept_folder_list(train_or_regular_dir: str):
     })
   return result
 
-def get_image_list(concept_dir: str):
+def get_image_list(concept_dir: str) -> list[str]:
   '''
     从 imageset-xxx/src/8_katana 目录下获取所有的图片文件名称
     return ['imageset-xxx/src/8_katana/katana_000001.jpg', ...]
@@ -64,8 +67,11 @@ def get_image_list(concept_dir: str):
   imagefilenames = [os.path.normpath(imagefilename).replace('\\', '/') for imagefilename in imagefilenames]
   return imagefilenames
 
-def convert_and_copy_images(source_dir, target_dir):  
-  
+def convert_and_copy_images(source_dir: str, target_dir: str) -> int:  
+  '''
+    source_dir 为绝对路径
+    target_dir imageset-xxx 的相对路径
+  '''
   valid_image_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp'}
   
   # 获取源目录下的所有图片文件
@@ -85,7 +91,7 @@ def convert_and_copy_images(source_dir, target_dir):
         img = img.convert("RGB")
         # 生成新的文件名
         new_file_name = f"{index:06d}.jpg"
-        target_path = os.path.join(target_dir, new_file_name)
+        target_path = os.path.join(CONF_REPO_DIR, target_dir, new_file_name)
         # 保存为 JPG 格式
         img.save(target_path, "JPEG")
         # 增加计数器
@@ -95,7 +101,10 @@ def convert_and_copy_images(source_dir, target_dir):
       continue
   return image_count
 
-def load_caption(image_path: str):
+def load_caption(image_path: str) -> list[str]:
+  '''
+    image_path 从 imageset-xxx 开始
+  '''
   import pyexiv2, json
   image_path = os.path.join(CONF_REPO_DIR, image_path)
   metadata = pyexiv2.Image(image_path)
@@ -107,7 +116,15 @@ def load_caption(image_path: str):
     tags = []
   return tags
   
-  
+def save_caption(image_path: str, tags: list[str]):
+  import pyexiv2, json
+  image_path = os.path.join(CONF_REPO_DIR, image_path)
+  metadata = pyexiv2.Image(image_path)
+  try:
+    metadata.modify_comment(json.dumps(tags))
+  except:
+    pass
+  metadata.close()
 
 
 
@@ -289,7 +306,7 @@ async def add_concept(
   type: str, 
   load_directory: str):
   # load_directory 需要是绝对路径
-  dir = os.path.join(CONF_REPO_DIR, 'imageset-' + imageset_name)
+  dir = 'imageset-' + imageset_name
   if type == 'train':
     dir = os.path.join(dir, "src")
   elif type == "regular":
@@ -298,9 +315,10 @@ async def add_concept(
     raise HTTPException(status_code=400, detail=f"unknown type {type}")
   
   concept_dir = os.path.join(dir, f"{repeat}_{concept_name.strip()}")
+  abs_concept_dir = os.path.join(CONF_REPO_DIR, concept_dir)
   # 如果不存在，则创建目录, 创建目录功能正常
-  if not os.path.exists(concept_dir):
-    os.makedirs(concept_dir, exist_ok=True)
+  if not os.path.exists(abs_concept_dir):
+    os.makedirs(abs_concept_dir, exist_ok=True)
   if not os.path.exists(load_directory):
     return 0
   
@@ -315,9 +333,10 @@ async def upload_images(files: List[UploadFile] = File(...),
                         concept_folder: str = Form(...),
                         ):
   subdir = 'reg' if type == "regular" else "src"
-  dest_dir = os.path.join(CONF_REPO_DIR, 'imageset-'+imageset_name, subdir, concept_folder)
-  if not os.path.exists(dest_dir):
-    os.makedirs(dest_dir, exist_ok=True)
+  dest_dir = os.path.join('imageset-'+imageset_name, subdir, concept_folder)
+  abs_dest_dir = os.path.join(CONF_REPO_DIR, dest_dir)
+  if not os.path.exists(abs_dest_dir):
+    os.makedirs(abs_dest_dir, exist_ok=True)
   
   index = get_next_image_count(dest_dir)
   
@@ -325,9 +344,10 @@ async def upload_images(files: List[UploadFile] = File(...),
     contents = await file.read()
     import io
     image = Image.open(io.BytesIO(contents))
-    file_path = os.path.join(dest_dir, f'{index:06d}.jpg')
+    file_path = os.path.join(CONF_REPO_DIR, dest_dir, f'{index:06d}.jpg')
     index += 1
     image.convert("RGB").save(file_path, "JPEG")
+  return index
   
 
 
@@ -345,7 +365,27 @@ async def rename_imageset(origin_name: str, new_name: str):
     raise HTTPException(status_code=400, detail=str(e))
   return new_name
 
+@api_imageset.put("/rename_and_convert")
+async def rename_and_convert(imageset_name: str, is_regular: bool, concept_folder: str):
+  if is_regular:
+    base_dir = os.path.join('imageset-'+imageset_name, 'reg', concept_folder)
+  else:
+    base_dir = os.path.join('imageset-'+imageset_name, 'src', concept_folder)
+  index = get_next_image_count(base_dir)
+  imagefilenames = get_image_list(base_dir)
+  for imagefilename in tqdm(imagefilenames):
+    newfilename = os.path.join(base_dir, f"{index:06d}.jpg")
+    index += 1
+    # 注意不要把标签掉了
+    tags = load_caption(imagefilename)
+    img = Image.open(os.path.join(CONF_REPO_DIR, imagefilename))
+    img = img.convert('RGB')
+    img.save(os.path.join(CONF_REPO_DIR, newfilename), "JPEG")
+    save_caption(newfilename, tags)
+    # 删除原始图片
+    os.remove(os.path.join(CONF_REPO_DIR, imagefilename))
 
+  
 
 
 @api_imageset.delete("/delete")

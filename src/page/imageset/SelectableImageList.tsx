@@ -55,8 +55,6 @@ const selectAllImages = createSelector(
       image_list_map.set(filter.name, selectable_images);
 
     }
-    // 并不会反复调用
-    console.log('create image_list_map = ', image_list_map);
     return image_list_map;
   }
 );

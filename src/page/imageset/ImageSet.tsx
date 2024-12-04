@@ -3,7 +3,7 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-
 import api from "../../api";
 import { FilterState, ImageState, reloadImageSet } from "../../app/imageSetSlice";
 import Header from "../header/Header";
-import { Backdrop, Box, CircularProgress, Grid2 as Grid, MenuItem, Select, Slider, Toolbar } from "@mui/material";
+import { Backdrop, Box, CircularProgress, Grid2 as Grid, MenuItem, Paper, Select, Slider, Toolbar } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { Editor } from "./Detail";
 import { createSelector } from "@reduxjs/toolkit";
@@ -47,32 +47,30 @@ function ImageSet() {
 
   async function load() {
     // 加载数据
-    setLoading(true);
     let result = await api.load(imageset_name, is_regular);
     dispatch(reloadImageSet(result));
-    setLoading(false);
-    
-    // 有些需要跳转，有些不需要跳转, 不要自动跳转
-    // navigate('/imageset', { replace: true, state: { ...location.state, filter_name: filter.name } });
   }
 
   async function _delete() {
     if (is_regular) {
       let result = window.confirm(`Do you want to delete regular set for ${imageset_name}`);
       if (result) {
+        setLoading(true);
         await api.delete_regular(imageset_name);
       }
     } else {
       let result = window.confirm(`Do you want to delete train set for ${imageset_name}`);
       if (result) {
+        setLoading(true);
         await api.delete_train(imageset_name);
       }
     }
-    // 这里之际跳转即可
+    setLoading(false);
     navigate("/overview", { state: { imageset_name } });
   }
   useEffect(() => {
-    load();
+    setLoading(true);
+    load().finally(() => setLoading(false));
   }, [imageset_name, is_regular]);
 
   useEffect(() => {
@@ -85,17 +83,24 @@ function ImageSet() {
   const [column, setColumn] = useState(10);
   const height = '80vh';
 
-  const [openImage, setOpenImage] = useState<ImageState | null>(null);
-  function onImageClose(_image: ImageState) { setOpenImage(null); }
+  const [openImage, setOpenImage] = useState<ImageState | undefined>(undefined);
+  function onImageClose(_image: ImageState) { setOpenImage(undefined); }
   function onImageOpen(image: ImageState) { setOpenImage(image); }
+
+  async function __load() {
+    setLoading(true);
+    await load();
+    setLoading(false);
+    navigate('/imageset', { replace: true, state: { ...location.state, filter_name: filter.name } });
+  }
+
+
 
   return (<>
     <Header onRenameImageset={(_, new_name) => {
       navigate('/imageset', { replace: true, state: { ...location.state, imageset_name: new_name, filter_name: filter.name } })
     }}
-      onLoad={() => load().finally(() => 
-        navigate('/imageset', { replace: true, state: { ...location.state, filter_name: filter.name } })
-      ) }
+      onLoad={__load}
       onDelete={_delete}
     />
 
@@ -111,60 +116,62 @@ function ImageSet() {
 
     {/* 正式内容 */}
     <Grid container spacing={2} >
-      <Grid size={10}>
-        {/* 这里放置图片 */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Select
-            labelId="demo-simple-select-standard-label"
-            id="demo-simple-select-standard"
-            label="concept or selection"
-            variant="standard"
-            size="small"
-            value={filter.name}
-            sx={{ m: 1, minWidth: 240 }}
-            onChange={(event) => {
-              const _filter = getFilterByName(event.target.value);
-              setFilter(_filter);
-            }}
-          >
-            {
-              filterNameList.map((name, index) => <MenuItem key={index} value={name}>
-                {name}
-              </MenuItem>)
-            }
-          </Select>
-          <div style={{ flex: 1 }}></div>
-          <Slider
-            size="small"
-            defaultValue={column}
-            value={column}
-            onChange={(_, value) => setColumn(value as number)}
-            valueLabelDisplay="off"
-            sx={{ maxWidth: 360 }}
-            max={16}
-            min={4}
+      <Grid size={9}>
+        <Paper elevation={3} sx={{ backgroundColor: "rgba(255, 255, 255, 0.4)" }}>
+          {/* 这里放置图片 */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Select
+              labelId="demo-simple-select-standard-label"
+              id="demo-simple-select-standard"
+              label="concept or selection"
+              variant="standard"
+              size="small"
+              value={filter.name}
+              sx={{ m: 1, minWidth: 180 }}
+              onChange={(event) => {
+                const _filter = getFilterByName(event.target.value);
+                setFilter(_filter);
+              }}
+            >
+              {
+                filterNameList.map((name, index) => <MenuItem key={index} value={name}>
+                  {name}
+                </MenuItem>)
+              }
+            </Select>
+            <div style={{ flex: 1 }}></div>
+            <Slider
+              size="small"
+              defaultValue={column}
+              value={column}
+              onChange={(_, value) => setColumn(value as number)}
+              valueLabelDisplay="off"
+              sx={{ maxWidth: 120, margin: 1, }}
+              max={16}
+              min={4}
+            />
+          </Box>
+          <ImageGallery
+            images={filter.images}
+            height={height}
+            enableFullscreen
+            badge
+            column={column}
+            onImageClose={onImageClose}
+            onImageOpen={onImageOpen}
           />
-        </Box>
-        <ImageGallery
-          images={filter.images}
-          height={height}
-          enableFullscreen
-          badge
-          column={column}
-          onImageClose={onImageClose}
-          onImageOpen={onImageOpen}
-        />
+        </Paper>
       </Grid>
 
-      <Grid size={2} sx={{ height: '100%' }}>
+      <Grid size={3} sx={{ height: '100%' }}>
         {/* 在这里路由 */}
         <Routes>
           {/* 这里就先不跳转, 在里面按照需要跳转 */}
           <Route path="/detail" element={<Editor filter={filter} onReload={load} />} />
-          <Route path="/caption-editor" element={<CaptionEditor />} />
+          <Route path="/caption-editor" element={<CaptionEditor filter={filter} openImage={openImage} />} />
           <Route path="*" element={<Navigate to="/imageset/detail" replace state={location.state} />} />
         </Routes>
-        
+
       </Grid>
     </Grid>
 

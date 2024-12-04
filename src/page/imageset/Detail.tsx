@@ -3,7 +3,7 @@
 // 包含一个header, header中包含数据集名称, 刷新按钮, 新建按钮, 保存按钮, 设置按钮, 帮助按钮
 
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Divider, Grid2 as Grid, Stack } from "@mui/material";
+import { Backdrop, Button, CircularProgress, Divider, Grid2 as Grid, Stack } from "@mui/material";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { FilterState, removeFilter } from "../../app/imageSetSlice";
@@ -25,6 +25,8 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
   const [createDialog, setCreateDialog] = useState(false);
   const [addImageDialog, setAddImageDialog] = useState(false);
   const [taggerDialog, setTaggerDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   return (
     <>
       <Stack spacing={1} divider={<Divider flexItem />}>
@@ -51,15 +53,17 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
                 onClick={() => {
                   const response = window.confirm(`do you want to delete all images in ${filter.name}`);
                   if (response) {
+                    setLoading(true);
                     const name = filter.name;
                     dispatch(removeFilter(name));
                     // 删除图片, 需要跳转到 <all>
-                    api.delete_images(filter.images).then((result) => console.log(result)).finally(() => {
+                    api.delete_images(filter.images).finally(() => {
                       onReload().finally(() => {
-                        navigate('/imageset/detail', { replace: true, state: { ...location.state, filter_name: '<all>' } })
+                        setLoading(false);
+                        navigate('/imageset/detail', { replace: true, state: { ...location.state, filter_name: '<all>' } });
                       });
                     });
-                    
+
                   }
                 }}
               >delete images</Button>
@@ -79,11 +83,13 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
                   onClick={() => {
                     const response = window.confirm(`this operation will delete the ${filter.name} folder!`);
                     if (response) {
+                      setLoading(true);
                       // 删除概念
                       api.delete_concept(imageset_name, is_regular, filter.name).finally(() => {
                         // 已经将概念删除了, 我需要
                         dispatch(removeFilter(filter.name));
                         onReload().finally(() => {
+                          setLoading(false);
                           navigate('/imageset/detail', { replace: true, state: { ...location.state, filter_name: '<all>' } });
                         });
                       });
@@ -94,6 +100,12 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
                 <Button variant="contained" color="secondary" onClick={() => {
                   setAddImageDialog(true);
                 }}>add images</Button>
+                <Button variant="contained" color="secondary" onClick={() => {
+                  setLoading(true);
+                  api.rename_and_convert(imageset_name, is_regular, filter.name).finally(() => {
+                    onReload().finally(() => setLoading(false));
+                  });
+                }}>convert and rename</Button>
               </>
           }
         </Grid>
@@ -109,7 +121,6 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
 
         {/* 文件操作 */}
         <Grid spacing={1} container>
-          <Button variant="contained" color="warning">convert</Button>
           <Button variant="contained" color="warning">rename</Button>
           <Button variant="contained" color="warning">move</Button>
         </Grid>
@@ -133,11 +144,18 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
       <AddImageDialog open={addImageDialog} imageset_name={imageset_name} is_regular={is_regular} concept_folder={filter.name}
         onClose={() => { setAddImageDialog(false); }} onSubmit={onReload} />
 
-      <TaggerDialog open={taggerDialog} filter_name={filter.name}
+      <TaggerDialog open={taggerDialog} filter={filter}
         onClose={() => { setTaggerDialog(false); }} onSubmit={() => {
           onReload();
-          navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: filter.name } });
+          navigate("/imageset/caption-editor", { replace: true, state: { ...location.state, filter_name: filter.name } });
         }} />
+
+      <Backdrop
+        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}
+        open={loading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </>
   );
 }

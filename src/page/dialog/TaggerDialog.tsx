@@ -1,20 +1,11 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, LinearProgress, MenuItem, Select, Slider, Stack, TextField } from "@mui/material";
 import { useRef, useState } from "react";
-import { FilterState, ImageState } from "../../app/imageSetSlice";
+import { FilterState } from "../../app/imageSetSlice";
 import api from "../../api";
-import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
-import { createSelector } from "@reduxjs/toolkit";
-
-
-const selectImagesByFilterName = (filter_name: string) => createSelector(
-  (state: RootState) => state.imageSet.filters,
-  (filters) => filters.find((item: FilterState) => item.name === filter_name)?.images || []
-);
 
 interface taggerDialogProps {
   open: boolean;
-  filter_name: string,
+  filter: FilterState,
   onClose: () => void,
   onSubmit?: () => void,
 };
@@ -40,8 +31,7 @@ function TaggerDialog(props: taggerDialogProps) {
   const stop = useRef(false);
   const [progress, setProgress] = useState(0);
 
-  // 根据 filter_name 从 redux 中 select
-  const images: ImageState[] = useSelector(selectImagesByFilterName(props.filter_name));
+
 
   async function tagger() {
     setLoading(true);
@@ -49,11 +39,10 @@ function TaggerDialog(props: taggerDialogProps) {
     const additional_tags = additionalTags.split(',').map(tag => tag.trim());
     const exclude_tags = excludeTags.split(',').map(tag => tag.trim());
 
-    for (const [index, image] of images.entries()) {
+    for (const [index, image] of props.filter.images.entries()) {
       if (stop.current) { break; }
       const tags = await api.interrogate(image, modelName, threshold, additional_tags, exclude_tags);
-      setProgress(index * 100 / images.length);
-      console.log(tags);
+      setProgress(index * 100 / props.filter.images.length);
     }
 
     setLoading(false);
@@ -65,7 +54,7 @@ function TaggerDialog(props: taggerDialogProps) {
       open={props.open}
       onClose={props.onClose}
     >
-      <DialogTitle>tagger for <b>{props.filter_name}</b></DialogTitle>
+      <DialogTitle>tagger for <b>{props.filter.name}</b></DialogTitle>
       <DialogContent>
         {/* 模型选择器 */}
         <Stack spacing={2}>
