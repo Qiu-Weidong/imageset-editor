@@ -2,12 +2,14 @@
 
 // 包含一个header, header中包含数据集名称, 刷新按钮, 新建按钮, 保存按钮, 设置按钮, 帮助按钮
 
-import { Box, Chip, Grid2 as Grid, ImageList, ImageListItem, Paper } from "@mui/material";
+import { Box, Chip, Grid2 as Grid, ImageList, ImageListItem } from "@mui/material";
 import { useState } from "react";
 import { ImageState } from "../../app/imageSetSlice";
 
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
+import { useDispatch } from "react-redux";
+import { closeImage, openImage } from "../../app/openImageSlice";
 
 
 
@@ -26,9 +28,11 @@ function ImageGallery({
   images: ImageState[],
   enableFullscreen?: boolean,
   badge?: boolean,
-  onImageOpen?: (image: ImageState) => void,
-  onImageClose?: (image: ImageState) => void,
+  onImageOpen?: (image: ImageState, index: number) => void,
+  onImageClose?: (image: ImageState, index: number) => void,
 }) {
+  const dispatch = useDispatch();
+
   const [openImageIndex, setOpenImageIndex] = useState(
     images.length <= 1 ? 0 : -1
   );
@@ -36,7 +40,7 @@ function ImageGallery({
     const [hovered, setHovered] = useState(false);
     function click_handler() {
       setOpenImageIndex(props.index);
-      onImageOpen?.(props.image);
+      dispatch(openImage(props.image));
     }
 
     return (
@@ -86,6 +90,9 @@ function ImageGallery({
   function ImageCarousel({ images, openSlide }: { images: ImageState[], openSlide: number }) {
     return (
       <Carousel loop height={height} initialSlide={openSlide} withIndicators style={{ marginTop: `-${height}` }}
+        onSlideChange={(index) => {  
+          dispatch(openImage(images[index]));
+        } }
       >
         {
           images.map((image, index) =>
@@ -95,7 +102,10 @@ function ImageGallery({
                 background: 'rgba(255, 255, 255, .2)',
                 backdropFilter: 'blur(7px)',
               }}
-                onClick={() => {setOpenImageIndex(-1); onImageClose?.(image); }}
+                onClick={() => {
+                  setOpenImageIndex(-1); 
+                  dispatch(closeImage());
+                }}
               />
             </Carousel.Slide>
           )

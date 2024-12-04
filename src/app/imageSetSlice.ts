@@ -1,5 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+// path 是一个图片的唯一标识
+
 export interface ImageState {
   src: string,                // 图片的url
   thumbnail: string,          // 缩略图url
@@ -22,9 +24,6 @@ export interface FilterState {
   concept: { name: string, repeat: number } | null,  // 简单一点, 通过是否存在repeat来判断是否是临时选择
 };
 
-
-// 进入 detail 之后才加载, 加载 regular 或者 train 中所有图片的元信息
-// 对于数据集而言,一个train是一个ImageSet, regular 是一个 ImageSet.
 export interface ImageSetState {
   name: string, // 图片集的名字
 

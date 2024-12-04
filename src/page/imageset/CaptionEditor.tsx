@@ -1,8 +1,10 @@
 import { Button, Card, CardActions, CardContent, Chip, IconButton, TextField, Typography } from "@mui/material";
-import { FilterState, ImageState } from "../../app/imageSetSlice";
+import { FilterState } from "../../app/imageSetSlice";
 import { useEffect, useState } from "react";
 import DoneIcon from '@mui/icons-material/Done';
 import AddIcon from '@mui/icons-material/Add';
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
 
 
 
@@ -75,7 +77,10 @@ function CaptionEditorBox(props: {
   const [filterText, setFilterText] = useState<string>('');
   const [filteredCaptions, setFilteredCaptions] = useState<string[]>(props.captions);
 
-
+  useEffect(() => {
+    setFilterText('');
+    setFilteredCaptions(props.captions);
+  }, [props.captions]);
 
   // 控制添加部分的显示
   const [adding, setAdding] = useState(false);
@@ -136,10 +141,9 @@ function union<T>(arr1: T[], arr2: T[]): T[] {
 
 
 function CaptionEditor({
-  filter, openImage = undefined,
+  filter, 
 }: {
   filter: FilterState,
-  openImage?: ImageState
 }) {
   // 第一步, 计算所有标签的交集
 
@@ -153,9 +157,7 @@ function CaptionEditor({
     common_captions = intersection(common_captions, image.captions);
   }
 
-
-
-
+  const openImage = useSelector((state: RootState) => state.openImage.image);
 
   // 第二步, 计算所有标签的并集
   return (<Card sx={{ backgroundColor: 'rgba(255, 255, 255, 0.75)' }}>
@@ -176,7 +178,7 @@ function CaptionEditor({
       >Tag Editor</Typography>
     </CardContent>
     {
-      !openImage ? <><CardContent>
+      ! openImage ? <><CardContent>
         <Typography
           variant="h6"
           noWrap
@@ -239,7 +241,13 @@ function CaptionEditor({
             textDecoration: 'none',
           }}
         >Image Tags</Typography>
-        <CaptionEditorBox addable captions={openImage.captions}></CaptionEditorBox>
+        <CaptionEditorBox addable captions={openImage.captions}
+          onAddCaption={(caption) => {
+            // 构造出新的字幕
+            const captions = Array.from(new Set([...openImage.captions, caption]));
+
+          }}
+        ></CaptionEditorBox>
       </CardContent>
     }
 

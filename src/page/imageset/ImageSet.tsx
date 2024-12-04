@@ -83,9 +83,6 @@ function ImageSet() {
   const [column, setColumn] = useState(10);
   const height = '80vh';
 
-  const [openImage, setOpenImage] = useState<ImageState | undefined>(undefined);
-  function onImageClose(_image: ImageState) { setOpenImage(undefined); }
-  function onImageOpen(image: ImageState) { setOpenImage(image); }
 
   async function __load() {
     setLoading(true);
@@ -157,8 +154,6 @@ function ImageSet() {
             enableFullscreen
             badge
             column={column}
-            onImageClose={onImageClose}
-            onImageOpen={onImageOpen}
           />
         </Paper>
       </Grid>
@@ -168,7 +163,7 @@ function ImageSet() {
         <Routes>
           {/* 这里就先不跳转, 在里面按照需要跳转 */}
           <Route path="/detail" element={<Editor filter={filter} onReload={load} />} />
-          <Route path="/caption-editor" element={<CaptionEditor filter={filter} openImage={openImage} />} />
+          <Route path="/caption-editor" element={<CaptionEditor filter={filter}/>} />
           <Route path="*" element={<Navigate to="/imageset/detail" replace state={location.state} />} />
         </Routes>
 

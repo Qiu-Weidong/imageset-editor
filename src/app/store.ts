@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import settingsReducer from './settingsSlice';
-import imageSetRecucer from './imageSetSlice';
+import imageSetReducer from './imageSetSlice';
+import openImageReducer from './openImageSlice';
 
 
 export const store = configureStore({
   reducer: {
     setting: settingsReducer, // 用户设置
-    imageSet: imageSetRecucer,
+    imageSet: imageSetReducer,
+    openImage: openImageReducer,
   },
 })
 
