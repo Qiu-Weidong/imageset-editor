@@ -7,6 +7,8 @@ import { store } from "./app/store";
 import reportWebVitals from './reportWebVitals';
 import App from './App';
 import { MantineProvider } from '@mantine/core';
+import { enableMapSet } from 'immer';
+enableMapSet();
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

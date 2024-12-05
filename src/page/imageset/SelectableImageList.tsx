@@ -23,29 +23,25 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
 
-export const selectFilterNameList = createSelector(
-  (state: RootState) => state.imageSet.filters,
-  (filters) => filters.map(item => item.name)
-);
-
 // 可以将这个选择器放到外面的页面中，将对应的 filter_name 的图片作为属性传入进来
 const selectAllImages = createSelector(
-  (state: RootState) => state.imageSet.filters,
-  (filters) => {
-    // 目的是得到这样的一个 map
-    const image_list_map = new Map<string, SelectableImageState[]>();
+  [
+    (state: RootState) => state.imageSet.images,
+    (state: RootState) => state.imageSet.filters,
+  ],
+  (images, filters) => {
     // 首先需要建立一个 image map
     const image_map = new Map<string, SelectableImageState>();
-    // 直接使用 <all> images 来构造
-    filters.find(item => item.name === '<all>')?.images.forEach(image => {
-      image_map.set(image.path, { image, is_selected: false });
-    });
+    for(const [path, image] of images) {
+      image_map.set(path, { image, is_selected: false });
+    }
 
+    // 得到一个 SelectableImageState 的 filter
+    const image_list_map = new Map<string, SelectableImageState[]>();
+    
 
     for (const filter of filters) {
-
       const selectable_images: SelectableImageState[] = [];
-
       for (const image of filter.images) {
         const selectable_image = image_map.get(image.path);
         if (selectable_image) {
@@ -53,14 +49,14 @@ const selectAllImages = createSelector(
         }
       }
       image_list_map.set(filter.name, selectable_images);
-
     }
     return image_list_map;
   }
 );
 
+
 interface SelectableImageState {
-  image: ImageState,
+  image: ImageState, // 必须包含一个指向原始图像的引用
   is_selected: boolean,
 };
 
@@ -78,7 +74,6 @@ function SelectableImageList({
   enableFullscreen?: boolean,
   badge?: boolean,
   filter_name: string,
-  onFilterNameChange?: (newName: string) => void
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -296,7 +291,7 @@ function SelectableImageList({
           >返回</Button>
           <Button variant="contained" size="small" color="success" startIcon={<AddCircleIcon />}
             onClick={() => {
-              const images = image_list_map.get('<all>')?.filter(image => image.is_selected).map(image => image.image) || [];
+              const images: ImageState[] = image_list_map.get('<all>')?.filter(image => image.is_selected).map(image => image.image) || [];
               if (images.length <= 0) {
                 // 警告
                 window.alert('you have not select any images');

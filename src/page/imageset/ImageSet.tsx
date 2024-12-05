@@ -1,27 +1,17 @@
 import { useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import api from "../../api";
-import { FilterState, ImageState, reloadImageSet } from "../../app/imageSetSlice";
+import { FilterState, ImageSetState, reloadImageSet } from "../../app/imageSetSlice";
 import Header from "../header/Header";
 import { Backdrop, Box, CircularProgress, Grid2 as Grid, MenuItem, Paper, Select, Slider, Toolbar } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { Editor } from "./Detail";
-import { createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
 import ImageGallery from "./ImageGallery";
 import CaptionEditor from "./CaptionEditor";
 
 
-const selectAllFilter = createSelector(
-  (state: RootState) => state.imageSet.filters,
-  (filters) => {
-    const filter_map = new Map<string, FilterState>();
-    for (const filter of filters) {
-      filter_map.set(filter.name, filter);
-    }
-    return filter_map;
-  }
-);
+// filter 中保存的必须是引用, 这样在一个 filter 中修改了图片信息在另外的 filter 中才能够查看. 
 
 function ImageSet() {
   const location = useLocation();
@@ -31,10 +21,10 @@ function ImageSet() {
   const { imageset_name, is_regular, filter_name }:
     { imageset_name: string, is_regular: boolean, filter_name: string } = location.state;
 
-  const filter_map = useSelector(selectAllFilter);
-  const filterNameList = Array.from(filter_map.keys());
+  const filter_list = useSelector((state: RootState) => state.imageSet.filters);
+  const filterNameList = filter_list.map(filter => filter.name);
   function getFilterByName(name: string): FilterState {
-    return filter_map.get(name) || {
+    return filter_list.find((filter) => filter.name === name) || {
       name, images: [], concept: null,
     }
   }
@@ -47,7 +37,7 @@ function ImageSet() {
 
   async function load() {
     // 加载数据
-    let result = await api.load(imageset_name, is_regular);
+    let result: ImageSetState = await api.load(imageset_name, is_regular);
     dispatch(reloadImageSet(result));
   }
 
@@ -76,7 +66,7 @@ function ImageSet() {
   useEffect(() => {
     const _filter = getFilterByName(filter_name);
     setFilter(_filter);
-  }, [filter_name, filter_map]);
+  }, [filter_name, filter_list]);
 
 
 
@@ -88,7 +78,9 @@ function ImageSet() {
     setLoading(true);
     await load();
     setLoading(false);
-    navigate('/imageset', { replace: true, state: { ...location.state, filter_name: filter.name } });
+
+    // 这里是强行跳转到
+    navigate(location.pathname, { replace: true, state: { ...location.state, filter_name: filter.name } });
   }
 
 
@@ -163,7 +155,7 @@ function ImageSet() {
         <Routes>
           {/* 这里就先不跳转, 在里面按照需要跳转 */}
           <Route path="/detail" element={<Editor filter={filter} onReload={load} />} />
-          <Route path="/caption-editor" element={<CaptionEditor filter={filter}/>} />
+          <Route path="/caption-editor" element={<CaptionEditor filter={filter} onReload={load} />} />
           <Route path="*" element={<Navigate to="/imageset/detail" replace state={location.state} />} />
         </Routes>
 

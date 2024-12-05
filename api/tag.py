@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from typing import List
+from typing import List, Dict
 import os
 from .config import CONF_REPO_DIR
 
@@ -84,14 +84,24 @@ async def image_interrogate(request: InterrogateRequest):
   return tags
 
 
-
-
-async def save_tags():
+class TagMap(BaseModel):
+  tags: Dict[str, List[str]]
+  
+@api_tag.put("/save")
+async def save_tags(data: TagMap):
   '''
     i = Image(image_path)
     i.read_comment()
     i.modity_comment('')
     i.close()
+    Map<path, caption[]>
   '''
-  pass
+  # 接下来直接保存
+  import pyexiv2, json
+  for path, captions in data.tags.items():
+    image_path = os.path.join(CONF_REPO_DIR, path)
+    metadata = pyexiv2.Image(image_path)
+    metadata.modify_comment(json.dumps(captions))
+    metadata.close()
+  
 

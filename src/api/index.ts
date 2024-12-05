@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { ImageSetMetadata } from "../page/imageset/Overview";
-import { ImageSetState, ImageState } from "../app/imageSetSlice";
+import { FilterState, ImageSetState, ImageState } from "../app/imageSetSlice";
 import { FileWithPath } from "@mantine/dropzone";
 
 
@@ -67,21 +67,51 @@ async function add_concept(
   return result;
 }
 
-
+// 这里修改一下, load 只需要返回所有图片的列表即可
 async function load(imageset_name: string, is_regular: boolean): Promise<ImageSetState> {
-  let result: ImageSetState = (await axios.get("/imageset/load", {
+  // 返回一个 ImageState[] 的结果，根据这个结果来构造
+  let response: {
+    name: string, 
+    type: 'train' | 'regular',
+    images: ImageState[],
+  } = (await axios.get("/imageset/load", {
     params: { imageset_name, is_regular }
   })).data;
-  // 记得添加一个 <all> 的标识
-  const all_images: ImageState[] = []
-  for (const filter of result.filters) {
-    all_images.push(...filter.images);
+
+  const result: ImageSetState = {
+    name: response.name,
+    type: response.type, 
+    filters: [],
+    images: new Map(),
+  };
+
+
+  // 第一步, 先构造出来一个 image 的 map
+  for(const image of response.images) {
+    result.images.set(image.path, image);
   }
-  result.filters.push({
-    name: '<all>',
-    images: all_images,
-    concept: null,
-  });
+  // 第二步, 构造出一个 all 的 filter
+  const filter_all: FilterState = {
+    name: '<all>', concept: null, images: [...response.images],
+  };
+  result.filters.push(filter_all);
+
+  // 还是这样处理比较好
+
+  for(const image of response.images) {
+    const filter_name = `${image.repeat}_${image.concept}`;
+    const filter = result.filters.find((filter) => filter.name === filter_name);
+    if(filter) {
+      filter.images.push(image);
+    } else {
+      const new_filter: FilterState = {
+        name: filter_name,
+        concept: { name: image.concept, repeat: image.repeat },
+        images: [image],
+      }
+      result.filters.push(new_filter);
+    }
+  }
   return result;
 }
 
@@ -142,6 +172,12 @@ async function rename_and_convert(imageset_name: string, is_regular: boolean, co
   await axios.put("/imageset/rename_and_convert", {}, { params: { imageset_name, is_regular, concept_folder } });
 }
 
+
+async function save_tags(image_captions: Map<string, string[]>) {
+  const data = Object.fromEntries(image_captions);
+  await axios.put("/tag/save", { tags: data });
+}
+
 const api = {
   delete_imageset,
   create_imageset,
@@ -159,6 +195,7 @@ const api = {
   upload_images,
   interrogate,
   rename_and_convert,
+  save_tags,
 };
 
 

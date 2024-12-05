@@ -57,7 +57,7 @@ function ImageUploader({
       </Dropzone>
 
       {
-        preview ? <ImageList variant="masonry" cols={12} gap={4} sx={{ marginTop: 0, }}>
+        preview ? <ImageList variant="masonry" cols={4} gap={4} sx={{ marginTop: 0, }}>
           {
             files.map((file, index) => {
               const imageUrl = URL.createObjectURL(file);

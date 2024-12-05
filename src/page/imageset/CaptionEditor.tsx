@@ -1,10 +1,12 @@
-import { Button, Card, CardActions, CardContent, Chip, IconButton, TextField, Typography } from "@mui/material";
-import { FilterState } from "../../app/imageSetSlice";
+import { Backdrop, Button, Card, CardActions, CardContent, Chip, CircularProgress, IconButton, TextField, Typography } from "@mui/material";
+import { FilterState, ImageState } from "../../app/imageSetSlice";
 import { useEffect, useState } from "react";
 import DoneIcon from '@mui/icons-material/Done';
 import AddIcon from '@mui/icons-material/Add';
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
+import { useNavigate } from "react-router-dom";
+import api from "../../api";
 
 
 
@@ -41,6 +43,12 @@ function EditableChip(props: {
     }} autoFocus
       onChange={(e) => setInputValue(e.target.value)}
       onBlur={finishEdit}
+      onKeyDown={(event) => {
+        if(event.key === 'Enter') {
+          finishEdit();
+          event.preventDefault();
+        }
+      }}
     />
   </div>) : inputValue;
 
@@ -138,77 +146,151 @@ function union<T>(arr1: T[], arr2: T[]): T[] {
 }
 
 
-
-
-function CaptionEditor({
-  filter, 
-}: {
-  filter: FilterState,
-}) {
-  // 第一步, 计算所有标签的交集
-
-  let total_captions: string[] = [];
+function getAllCaptionsFromFilter(filter: FilterState): Map<string, string[]> {
+  const result = new Map<string, string[]>();
   for (const image of filter.images) {
-    total_captions = union(total_captions, image.captions);
+    result.set(image.path, image.captions);
+  }
+  return result;
+}
+
+function getTotalCaptionsAndCommonCaptionsFromImageCaptions(image_captions: Map<string, string[]>): { total_captions: string[], common_captions: string[] } {
+  let total_captions: string[] = [];
+  for (const captions of image_captions.values()) {
+    total_captions = union(total_captions, captions);
   }
 
   let common_captions: string[] = [...total_captions];
-  for (const image of filter.images) {
-    common_captions = intersection(common_captions, image.captions);
+  for (const captions of image_captions.values()) {
+    common_captions = intersection(common_captions, captions);
   }
 
+  return {
+    total_captions, common_captions,
+  };
+}
+
+
+interface CaptionState {
+  total_captions: string[],
+  common_captions: string[],
+  image_captions: Map<string, string[]>,
+}
+
+function CaptionEditor({
+  filter, // filter 决定了要当前编辑的对象, 但是我不能直接在 filter 上面进行修改
+  onReload, // 还是需要一个 onReload
+}: {
+  filter: FilterState,
+  onReload: () => Promise<void>,
+}) {
+  // 点击保存会直接保存到磁盘, 然后直接从磁盘重新加载即可
+  const navigate = useNavigate();
+
+  // 第一步, 计算所有标签的交集
+  const image_captions = getAllCaptionsFromFilter(filter);
+  const { total_captions, common_captions } = getTotalCaptionsAndCommonCaptionsFromImageCaptions(image_captions);
+
+  const [captionState, setCaptionState] = useState<CaptionState>({
+    total_captions, common_captions, image_captions
+  });
+  // 根据 openImage 在 captionsMap 中获取
   const openImage = useSelector((state: RootState) => state.openImage.image);
 
+
+
+  const [loading, setLoading] = useState(false);
+  async function save() {
+    setLoading(true);
+    // 调用保存api
+    await api.save_tags(captionState.image_captions);
+    await onReload();
+    setLoading(false);
+  }
+
+  // 除非 filter 改变
+  useEffect(() => {
+    const image_captions = getAllCaptionsFromFilter(filter);
+    const { total_captions, common_captions } = getTotalCaptionsAndCommonCaptionsFromImageCaptions(image_captions);
+    setCaptionState({
+      image_captions, total_captions, common_captions,
+    });
+  }, [filter]);
+
+  function updateImageCaptions(image: ImageState, captions: string[]) {
+    // 直接修改对应图片的字幕
+    const image_captions = new Map(captionState.image_captions);
+    image_captions.set(image.path, captions);
+    const { total_captions, common_captions } = getTotalCaptionsAndCommonCaptionsFromImageCaptions(image_captions);
+    setCaptionState({
+      image_captions, total_captions, common_captions,
+    });
+  }
+
+  function addCaption(caption: string) {
+    // 所有图片都添加一个 caption
+    const image_captions = new Map<string, string[]>();
+    for (const [key, value] of captionState.image_captions) {
+      image_captions.set(key, Array.from(new Set([...value, caption])));
+    }
+    const { total_captions, common_captions } = getTotalCaptionsAndCommonCaptionsFromImageCaptions(image_captions);
+    setCaptionState({
+      image_captions, total_captions, common_captions,
+    });
+  }
+
+  function removeCaption(caption: string) {
+    // 所有图片都删除一个 caption
+    const image_captions = new Map<string, string[]>();
+    for (const [key, value] of captionState.image_captions) {
+      const captions = value.filter(item => item !== caption);
+      image_captions.set(key, Array.from(new Set(captions)));
+    }
+    const { total_captions, common_captions } = getTotalCaptionsAndCommonCaptionsFromImageCaptions(image_captions);
+    setCaptionState({
+      image_captions, total_captions, common_captions,
+    });
+  }
+
+  function changeCaption(before: string, after: string) {
+    // 所有图片都修改一个 caption
+    const image_captions = new Map<string, string[]>();
+    for (const [key, value] of captionState.image_captions) {
+      const captions = value.map(item => {
+        if (item === before) { return after; }
+        else { return item; }
+      });
+      image_captions.set(key, Array.from(new Set(captions)));
+    }
+    const { total_captions, common_captions } = getTotalCaptionsAndCommonCaptionsFromImageCaptions(image_captions);
+    setCaptionState({
+      image_captions, total_captions, common_captions,
+    });
+  }
+
+
+
   // 第二步, 计算所有标签的并集
-  return (<Card sx={{ backgroundColor: 'rgba(255, 255, 255, 0.75)' }}>
-    <CardContent>
-      <Typography
-        variant="h5"
-        noWrap
-        component="div"
-        sx={{
-          mr: 2,
-          display: { xs: 'none', md: 'flex' },
-          fontFamily: 'monospace',
-          fontWeight: 700,
-          letterSpacing: '.3rem',
-          color: 'inherit',
-          textDecoration: 'none',
-        }}
-      >Tag Editor</Typography>
-    </CardContent>
-    {
-      ! openImage ? <><CardContent>
+  return (
+    <><Card sx={{ backgroundColor: 'rgba(255, 255, 255, 0.75)' }}>
+      <CardContent>
         <Typography
-          variant="h6"
+          variant="h5"
           noWrap
           component="div"
           sx={{
             mr: 2,
             display: { xs: 'none', md: 'flex' },
             fontFamily: 'monospace',
-            fontWeight: 400,
-            letterSpacing: '.1rem',
+            fontWeight: 700,
+            letterSpacing: '.3rem',
             color: 'inherit',
             textDecoration: 'none',
           }}
-        >Commom Tags</Typography>
-        <CaptionEditorBox captions={common_captions} addable
-          onRemoveCaption={(caption: string) => {
-            // 所有图片都删除 caption 标签
-            // 更新 common captions
-          }}
-          onAddCaption={(caption: string) => {
-            // 所有图片都添加 caption 标签
-            // 更新 common captions
-          }}
-          onChangeCaption={(before, after) => {
-            // 所有图片都将 before 修改为 after
-            // 更新 common captions
-          }}
-        ></CaptionEditorBox>
+        >Tag Editor</Typography>
       </CardContent>
-        <CardContent>
+      {
+        !openImage ? <><CardContent>
           <Typography
             variant="h6"
             noWrap
@@ -222,45 +304,110 @@ function CaptionEditor({
               color: 'inherit',
               textDecoration: 'none',
             }}
-          >Total Tags</Typography>
-          <CaptionEditorBox captions={total_captions}
-
+          >Commom Tags</Typography>
+          <CaptionEditorBox captions={captionState.common_captions} addable
+            onRemoveCaption={(caption: string) => {
+              removeCaption(caption);
+            }}
+            onAddCaption={(caption: string) => {
+              addCaption(caption);
+            }}
+            onChangeCaption={(before, after) => {
+              changeCaption(before, after);
+            }}
           ></CaptionEditorBox>
-        </CardContent></> : <CardContent>
-        <Typography
-          variant="h6"
-          noWrap
-          component="div"
-          sx={{
-            mr: 2,
-            display: { xs: 'none', md: 'flex' },
-            fontFamily: 'monospace',
-            fontWeight: 400,
-            letterSpacing: '.1rem',
-            color: 'inherit',
-            textDecoration: 'none',
+        </CardContent>
+          <CardContent>
+            <Typography
+              variant="h6"
+              noWrap
+              component="div"
+              sx={{
+                mr: 2,
+                display: { xs: 'none', md: 'flex' },
+                fontFamily: 'monospace',
+                fontWeight: 400,
+                letterSpacing: '.1rem',
+                color: 'inherit',
+                textDecoration: 'none',
+              }}
+            >Total Tags</Typography>
+            <CaptionEditorBox captions={captionState.total_captions}
+              onRemoveCaption={(caption: string) => removeCaption(caption)}
+              onChangeCaption={(before: string, after: string) => changeCaption(before, after)}
+            ></CaptionEditorBox>
+          </CardContent></> : <CardContent>
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{
+              mr: 2,
+              display: { xs: 'none', md: 'flex' },
+              fontFamily: 'monospace',
+              fontWeight: 400,
+              letterSpacing: '.1rem',
+              color: 'inherit',
+              textDecoration: 'none',
+            }}
+          >Image Tags</Typography>
+          <CaptionEditorBox addable captions={captionState.image_captions.get(openImage.path) || []}
+            onAddCaption={(caption) => {
+              // 构造出新的字幕
+              const origin_captions = captionState.image_captions.get(openImage.path) || [];
+              const captions = Array.from(new Set([...origin_captions, caption]));
+              updateImageCaptions(openImage, captions);
+            }}
+            onRemoveCaption={(caption) => {
+              const origin_captions = captionState.image_captions.get(openImage.path) || [];
+              const captions = origin_captions.filter(item => item !== caption);
+              updateImageCaptions(openImage, captions);
+            }}
+            onChangeCaption={(before, after) => {
+              const origin_captions = captionState.image_captions.get(openImage.path) || [];
+              const captions = origin_captions.map(item => {
+                if (item === before) {
+                  return after;
+                } else {
+                  return item;
+                }
+              });
+              updateImageCaptions(openImage, captions);
+            }}
+          ></CaptionEditorBox>
+        </CardContent>
+      }
+
+      <CardActions>
+        <Button size="small" color="primary" variant="contained"
+          onClick={() => {
+            save().finally(() => {
+              // 跳转
+            });
           }}
-        >Image Tags</Typography>
-        <CaptionEditorBox addable captions={openImage.captions}
-          onAddCaption={(caption) => {
-            // 构造出新的字幕
-            const captions = Array.from(new Set([...openImage.captions, caption]));
-
+        >
+          Save
+        </Button>
+        <Button size="small" color="secondary" variant="contained"
+          onClick={() => {
+            const response = window.confirm('you will lose all changes.');
+            if (response) {
+              navigate(-1);
+            }
           }}
-        ></CaptionEditorBox>
-      </CardContent>
-    }
+        >
+          Return
+        </Button>
+      </CardActions>
 
-    <CardActions>
-      <Button size="small" color="primary" variant="contained">
-        Save
-      </Button>
-      <Button size="small" color="secondary" variant="contained">
-        Return
-      </Button>
-    </CardActions>
-
-  </Card>);
+    </Card>
+      <Backdrop
+        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}
+        open={loading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+    </>);
 }
 
 export default CaptionEditor;

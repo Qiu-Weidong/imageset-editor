@@ -203,61 +203,46 @@ async def get_imageset_metadata(name: str):
 async def load(imageset_name: str, is_regular: bool):
   '''
     加载数据集中的所有图片元信息
-  {
-    "name": imageset_name, 
-    "type": 'regular',
-    "filters": [{
-      "name": "1_katana", 
-      "concept": { "name": "katana", "repeat": 1, },   
-      "images": [],
-    }],
-  }
+    [{
+      src: string,                // 图片的url
+      thumbnail: string,          // 缩略图url
+      filename: string,           // 文件名称(不包含扩展名)
+      basename: string,           // 文件名称(包含扩展名)
+      path: string,               // 准确路径, path 也可以唯一标识, 从 src/reg 目录下开始
+      captions: string[],         // 字幕
+      width: number,              // 宽度
+      height: number,             // 高度
+      concept: string,
+      repeat: number,
+    }]
   '''
   imageset_dir = os.path.join('imageset-' + imageset_name)
   if is_regular:
     imageset_dir = os.path.join(imageset_dir, 'reg')
   else:
     imageset_dir = os.path.join(imageset_dir, 'src')
-    
-  # 传入文件夹的名称, 保证满足 8_xxx 这样的格式
-  def load_concept(name: str, repeat: int, path: str):
-    result = {
-      "name": f"{repeat}_{name}", 
-      "concept": { "name": name, "repeat": repeat, },
-      "images": [], 
-    }
-    
-    # 遍历下方的所有图片, 并添加到 result 中去, 注意这里的 imagefilenames 是包含了前缀的
-    imagefilenames = get_image_list(path)
+  result = {
+    "name": imageset_name, 
+    "type": 'regular' if is_regular else 'train',
+    "images": [],
+  }
+  
+  concepts = get_concept_folder_list(imageset_dir) # [{ 'name': 'katana', 'repeat': 8, 'path': 'imageset-xx/src/8_katana' }, ]
+  for concept in concepts:
+    imagefilenames = get_image_list(concept['path'])
     for imagefilename in imagefilenames:
       basename = os.path.basename(imagefilename)
       filename, _ = os.path.splitext(basename)
-      # 读取字幕/标签
       result['images'].append({
         'src': f'http://{CONF_HOST}:{CONF_PORT}/image/{imagefilename}',
         'thumbnail': f'http://{CONF_HOST}:{CONF_PORT}/image/thumbnail/{imagefilename}',
         'filename': filename,
         'basename': basename,
         'captions': load_caption(imagefilename),
-        'concept': name, 
-        'repeat': repeat,
+        'concept': concept['name'], 
+        'repeat': concept['repeat'],
         'path': imagefilename,
       })
-    
-    return result
-    
-  
-  result = {
-    "name": imageset_name, 
-    "type": 'regular' if is_regular else 'train',
-    "filters": [],
-  }
-  
-  concepts = get_concept_folder_list(imageset_dir)
-  for concept in concepts:
-    concept = load_concept(concept['name'], concept['repeat'], concept['path'])
-    result['filters'].append(concept)
-  
   return result
 
 @api_imageset.get("/open_in_file_explore")
