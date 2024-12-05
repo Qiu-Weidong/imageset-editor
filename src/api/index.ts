@@ -74,6 +74,7 @@ async function load(imageset_name: string, is_regular: boolean): Promise<ImageSe
     name: string, 
     type: 'train' | 'regular',
     images: ImageState[],
+    filters: FilterState[],
   } = (await axios.get("/imageset/load", {
     params: { imageset_name, is_regular }
   })).data;
@@ -81,7 +82,7 @@ async function load(imageset_name: string, is_regular: boolean): Promise<ImageSe
   const result: ImageSetState = {
     name: response.name,
     type: response.type, 
-    filters: [],
+    filters: response.filters, // 注意这里只有 concept 的 filter, 且不包含任何图片
     images: new Map(),
   };
 
@@ -96,21 +97,13 @@ async function load(imageset_name: string, is_regular: boolean): Promise<ImageSe
   };
   result.filters.push(filter_all);
 
-  // 还是这样处理比较好
-
+  // 还是这样处理比较好, 然后往 result 的 filter 中填充图片即可
   for(const image of response.images) {
     const filter_name = `${image.repeat}_${image.concept}`;
     const filter = result.filters.find((filter) => filter.name === filter_name);
     if(filter) {
       filter.images.push(image);
-    } else {
-      const new_filter: FilterState = {
-        name: filter_name,
-        concept: { name: image.concept, repeat: image.repeat },
-        images: [image],
-      }
-      result.filters.push(new_filter);
-    }
+    } 
   }
   return result;
 }

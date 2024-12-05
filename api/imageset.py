@@ -225,10 +225,19 @@ async def load(imageset_name: str, is_regular: bool):
     "name": imageset_name, 
     "type": 'regular' if is_regular else 'train',
     "images": [],
+    "filters": [], # 这里只将 filters 的名称构造出来, 其他在前端去填充
   }
   
   concepts = get_concept_folder_list(imageset_dir) # [{ 'name': 'katana', 'repeat': 8, 'path': 'imageset-xx/src/8_katana' }, ]
   for concept in concepts:
+    result['filters'].append({
+      'name': f"{concept['repeat']}_{concept['name']}", 
+      'concept': {
+        'name': concept['name'],
+        'repeat': concept['repeat']
+      },
+      'images': [],
+    })
     imagefilenames = get_image_list(concept['path'])
     for imagefilename in imagefilenames:
       basename = os.path.basename(imagefilename)

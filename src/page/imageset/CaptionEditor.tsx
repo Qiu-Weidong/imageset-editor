@@ -44,7 +44,7 @@ function EditableChip(props: {
       onChange={(e) => setInputValue(e.target.value)}
       onBlur={finishEdit}
       onKeyDown={(event) => {
-        if(event.key === 'Enter') {
+        if (event.key === 'Enter') {
           finishEdit();
           event.preventDefault();
         }
@@ -110,7 +110,7 @@ function CaptionEditorBox(props: {
     {/* 过滤器  */}
     <TextField fullWidth size="small" variant="standard" label="filter" value={filterText} onChange={(e) => {
       setFilterText(e.target.value);
-      const filtered = props.captions.filter(caption => caption.includes(e.target.value));
+      const filtered = props.captions.filter(caption => caption.toLocaleLowerCase().includes(e.target.value.toLocaleLowerCase()));
       setFilteredCaptions(filtered);
     }} />
 
@@ -194,22 +194,31 @@ function CaptionEditor({
   const [captionState, setCaptionState] = useState<CaptionState>({
     total_captions, common_captions, image_captions
   });
-  // 根据 openImage 在 captionsMap 中获取
+
   const openImage = useSelector((state: RootState) => state.openImage.image);
 
 
 
   const [loading, setLoading] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+
   async function save() {
     setLoading(true);
     // 调用保存api
     await api.save_tags(captionState.image_captions);
     await onReload();
     setLoading(false);
+
+    setDirty(false);
   }
 
   // 除非 filter 改变
   useEffect(() => {
+    if (dirty) {
+      const response = window.confirm("do you want to save your work?");
+      if (response) { save(); }
+    }
     const image_captions = getAllCaptionsFromFilter(filter);
     const { total_captions, common_captions } = getTotalCaptionsAndCommonCaptionsFromImageCaptions(image_captions);
     setCaptionState({
@@ -218,6 +227,7 @@ function CaptionEditor({
   }, [filter]);
 
   function updateImageCaptions(image: ImageState, captions: string[]) {
+    setDirty(true);
     // 直接修改对应图片的字幕
     const image_captions = new Map(captionState.image_captions);
     image_captions.set(image.path, captions);
@@ -228,6 +238,7 @@ function CaptionEditor({
   }
 
   function addCaption(caption: string) {
+    setDirty(true);
     // 所有图片都添加一个 caption
     const image_captions = new Map<string, string[]>();
     for (const [key, value] of captionState.image_captions) {
@@ -240,6 +251,7 @@ function CaptionEditor({
   }
 
   function removeCaption(caption: string) {
+    setDirty(true);
     // 所有图片都删除一个 caption
     const image_captions = new Map<string, string[]>();
     for (const [key, value] of captionState.image_captions) {
@@ -253,6 +265,7 @@ function CaptionEditor({
   }
 
   function changeCaption(before: string, after: string) {
+    setDirty(true);
     // 所有图片都修改一个 caption
     const image_captions = new Map<string, string[]>();
     for (const [key, value] of captionState.image_captions) {
@@ -390,10 +403,12 @@ function CaptionEditor({
         </Button>
         <Button size="small" color="secondary" variant="contained"
           onClick={() => {
-            const response = window.confirm('you will lose all changes.');
-            if (response) {
-              navigate(-1);
+            if (dirty) {
+              const response = window.confirm("do you want to save your work?");
+              if (response) { save(); }
             }
+            navigate(-1);
+            
           }}
         >
           Return
