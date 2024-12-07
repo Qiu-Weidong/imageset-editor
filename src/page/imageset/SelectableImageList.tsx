@@ -137,11 +137,16 @@ function SelectableImageList({
 
   const [showCaptionFilter, setShowCaptionFilter] = useState(false);
   const [sortMethod, setSortMethod] = useState(0);
-  
+  const sortMethodList = [
+    (a: LabelState, b: LabelState): number => b.frequency - a.frequency,
+    (a: LabelState, b: LabelState): number => a.frequency - b.frequency,
+    (a: LabelState, b: LabelState): number => b.content.localeCompare(a.content),
+    (a: LabelState, b: LabelState): number => a.content.localeCompare(b.content),
+  ];
   
   const [filteredImages, setFilteredImages] = useState<SelectableImageState[]>(data.current.images);
   const [selectedLabels, setSelectedLabels] = useState<LabelState[]>([]);
-  const [selectableLabels, setSelectableLabels] = useState<LabelState[]>(data.current.labels);
+  const [selectableLabels, setSelectableLabels] = useState<LabelState[]>(data.current.labels.sort(sortMethodList[sortMethod]));
 
   
   const [openImageIndex, setOpenImageIndex] = useState(
@@ -264,8 +269,7 @@ function SelectableImageList({
 
 
   function updateImageListAndSelectableLabels(selectedLabels: LabelState[]) {
-
-    // 注意, 是对所有的图片进行过滤
+    // 注意, 是对所有的图片进行过滤, 提供一个反向过滤函数
     const images = data.current.images.filter(image => {
       for(const label of selectedLabels) {
         if(! image.image.captions.includes(label.content)) {
@@ -277,7 +281,7 @@ function SelectableImageList({
 
     setFilteredImages(images);
 
-    // 获取所有已选图片的标签
+    // 获取所有已选图片的标签, 如果是反向过滤,那么这里需要获取已选图片不包含的标签
     let caption_set = new Set<string>([]);
     for(const image of images) {
       caption_set = new Set([...caption_set, ...image.image.captions]);
@@ -288,7 +292,7 @@ function SelectableImageList({
     }
 
     // 最后计算得到可选标签
-    const selectable_labels = data.current.labels.filter(label => caption_set.has(label.content));
+    const selectable_labels = data.current.labels.filter(label => caption_set.has(label.content)).sort(sortMethodList[sortMethod]);
     setSelectableLabels(selectable_labels);
   }
 
@@ -296,7 +300,9 @@ function SelectableImageList({
     // 清除所有过滤
     setSelectedLabels([]); // 删除所有已选标签
     setFilteredImages(data.current.images);
-    setSelectableLabels(data.current.labels);
+    setSelectableLabels(
+      data.current.labels.sort(sortMethodList[sortMethod])
+    );
   }
 
   function onLabelSelected(label: LabelState) {
@@ -324,17 +330,12 @@ function SelectableImageList({
     // 更新 data
     data.current = getAllImagesAndLabels(image_list_map, name);
     setFilteredImages(data.current.images);
-    setSelectableLabels(data.current.labels);
+    setSelectableLabels(data.current.labels.sort(sortMethodList[sortMethod]));
   }
 
-  const sortMethodList = [
-    (a: LabelState, b: LabelState): number => b.frequency - a.frequency,
-    (a: LabelState, b: LabelState): number => a.frequency - b.frequency,
-    (a: LabelState, b: LabelState): number => b.content.localeCompare(a.content),
-    (a: LabelState, b: LabelState): number => a.content.localeCompare(b.content),
-  ];
+  
 
-  const filter = (<div style={{ marginBottom: 5 }}>
+  const filter = (<div style={{ marginBottom: 5, marginLeft: 2, marginRight: 2,}}>
 
     {/* 首先来一个 switch(正向过滤或负向过滤), 一个输入框(搜索标签, 自动补全),  一个下拉菜单(排序方式), 一个清除按钮(重置) */}
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
@@ -396,7 +397,7 @@ function SelectableImageList({
     }
   </div>);
 
-  return (<>
+  return (<Paper elevation={3} sx={{ backgroundColor: 'rgba(255,255,255, 0.8)' }}>
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <Select
         labelId="demo-simple-select-standard-label"
@@ -423,7 +424,6 @@ function SelectableImageList({
       <Grid container spacing={1} sx={{ flex: 1, }}>
         <Button variant="contained" size="small" startIcon={<VisibilityIcon />}
           onClick={() => {
-            // const selected_images = image_list_map.get('<all>')?.filter(image => image.is_selected) || [];
             onChangeFilterName('[selected images]');
           }}
         >查看已选图片</Button>
@@ -497,7 +497,7 @@ function SelectableImageList({
           }}
         >创建</Button>
       </Grid>
-      <Button size="small" variant="contained" onClick={() => setShowCaptionFilter((prev) => !prev)}
+      <Button size="small" variant="text" onClick={() => setShowCaptionFilter((prev) => !prev)}
         endIcon={!showCaptionFilter ? <ExpandMoreIcon /> : <ExpandLessIcon />}>根据标签过滤</Button>
       <Slider
         size="small"
@@ -505,7 +505,7 @@ function SelectableImageList({
         value={column}
         onChange={(_, value) => setColumn(value as number)}
         valueLabelDisplay="off"
-        sx={{ marginLeft: 1, maxWidth: 120 }}
+        sx={{  maxWidth: 120, m: 1 }}
         max={16}
         min={4}
       />
@@ -526,7 +526,7 @@ function SelectableImageList({
       </Box>
       {enableFullscreen && openImageIndex >= 0 ? <ImageCarousel images={filteredImages} openSlide={openImageIndex} /> : <></>}
     </Box>
-  </>);
+  </Paper>);
 }
 
 export default SelectableImageList;
