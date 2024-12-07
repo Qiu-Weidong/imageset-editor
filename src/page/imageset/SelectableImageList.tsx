@@ -2,7 +2,7 @@
 
 // 包含一个header, header中包含数据集名称, 刷新按钮, 新建按钮, 保存按钮, 设置按钮, 帮助按钮
 
-import { Autocomplete, Avatar, Box, Button, Chip, Divider, FormControl, Grid2 as Grid, IconButton, ImageList, ImageListItem, InputLabel, MenuItem, Paper, Select, Slider, TextField } from "@mui/material";
+import { Autocomplete, Avatar, Box, Button, Chip, Divider, FormControl, Grid2 as Grid, IconButton, ImageList, ImageListItem, InputLabel, MenuItem, Select, Slider, TextField } from "@mui/material";
 import { useRef, useState } from "react";
 import { addFilter, ImageState } from "../../app/imageSetSlice";
 
@@ -317,6 +317,8 @@ function SelectableImageList({
 
 
   function onChangeFilterName(name: string) {
+    clearAllFilter();
+
     // 首先需要设置 filter name
     setFilterName(name);
     // 更新 data
