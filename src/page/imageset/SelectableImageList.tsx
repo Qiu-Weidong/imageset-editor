@@ -174,7 +174,6 @@ function SelectableImageList({
           onMouseLeave={() => setHovered(false)}
           loading="lazy"
           onClick={click_handler}
-        // onDoubleClick={() => setOpenImageIndex(props.index)}
         />
 
         {/* 蒙版就只是蒙版 */}

@@ -128,7 +128,9 @@ function ImageSet() {
                 </MenuItem>)
               }
             </Select>
-            <div style={{ flex: 1 }}></div>
+            <div style={{ flex: 1 }}>
+              <b>{ filter.images.length }</b> images.
+            </div>
             <Slider
               size="small"
               defaultValue={column}

@@ -1,11 +1,11 @@
 import { AppBar, Container, Toolbar } from "@mui/material";
-import { Paper, Autocomplete, Avatar, Box, Button, Chip, Divider, FormControl, Grid2 as Grid, IconButton, ImageList, ImageListItem, InputLabel, MenuItem, Select, Slider, TextField } from "@mui/material";
+import { Paper, Autocomplete, Avatar, Button, Chip, Divider, FormControl, Grid2 as Grid, IconButton, ImageList, ImageListItem, InputLabel, MenuItem, Select, Slider, TextField } from "@mui/material";
 import { useRef, useState } from "react";
 import { addFilter, ImageState } from "../../app/imageSetSlice";
 
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
-import { BorderColor, CheckCircle, CloseFullscreen, Fullscreen } from "@mui/icons-material";
+import { CheckCircle, Fullscreen } from "@mui/icons-material";
 import { RootState } from "../../app/store";
 import { createSelector } from "@reduxjs/toolkit";
 import { useSelector } from "react-redux";
@@ -309,7 +309,7 @@ function SelectionEditor({
 
 
 
-  const filter = (<div style={{ marginBottom: 5, marginLeft: 2, marginRight: 2, }}>
+  const filter = (<div style={{ marginBottom: 5, marginLeft: 2, marginRight: 2,}}>
 
     {/* 首先来一个 switch(正向过滤或负向过滤), 一个输入框(搜索标签, 自动补全),  一个下拉菜单(排序方式), 一个清除按钮(重置) */}
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
@@ -353,7 +353,7 @@ function SelectionEditor({
       <IconButton size='small' onClick={clearAllFilter}
       > <ClearAllIcon /> </IconButton>
     </div>
-
+    <div style={{ maxHeight: '80vh', overflow: 'scroll' }}>
     {
       // 已选标签
       selectedLabels.map((label, key) => <Chip avatar={<Avatar>{label.frequency}</Avatar>} key={key} color="primary"
@@ -369,6 +369,7 @@ function SelectionEditor({
       selectableLabels.map((label, key) => <Chip avatar={<Avatar>{label.frequency}</Avatar>} key={key}
         clickable variant='outlined' size='small' label={label.content} onClick={() => onLabelSelected(label)} />)
     }
+    </div>
   </div>);
 
 
@@ -528,13 +529,6 @@ function SelectionEditor({
 
 
 
-
-
-
-
-
-
-
-
-
 export default SelectionEditor;
+
+

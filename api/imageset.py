@@ -21,17 +21,22 @@ def get_next_image_count(target_dir: str) -> int:
   '''
     path 应该从 imageset-xxx 开始
   '''
-  result = 0
+  max_number = 0
+  min_number = 918932490718831499 # 随便初始化一个很大的数字
   # 列出目标目录中的所有文件
   for file_name in os.listdir(os.path.join(CONF_REPO_DIR, target_dir)):
     name, _ = os.path.splitext(file_name)
     try:
-      number = int(name) + 1
-      if number > result:
-        result = number
+      number = int(name)
+      if number > max_number:
+        max_number = number
+      elif number < min_number:
+        min_number = number
     except:
       continue
-  return result  # 返回下一个可用的序号
+  if len(os.listdir(os.path.join(CONF_REPO_DIR, target_dir))) < min_number:
+    return 0
+  return max_number + 1  # 返回下一个可用的序号
 
 def get_concept_folder_list(train_or_regular_dir: str) -> list[dict]:
   '''
@@ -275,7 +280,6 @@ async def get_imageset_list():
   imageset_names = os.listdir(CONF_REPO_DIR)
   imageset_names = [name[9:] for name in imageset_names if name.startswith('imageset-')]
   return imageset_names
-
 
 
 

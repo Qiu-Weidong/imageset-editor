@@ -11,6 +11,7 @@ import api from "../../api";
 import CreateDialog from "../dialog/CreateDialog";
 import AddImageDialog from "../dialog/AddImagesDialog";
 import TaggerDialog from "../dialog/TaggerDialog";
+import { SimilarImageState } from "./SimilarImageEditor";
 
 
 export function Editor({ filter, onReload }: { filter: FilterState, onReload: () => Promise<void>, }) {
@@ -116,7 +117,17 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
         <Grid spacing={1} container>
           <Button variant="contained" onClick={() => setTaggerDialog(true)}>tagger</Button>
           <Button variant="contained" onClick={() => navigate("/imageset/caption-editor", { state: { ...location.state, filter_name: filter.name } })}>edit tag</Button>
-          <Button variant="contained">detect similar images</Button>
+          <Button variant="contained" onClick={() => {
+            setLoading(true);
+            api.detect_similar_images(filter.images, 0.9).then((similar_images: SimilarImageState[][]) => {
+              if(similar_images.length > 0) {
+                navigate("/similar-image-editor", { state: { similar_images } });
+              }
+              else {
+                window.alert('did not found similar images.');
+              }
+            }).finally(() => setLoading(false));
+          }}>detect similar images</Button>
         </Grid>
 
         {/* 文件操作 */}

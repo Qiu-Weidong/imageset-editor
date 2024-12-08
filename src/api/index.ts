@@ -135,11 +135,13 @@ async function interrogate(
   model_name: string = 'wd14-convnextv2.v1', 
   threshold: number = 0.35, 
   additional_tags: string[] = [],
-  exclude_tags: string[] = []
+  exclude_tags: string[] = [],
+  ignore: boolean = true,
 ) {
   return (await axios.post("/tag/interrogate", {
     image: image.path,
     model_name, threshold, additional_tags, exclude_tags,
+    ignore,
   })).data;
 }
 
@@ -171,6 +173,10 @@ async function save_tags(image_captions: Map<string, string[]>) {
   await axios.put("/tag/save", { tags: data });
 }
 
+async function detect_similar_images(images: ImageState[], threshold: number) {
+  return (await axios.post("/tag/detect_similar_images", { images: images.map(image => image.path), threshold })).data;
+}
+
 const api = {
   delete_imageset,
   create_imageset,
@@ -189,6 +195,7 @@ const api = {
   interrogate,
   rename_and_convert,
   save_tags,
+  detect_similar_images,
 };
 
 

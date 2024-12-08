@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, LinearProgress, MenuItem, Select, Slider, Stack, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, InputLabel, LinearProgress, MenuItem, Select, Slider, Stack, Switch, TextField } from "@mui/material";
 import { useRef, useState } from "react";
 import { FilterState } from "../../app/imageSetSlice";
 import api from "../../api";
@@ -25,7 +25,7 @@ function TaggerDialog(props: taggerDialogProps) {
   const [threshold, setThreshold] = useState(0.35);
   const [additionalTags, setAdditionalTags] = useState('');
   const [excludeTags, setExcludeTags] = useState('');
-
+  const [ignoreTagged, setIgnoreTagged] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const stop = useRef(false);
@@ -41,7 +41,7 @@ function TaggerDialog(props: taggerDialogProps) {
 
     for (const [index, image] of props.filter.images.entries()) {
       if (stop.current) { break; }
-      const tags = await api.interrogate(image, modelName, threshold, additional_tags, exclude_tags);
+      const tags = await api.interrogate(image, modelName, threshold, additional_tags, exclude_tags, ignoreTagged);
       setProgress(index * 100 / props.filter.images.length);
     }
 
@@ -87,6 +87,8 @@ function TaggerDialog(props: taggerDialogProps) {
               min={0}
             />
           </FormControl>
+          <FormControlLabel labelPlacement="start" control={<Switch defaultChecked value={ignoreTagged} size="small" 
+            onChange={(event) => setIgnoreTagged(event.target.checked)} />} label="ignore tagged images" />
 
           {/* 直接使用 text input 即可 */}
           <TextField id="additional tags" label="additional tags(split by ',')" size="small" variant="standard"
