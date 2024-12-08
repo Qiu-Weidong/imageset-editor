@@ -15,7 +15,7 @@ export function App() {
         <Routes>
           <Route path='/home' element={<Start />} />
           <Route path='/overview' element={<Overview />} />
-          <Route path="/selection-editor" element={ <SelectionEditor /> } />
+          <Route path="/selection-editor" element={ <SelectionEditor enableFullscreen selectable /> } />
           <Route path='/debug' element={<Debug />} />
           <Route path='/imageset/*' element={ <ImageSet /> } />
           <Route path="/" element={<Navigate to="/home" replace />} />
