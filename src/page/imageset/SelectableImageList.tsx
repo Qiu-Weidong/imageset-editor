@@ -2,7 +2,7 @@
 
 // 包含一个header, header中包含数据集名称, 刷新按钮, 新建按钮, 保存按钮, 设置按钮, 帮助按钮
 
-import { Autocomplete, Avatar, Box, Button, Chip, Divider, FormControl, Grid2 as Grid, IconButton, ImageList, ImageListItem, InputLabel, MenuItem, Paper, Select, Slider, TextField } from "@mui/material";
+import { Paper, Autocomplete, Avatar, Box, Button, Chip, Divider, FormControl, Grid2 as Grid, IconButton, ImageList, ImageListItem, InputLabel, MenuItem, Select, Slider, TextField } from "@mui/material";
 import { useRef, useState } from "react";
 import { addFilter, ImageState } from "../../app/imageSetSlice";
 
@@ -71,7 +71,7 @@ interface LabelState {
 
 
 
-function getAllLabelsFromImages(images: SelectableImageState[]) : LabelState[] {
+function getAllLabelsFromImages(images: SelectableImageState[]): LabelState[] {
   const label_count = new Map<string, number>();
   for (const image of images) {
     for (const caption of image.image.captions) {
@@ -143,12 +143,12 @@ function SelectableImageList({
     (a: LabelState, b: LabelState): number => b.content.localeCompare(a.content),
     (a: LabelState, b: LabelState): number => a.content.localeCompare(b.content),
   ];
-  
+
   const [filteredImages, setFilteredImages] = useState<SelectableImageState[]>(data.current.images);
   const [selectedLabels, setSelectedLabels] = useState<LabelState[]>([]);
   const [selectableLabels, setSelectableLabels] = useState<LabelState[]>(data.current.labels.sort(sortMethodList[sortMethod]));
 
-  
+
   const [openImageIndex, setOpenImageIndex] = useState(
     filteredImages.length <= 1 ? 0 : -1
   );
@@ -251,8 +251,10 @@ function SelectableImageList({
 
   function ImageCarousel({ images, openSlide }: { images: SelectableImageState[], openSlide: number }) {
     return (
-      <div style={{ position: 'relative' }}>
-        <Carousel loop height={height} initialSlide={openSlide} withIndicators style={{ marginTop: `-${height}` }}
+
+      <div style={{ zIndex: 10, position: 'relative', }}>
+        {/* Carousel 的父级元素必须是relative */}
+        <Carousel loop height="100vh" initialSlide={openSlide} withIndicators
         >
           {
             images.map((image, index) =>
@@ -262,7 +264,7 @@ function SelectableImageList({
         </Carousel>
 
         {/* 添加一个缩小按钮 */}
-        <IconButton sx={{ position: 'absolute', top: 0, right: 0 }} color="success" onClick={() => setOpenImageIndex(-1)}> <CloseFullscreen /> </IconButton>
+        <IconButton sx={{ position: 'absolute', top: 0, right: 0 }} color="error" onClick={() => setOpenImageIndex(-1)}> <CloseFullscreen /> </IconButton>
       </div>
     );
   }
@@ -271,8 +273,8 @@ function SelectableImageList({
   function updateImageListAndSelectableLabels(selectedLabels: LabelState[]) {
     // 注意, 是对所有的图片进行过滤, 提供一个反向过滤函数
     const images = data.current.images.filter(image => {
-      for(const label of selectedLabels) {
-        if(! image.image.captions.includes(label.content)) {
+      for (const label of selectedLabels) {
+        if (!image.image.captions.includes(label.content)) {
           return false;
         }
       }
@@ -283,11 +285,11 @@ function SelectableImageList({
 
     // 获取所有已选图片的标签, 如果是反向过滤,那么这里需要获取已选图片不包含的标签
     let caption_set = new Set<string>([]);
-    for(const image of images) {
+    for (const image of images) {
       caption_set = new Set([...caption_set, ...image.image.captions]);
     }
     // 去除所有已选标签
-    for(const label of selectedLabels) {
+    for (const label of selectedLabels) {
       caption_set.delete(label.content);
     }
 
@@ -333,9 +335,9 @@ function SelectableImageList({
     setSelectableLabels(data.current.labels.sort(sortMethodList[sortMethod]));
   }
 
-  
 
-  const filter = (<div style={{ marginBottom: 5, marginLeft: 2, marginRight: 2,}}>
+
+  const filter = (<div style={{ marginBottom: 5, marginLeft: 2, marginRight: 2, }}>
 
     {/* 首先来一个 switch(正向过滤或负向过滤), 一个输入框(搜索标签, 自动补全),  一个下拉菜单(排序方式), 一个清除按钮(重置) */}
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
@@ -397,138 +399,145 @@ function SelectableImageList({
     }
   </div>);
 
-  return (<Paper elevation={3} sx={{ backgroundColor: 'rgba(255,255,255, 0.8)' }}>
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <Select
-        labelId="demo-simple-select-standard-label"
-        id="demo-simple-select-standard"
-        label="concept or selection"
-        variant="standard"
-        size="small"
-        value={filterName}
-        sx={{ m: 1, minWidth: 160 }}
-        onChange={(event) => {
-          // 切换, 记得清除所有的过滤
-          onChangeFilterName(event.target.value);
-        }}
-      >
-        {
-          filterNameList.map((name, index) => <MenuItem key={index} value={name}>
-            {name}
-          </MenuItem>)
-        }
+  return (
 
-        <MenuItem value="[selected images]" disabled key={filterName.length + 5}  >[selected images]</MenuItem>
-      </Select>
-
-      <Grid container spacing={1} sx={{ flex: 1, }}>
-        <Button variant="contained" size="small" startIcon={<VisibilityIcon />}
-          onClick={() => {
-            onChangeFilterName('[selected images]');
-          }}
-        >查看已选图片</Button>
-        <Button variant="contained" size="small" startIcon={<SelectAllIcon />}
-          onClick={() => {
-            const selected_images = filteredImages.map(image => {
-              image.is_selected = true;
-              return image;
-            });
-            setFilteredImages(selected_images);
-          }}
-        >全选以下图片</Button>
-
-        <Button variant="contained" size="small" startIcon={<TabUnselectedIcon />}
-          onClick={() => {
-            const selected_images = filteredImages.map(image => {
-              image.is_selected = false;
-              return image;
-            });
-            setFilteredImages(selected_images);
-          }}
-        >将以下图片全部取消选择</Button>
-
-        <Button variant="contained" size="small" startIcon={<FlipCameraAndroidIcon />}
-          onClick={() => {
-            const selected_images = filteredImages.map(image => {
-              image.is_selected = !image.is_selected;
-              return image;
-            });
-            setFilteredImages(selected_images);
-          }}
-        >反转选择</Button>
-
-        <Button variant="contained" size="small" color="error" startIcon={<RestartAltIcon />}
-          onClick={() => {
-            image_list_map.get('<all>')?.forEach(image => image.is_selected = false);
-            onChangeFilterName('<all>');
-          }}
-        >重置</Button>
-        <Button variant="contained" size="small" color="secondary" startIcon={<ChevronLeftIcon />}
-          onClick={() => {
-            image_list_map.get('<all>')?.forEach(image => image.is_selected = false);
-            navigate(-1);
-          }}
-        >返回</Button>
-        <Button variant="contained" size="small" color="success" startIcon={<AddCircleIcon />}
-          onClick={() => {
-            const images: ImageState[] = image_list_map.get('<all>')?.filter(image => image.is_selected).map(image => image.image) || [];
-            if (images.length <= 0) {
-              // 警告
-              window.alert('you have not select any images');
-              return;
-            }
-
-            let input = window.prompt('create a new selection', 'input your selection name');
-            while (input && input === 'all') {
-              input = window.prompt('create a new selection', 'input your selection name, can not be "all"');
-            }
-
-
-            if (input) {
-              const name = `<${input}>`;
-
-              dispatch(addFilter({
-                name,
-                images,
-                concept: null,
-              }));
-              navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: name } });
-            }
-          }}
-        >创建</Button>
-      </Grid>
-      <Button size="small" variant="text" onClick={() => setShowCaptionFilter((prev) => !prev)}
-        endIcon={!showCaptionFilter ? <ExpandMoreIcon /> : <ExpandLessIcon />}>根据标签过滤</Button>
-      <Slider
-        size="small"
-        defaultValue={column}
-        value={column}
-        onChange={(_, value) => setColumn(value as number)}
-        valueLabelDisplay="off"
-        sx={{  maxWidth: 120, m: 1 }}
-        max={16}
-        min={4}
-      />
-    </Box>
-    <Box>
-      {
-        showCaptionFilter ? filter : <></>
-      }
-      {/* 应该将 carousel 盖在 paper 上面 */}
-      <Box >
-        {
-          filteredImages.length > 0 ? <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0 }} >
-            {
-              filteredImages.map((image, index) => <ImageCard key={index} image={image} index={index} selectable={selectable} />)
-            }
-          </ImageList> : <>no images</>
-        }
-      </Box>
+    <Paper elevation={3} sx={{ position: 'relative', height: '100vh', backgroundColor: 'rgba(255,255,255,0.7)',  }}>
       {enableFullscreen && openImageIndex >= 0 ? <ImageCarousel images={filteredImages} openSlide={openImageIndex} /> : <></>}
-    </Box>
-  </Paper>);
+
+      <Box style={{ position: 'absolute', top: 0, overflow: 'scroll',height: '100vh' }}>
+
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Select
+            labelId="demo-simple-select-standard-label"
+            id="demo-simple-select-standard"
+            label="concept or selection"
+            variant="standard"
+            size="small"
+            value={filterName}
+            sx={{ m: 1, minWidth: 160 }}
+            onChange={(event) => {
+              // 切换, 记得清除所有的过滤
+              onChangeFilterName(event.target.value);
+            }}
+          >
+            {
+              filterNameList.map((name, index) => <MenuItem key={index} value={name}>
+                {name}
+              </MenuItem>)
+            }
+
+            <MenuItem value="[selected images]" disabled key={filterName.length + 5}  >[selected images]</MenuItem>
+          </Select>
+
+          <Grid container spacing={1} sx={{ flex: 1, }}>
+            <Button variant="contained" size="small" startIcon={<VisibilityIcon />}
+              onClick={() => {
+                onChangeFilterName('[selected images]');
+              }}
+            >查看已选图片</Button>
+            <Button variant="contained" size="small" startIcon={<SelectAllIcon />}
+              onClick={() => {
+                const selected_images = filteredImages.map(image => {
+                  image.is_selected = true;
+                  return image;
+                });
+                setFilteredImages(selected_images);
+              }}
+            >全选以下图片</Button>
+
+            <Button variant="contained" size="small" startIcon={<TabUnselectedIcon />}
+              onClick={() => {
+                const selected_images = filteredImages.map(image => {
+                  image.is_selected = false;
+                  return image;
+                });
+                setFilteredImages(selected_images);
+              }}
+            >将以下图片全部取消选择</Button>
+
+            <Button variant="contained" size="small" startIcon={<FlipCameraAndroidIcon />}
+              onClick={() => {
+                const selected_images = filteredImages.map(image => {
+                  image.is_selected = !image.is_selected;
+                  return image;
+                });
+                setFilteredImages(selected_images);
+              }}
+            >反转选择</Button>
+
+            <Button variant="contained" size="small" color="error" startIcon={<RestartAltIcon />}
+              onClick={() => {
+                image_list_map.get('<all>')?.forEach(image => image.is_selected = false);
+                onChangeFilterName('<all>');
+              }}
+            >重置</Button>
+            <Button variant="contained" size="small" color="secondary" startIcon={<ChevronLeftIcon />}
+              onClick={() => {
+                image_list_map.get('<all>')?.forEach(image => image.is_selected = false);
+                navigate(-1);
+              }}
+            >返回</Button>
+            <Button variant="contained" size="small" color="success" startIcon={<AddCircleIcon />}
+              onClick={() => {
+                const images: ImageState[] = image_list_map.get('<all>')?.filter(image => image.is_selected).map(image => image.image) || [];
+                if (images.length <= 0) {
+                  // 警告
+                  window.alert('you have not select any images');
+                  return;
+                }
+
+                let input = window.prompt('create a new selection', 'input your selection name');
+                while (input && input === 'all') {
+                  input = window.prompt('create a new selection', 'input your selection name, can not be "all"');
+                }
+
+
+                if (input) {
+                  const name = `<${input}>`;
+
+                  dispatch(addFilter({
+                    name,
+                    images,
+                    concept: null,
+                  }));
+                  navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: name } });
+                }
+              }}
+            >创建</Button>
+          </Grid>
+          <Button size="small" variant="text" onClick={() => setShowCaptionFilter((prev) => !prev)}
+            endIcon={!showCaptionFilter ? <ExpandMoreIcon /> : <ExpandLessIcon />}>根据标签过滤</Button>
+          <Slider
+            size="small"
+            defaultValue={column}
+            value={column}
+            onChange={(_, value) => setColumn(value as number)}
+            valueLabelDisplay="off"
+            sx={{ maxWidth: 120, m: 1 }}
+            max={16}
+            min={4}
+          />
+        </Box>
+
+
+
+
+        <Box>
+          {
+            showCaptionFilter ? filter : <></>
+          }
+
+          {
+            filteredImages.length > 0 ? <ImageList variant="masonry" cols={column} gap={4} style={{ marginTop: 0 }} >
+              {
+                filteredImages.map((image, index) => <ImageCard key={index} image={image} index={index} selectable={selectable} />)
+              }
+            </ImageList> : <>no images</>
+          }
+
+        </Box>
+      </Box>
+    </Paper>);
 }
 
 export default SelectableImageList;
-
-
