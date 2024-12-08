@@ -347,7 +347,25 @@ async def upload_images(files: List[UploadFile] = File(...),
     image.convert("RGB").save(file_path, "JPEG")
   return index
   
-
+class MoveRequest(BaseModel):
+  imageset_name: str
+  is_regular: bool
+  images: List[str] 
+  folder: str
+    
+@api_imageset.post("/move")
+async def move(request: MoveRequest):
+  if request.is_regular:
+    d = os.path.join("imageset-" + request.imageset_name, 'reg')
+  else:
+    d = os.path.join("imageset-" + request.imageset_name, 'src')  
+  dest = os.path.join(CONF_REPO_DIR, d, request.folder)
+  import shutil
+  if not os.path.exists(dest):
+    os.makedirs(dest, exist_ok=True)
+  for filename in tqdm(request.images):
+    shutil.move(os.path.join(CONF_REPO_DIR, filename), dest)
+  return
 
 
 

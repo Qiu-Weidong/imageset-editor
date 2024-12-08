@@ -177,6 +177,12 @@ async function detect_similar_images(images: ImageState[], threshold: number) {
   return (await axios.post("/tag/detect_similar_images", { images: images.map(image => image.path), threshold })).data;
 }
 
+async function move_images(imageset_name: string, images:ImageState[], is_regular: boolean, folder: string) {
+  await axios.post("/imageset/move", {
+    imageset_name, images: images.map(img => img.path), is_regular, folder,
+  });
+}
+
 const api = {
   delete_imageset,
   create_imageset,
@@ -196,6 +202,7 @@ const api = {
   rename_and_convert,
   save_tags,
   detect_similar_images,
+  move_images,
 };
 
 

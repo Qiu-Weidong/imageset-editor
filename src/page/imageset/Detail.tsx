@@ -68,6 +68,26 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
                   }
                 }}
               >delete images</Button>
+              <Button variant="contained" color="info"
+                onClick={() => {
+                  const response = window.prompt("input concept name, such as 8_girl");
+                  if (response) {
+                    setLoading(true);
+                    api.move_images(imageset_name, filter.images, is_regular, response).then(() => {
+
+                      onReload().then(() => {
+                        const name = filter.name;
+                        dispatch(removeFilter(name));
+                        navigate("/imageset/detail", { replace: true, state: { ...location.state, filter_name: response } });
+                      }).finally(() => {
+                        setLoading(false);
+                      })
+                    }).finally(() => {
+                      setLoading(false);
+                    });
+                  }
+                }}
+              >save as concept</Button>
             </> : <></>
           }
         </Grid>
@@ -120,7 +140,7 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
           <Button variant="contained" onClick={() => {
             setLoading(true);
             api.detect_similar_images(filter.images, 0.9).then((similar_images: SimilarImageState[][]) => {
-              if(similar_images.length > 0) {
+              if (similar_images.length > 0) {
                 navigate("/similar-image-editor", { state: { similar_images } });
               }
               else {
@@ -128,12 +148,6 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
               }
             }).finally(() => setLoading(false));
           }}>detect similar images</Button>
-        </Grid>
-
-        {/* 文件操作 */}
-        <Grid spacing={1} container>
-          <Button variant="contained" color="warning">rename</Button>
-          <Button variant="contained" color="warning">move</Button>
         </Grid>
 
         {/* 图片操作 */}

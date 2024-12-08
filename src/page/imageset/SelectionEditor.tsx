@@ -5,7 +5,7 @@ import { addFilter, ImageState } from "../../app/imageSetSlice";
 
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
-import { CheckCircle, Fullscreen } from "@mui/icons-material";
+import { CheckCircle, CloseFullscreen, Fullscreen } from "@mui/icons-material";
 import { RootState } from "../../app/store";
 import { createSelector } from "@reduxjs/toolkit";
 import { useSelector } from "react-redux";
@@ -90,8 +90,11 @@ function getAllLabelsFromImages(images: SelectableImageState[]): LabelState[] {
 }
 
 function getAllImagesAndLabels(image_list_map: Map<string, SelectableImageState[]>, filtername: string) {
-  const images = (filtername === "[selected images]" ?
-    image_list_map.get('<all>')?.filter(image => image.is_selected) : image_list_map.get(filtername)) || [];
+  const images = (
+    filtername === "[selected images]" ? 
+    (image_list_map.get('<all>')?.filter(image => image.is_selected) || []) : 
+    (filtername === "[unselected images]" ? image_list_map.get('<all>')?.filter(image => 
+      ! image.is_selected) : image_list_map.get(filtername)) || []);
 
   const labels = getAllLabelsFromImages(images);
 
@@ -220,6 +223,7 @@ function SelectionEditor({
   function ImageSlider({ image, index }: { image: SelectableImageState, index: number }) {
     const [selected, setSelected] = useState(image.is_selected);
     return (
+
       <Carousel.Slide key={index}>
         <div style={{ width: '100%', height: '100%', position: 'relative' }}>
           <img src={image.image.src}
@@ -229,15 +233,23 @@ function SelectionEditor({
               background: 'rgba(255, 255, 255, .27)',
               backdropFilter: 'blur(7px)',
             }}
-            onClick={() => setOpenImageIndex(-1)}
+            onDoubleClick={() => {
+              image.is_selected = ! image.is_selected;
+              setSelected(image.is_selected);
+            } }
           />
+
           <IconButton sx={{ position: 'absolute', top: 0, left: 0, }} onClick={() => {
             image.is_selected = !image.is_selected;
             setSelected(image.is_selected);
           }}
           ><CheckCircle color={selected ? "error" : "disabled"} /> </IconButton>
+
+          <IconButton sx={{ position: 'absolute', top: 0, right: 0, }} onClick={() => setOpenImageIndex(-1) }
+          ><CloseFullscreen  /> </IconButton>
         </div>
       </Carousel.Slide>
+
     );
   }
 
@@ -309,7 +321,7 @@ function SelectionEditor({
 
 
 
-  const filter = (<div style={{ marginBottom: 5, marginLeft: 2, marginRight: 2,}}>
+  const filter = (<div style={{ marginBottom: 5, marginLeft: 2, marginRight: 2, }}>
 
     {/* 首先来一个 switch(正向过滤或负向过滤), 一个输入框(搜索标签, 自动补全),  一个下拉菜单(排序方式), 一个清除按钮(重置) */}
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
@@ -354,21 +366,21 @@ function SelectionEditor({
       > <ClearAllIcon /> </IconButton>
     </div>
     <div style={{ maxHeight: '80vh', overflow: 'scroll' }}>
-    {
-      // 已选标签
-      selectedLabels.map((label, key) => <Chip avatar={<Avatar>{label.frequency}</Avatar>} key={key} color="primary"
-        clickable variant='filled' size='small' label={label.content}
-        onClick={() => onLableUnselected(label)} onDelete={() => onLableUnselected(label)} />)
-    }
-    {
-      selectedLabels.length > 0 ? <Divider style={{ marginTop: 2 }} /> : ''
-    }
+      {
+        // 已选标签
+        selectedLabels.map((label, key) => <Chip avatar={<Avatar>{label.frequency}</Avatar>} key={key} color="primary"
+          clickable variant='filled' size='small' label={label.content}
+          onClick={() => onLableUnselected(label)} onDelete={() => onLableUnselected(label)} />)
+      }
+      {
+        selectedLabels.length > 0 ? <Divider style={{ marginTop: 2 }} /> : ''
+      }
 
-    {
-      // 可选标签
-      selectableLabels.map((label, key) => <Chip avatar={<Avatar>{label.frequency}</Avatar>} key={key}
-        clickable variant='outlined' size='small' label={label.content} onClick={() => onLabelSelected(label)} />)
-    }
+      {
+        // 可选标签
+        selectableLabels.map((label, key) => <Chip avatar={<Avatar>{label.frequency}</Avatar>} key={key}
+          clickable variant='outlined' size='small' label={label.content} onClick={() => onLabelSelected(label)} />)
+      }
     </div>
   </div>);
 
@@ -400,6 +412,7 @@ function SelectionEditor({
               }
 
               <MenuItem value="[selected images]" disabled key={filterName.length + 5}  >[selected images]</MenuItem>
+              <MenuItem value="[unselected images]" disabled key={filterName.length + 6}  >[unselected images]</MenuItem>
             </Select>
 
             <Grid container spacing={1} sx={{ flex: 1, }}>
@@ -408,6 +421,11 @@ function SelectionEditor({
                   onChangeFilterName('[selected images]');
                 }}
               >查看已选图片</Button>
+              <Button variant="contained" size="small" startIcon={<VisibilityIcon />}
+                onClick={() => {
+                  onChangeFilterName('[unselected images]');
+                }}
+              >隐藏已选图片</Button>
               <Button variant="contained" size="small" startIcon={<SelectAllIcon />}
                 onClick={() => {
                   const selected_images = filteredImages.map(image => {
@@ -519,7 +537,7 @@ function SelectionEditor({
                   <ImageSlider image={image} index={index} />
                 )
               }
-            </Carousel></div>: <></>
+            </Carousel></div> : <></>
         }
 
 
