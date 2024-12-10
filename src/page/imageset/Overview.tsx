@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Box, Button, Card, CardContent, CircularProgress, Container, Fab, Toolbar, Typography } from "@mui/material";
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
 import Header from "../header/Header";
-import { useDispatch } from "react-redux";
 import { setImageSetName } from "../../app/imageSetSlice";
 import CreateDialog from "../dialog/CreateDialog";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -61,16 +60,11 @@ function ConceptCover(props: { concept: ConceptMetadata, onClick: () => void }) 
 // 展示训练集和正则集的基本信息, 点击即可进入
 function Overview() {
   const carousel_height = 480;
-
-  const location = useLocation();
-  const { imageset_name } = location.state;
-  const dispatch = useDispatch();
+  const { imageset_name = 'error' } = useParams(); 
 
   // 通过路由传参将打开的imageset名称传入
   const navigate = useNavigate();
 
-  // imageset_name 可以直接使用 selector
-  // const imageset_name = useSelector((state: RootState) => state.imageSet.name);
   const [trainDataset, setTrainDataset] = useState<ImageSetMetadata | null>(null);
   const [regularDataset, setRegularDataset] = useState<ImageSetMetadata | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,8 +86,7 @@ function Overview() {
       if (result.regular) {
         setRegularDataset(result.regular);
       }
-      // dispatch 以修改 redux 的状态 name 修改为
-      dispatch(setImageSetName(imageset_name));
+
     } catch (error) {
       console.error(error);
       // 跳转到 404 页面
@@ -121,7 +114,7 @@ function Overview() {
   // 还需要添加一个 concept 参数
   const jump2detail = (is_regular: boolean, concept: string, repeat: number) => {
     // 设置类型为 train | regular
-    navigate("/imageset/detail", { state: { imageset_name, is_regular, filter_name: `${repeat}_${concept}` } });
+    navigate(`/concept/${imageset_name}/${is_regular ? "reg" : "src"}/${concept}/${repeat}/all`);
   };
 
 
@@ -137,7 +130,7 @@ function Overview() {
   }}><CircularProgress size={128} /></div>);
 
 
-  const train = trainDataset ?
+  const train = trainDataset && trainDataset.concepts.length > 0 ?
     <Card sx={{ width: '100%', marginBottom: 1, }}>
       <CardContent sx={{ display: 'flex' }}>
         <div style={{ flex: 1 }}>
@@ -171,7 +164,7 @@ function Overview() {
     ;
 
 
-  const regular = regularDataset ?
+  const regular = regularDataset && regularDataset.concepts.length > 0 ?
     <Card sx={{ width: '100%', marginBottom: 1, }}>
       <CardContent sx={{ display: 'flex' }}>
         <div style={{ flex: 1, }}>
@@ -205,12 +198,18 @@ function Overview() {
     </Fab>
     ;
 
+  async function rename(oldname: string, newname: string) {
+    setLoading(true);
+    // 执行修改名称函数
+    await api.rename_imageset(oldname, newname);
+    navigate(`/overview/${newname}`, { replace: true, state: { imageset_name: newname } });
+    setLoading(false);
+  }
+
 
   return (
     <Container sx={{ minHeight: '100vh', height: '100vh' }}>
-      <Header onRenameImageset={(_, new_name) => {
-        navigate('/overview', { replace: true, state: { imageset_name: new_name } });
-      }}
+      <Header imageset_name={imageset_name} onRenameImageset={rename}
         onLoad={load}
         onDelete={_delete}
       ></Header>

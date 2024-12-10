@@ -32,7 +32,7 @@ function OpenDialog(props: OpenDialogProps) {
     {
       imagesetNames.map((name) => <ListItem disablePadding key={name}>
         <ListItemButton onClick={() => {
-          navigate(`/overview`, { state: { imageset_name: name } });
+          navigate(`/overview/${name}`, { state: { imageset_name: name } });
           // 不如强制刷新
         }}>
           <ListItemText primary={name} />

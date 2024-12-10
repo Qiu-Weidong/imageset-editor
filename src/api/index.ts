@@ -4,6 +4,7 @@ import axios from "axios";
 import { ImageSetMetadata } from "../page/imageset/Overview";
 import { FilterState, ImageSetState, ImageState } from "../app/imageSetSlice";
 import { FileWithPath } from "@mantine/dropzone";
+import { ConceptState } from "../app/conceptSlice";
 
 
 const port = window.api_port || 1420;
@@ -46,6 +47,12 @@ async function find_imageset_list(): Promise<string[]> {
 
 async function rename_imageset(oldname: string, newname: string) {
   await axios.put("/imageset/rename", {}, { params: { origin_name: oldname, new_name: newname } })
+}
+
+async function rename_concept(imageset_name: string,  
+  is_regular: boolean, origin_name: string, new_name: string, origin_repeat: number, new_repeat: number) {
+  await axios.put("/imageset/rename_concept", {}, { 
+    params: { imageset_name, is_regular,  origin_name, new_name, origin_repeat, new_repeat } });
 }
 
 type Metadata = { train: ImageSetMetadata, regular: ImageSetMetadata };
@@ -106,6 +113,10 @@ async function load(imageset_name: string, is_regular: boolean): Promise<ImageSe
     } 
   }
   return result;
+}
+
+async function load_concept(imageset_name: string, is_regular: boolean, concept_name: string, repeat: number): Promise<ConceptState> {
+  return (await axios.get("/imageset/load_concept", { params: { imageset_name, is_regular, concept_name, repeat } })).data;
 }
 
 
@@ -203,6 +214,8 @@ const api = {
   save_tags,
   detect_similar_images,
   move_images,
+  rename_concept,
+  load_concept,
 };
 
 

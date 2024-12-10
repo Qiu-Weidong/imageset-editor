@@ -14,12 +14,14 @@ export interface ImageState {
   repeat: number,
 };
 
-
 export interface FilterState {
   name: string,
   images: ImageState[],
   concept: { name: string, repeat: number } | null,  // 简单一点, 通过是否存在repeat来判断是否是临时选择
 };
+
+
+
 
 export interface ImageSetState {
   name: string, // 图片集的名字

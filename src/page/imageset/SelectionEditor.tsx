@@ -19,7 +19,7 @@ import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
 
@@ -116,6 +116,12 @@ function SelectionEditor({
   enableFullscreen?: boolean,
   badge?: boolean,
 }) {
+  const param = useParams();
+  const imageset_name = param.imageset_name || 'error';
+  const is_regular = param.type === 'reg';
+  const concept_name = param.concept_name || 'error';
+  const repeat = parseInt(param.repeat || "0") || 0;
+  
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();

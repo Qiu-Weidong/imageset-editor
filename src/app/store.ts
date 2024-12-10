@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import settingsReducer from './settingsSlice';
 import imageSetReducer from './imageSetSlice';
 import openImageReducer from './openImageSlice';
+import conceptReducer from './conceptSlice';
 
 
 export const store = configureStore({
@@ -9,6 +10,7 @@ export const store = configureStore({
     setting: settingsReducer, // 用户设置
     imageSet: imageSetReducer,
     openImage: openImageReducer,
+    concept: conceptReducer,
   },
 })
 

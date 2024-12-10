@@ -259,6 +259,51 @@ async def load(imageset_name: str, is_regular: bool):
       })
   return result
 
+@api_imageset.get("/load_concept")
+async def load_concept(imageset_name: str, is_regular: bool, concept_name: str, repeat: int):
+  '''
+    {
+      name : string, 
+      repeat: number,
+      is_regular: boolean,
+      imageset_name: string,
+      images: ImageState[],
+    }
+  '''
+  result = {
+    "name": concept_name, 
+    "repeat": repeat,
+    "is_regular": is_regular,
+    "imageset_name": imageset_name,
+    
+    "images": [],
+  }
+  
+  imageset_dir = os.path.join("imageset-"+imageset_name)
+  if is_regular:
+    imageset_dir = os.path.join(imageset_dir, 'reg')
+  else:
+    imageset_dir = os.path.join(imageset_dir, 'src')
+  concept_dir = os.path.join(imageset_dir, f"{repeat}_{concept_name}")
+  if not os.path.exists(os.path.join(CONF_REPO_DIR, concept_dir)):
+    raise HTTPException(status_code=404, detail=f"{concept_dir} is not found")
+  # 加载 concept_dir 下面的所有图片
+  imagefilenames = get_image_list(concept_dir)
+  for imagefilename in imagefilenames:
+    basename = os.path.basename(imagefilename)
+    filename, _ = os.path.splitext(basename)
+    result['images'].append({
+      'src': f'http://{CONF_HOST}:{CONF_PORT}/image/{imagefilename}',
+      'thumbnail': f'http://{CONF_HOST}:{CONF_PORT}/image/thumbnail/{imagefilename}',
+      'filename': filename,
+      'basename': basename,
+      'captions': load_caption(imagefilename),
+      'concept': concept_name, 
+      'repeat': repeat,
+      'path': imagefilename,
+    })
+  return result
+
 @api_imageset.get("/open_in_file_explore")
 async def open_in_file_explore(imageset_name: str):
   dir = os.path.join(CONF_REPO_DIR, 'imageset-' + imageset_name)
@@ -378,8 +423,26 @@ async def rename_imageset(origin_name: str, new_name: str):
   try:
     os.rename(origin_path, new_path)  
   except Exception as e:
+    print(str(e))
     raise HTTPException(status_code=400, detail=str(e))
   return new_name
+
+@api_imageset.put("/rename_concept")
+async def rename_concept(imageset_name: str, is_regular: bool, origin_name: str, new_name: str, origin_repeat: int, new_repeat: int):
+  if is_regular:
+    dir = os.path.join('imageset-'+imageset_name, 'reg')
+  else:
+    dir = os.path.join('imageset-'+imageset_name, 'src')
+  origin_dir = os.path.join(dir, f'{origin_repeat}_{origin_name}')
+  new_dir = os.path.join(dir, f'{new_repeat}_{new_name}')
+  try:
+    os.rename(os.path.join(CONF_REPO_DIR, origin_dir), os.path.join(CONF_REPO_DIR, new_dir))
+  except Exception as e:
+    raise HTTPException(status_code=400, detail=str(e))
+  return {
+    'name': new_name, 
+    'repeat': new_repeat,
+  }
 
 @api_imageset.put("/rename_and_convert")
 async def rename_and_convert(imageset_name: str, is_regular: bool, concept_folder: str):

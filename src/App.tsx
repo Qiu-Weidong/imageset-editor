@@ -5,9 +5,9 @@ import Overview from './page/imageset/Overview';
 
 import Debug from './page/debug/Debug';
 import NotFound from './page/notfound/NotFound';
-import ImageSet from './page/imageset/ImageSet';
 import SelectionEditor from './page/imageset/SelectionEditor';
 import SimilarImageEditor from './page/imageset/SimilarImageEditor';
+import ImageSet from './page/imageset/ImageSet';
 
 export function App() {
   return (
@@ -15,13 +15,15 @@ export function App() {
       <Router>
         <Routes>
           <Route path='/home' element={<Start />} />
-          <Route path='/overview' element={<Overview />} />
-          <Route path="/selection-editor" element={ <SelectionEditor enableFullscreen selectable /> } />
+          <Route path='/overview/:imageset_name' element={<Overview />} />
+          <Route path="/selection-editor/:imageset_name/:type/:concept_name/:repeat/*" element={ <Debug /> } />
+
+          {/* 有点意思，还可以这样 */}
+          <Route path='/concept/:imageset_name/:type/:concept_name/:repeat/:filter_name/*' element={ <ImageSet /> } />
+          
           <Route path='/similar-image-editor' element={ <SimilarImageEditor /> } />
           <Route path='/debug' element={<Debug />} />
-          <Route path='/imageset/*' element={ <ImageSet /> } />
           <Route path="/" element={<Navigate to="/home" replace />} />
-          
           <Route path="*" element={ <NotFound /> }></Route>
         </Routes>
       </Router>

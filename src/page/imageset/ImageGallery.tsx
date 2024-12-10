@@ -20,16 +20,12 @@ function ImageGallery({
   images, // 图片需要从外面传递过来
   enableFullscreen = false,
   badge = false,
-  onImageOpen,
-  onImageClose,
 }: {
   height: string | number,
   column?: number,
   images: ImageState[],
   enableFullscreen?: boolean,
   badge?: boolean,
-  onImageOpen?: (image: ImageState, index: number) => void,
-  onImageClose?: (image: ImageState, index: number) => void,
 }) {
   const dispatch = useDispatch();
 
@@ -51,8 +47,7 @@ function ImageGallery({
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             loading="lazy"
-            onClick={click_handler}
-            // onDoubleClick={() => console.log('double clicked.')}
+            onDoubleClick={click_handler}
           />
 
           {/* 蒙版就只是蒙版 */}

@@ -1,91 +1,77 @@
-import { AppBar, IconButton, InputAdornment, TextField, Toolbar, Typography } from "@mui/material";
+import { AppBar, Avatar, Chip, IconButton, Grid2 as Grid, TextField, Toolbar, Typography } from "@mui/material";
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FolderIcon from '@mui/icons-material/Folder';
-import CloseIcon from '@mui/icons-material/Close';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/Help';
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import DeleteIcon from '@mui/icons-material/Delete';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import SaveIcon from '@mui/icons-material/Save';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import EditNoteIcon from '@mui/icons-material/EditNote';
-import CheckIcon from '@mui/icons-material/Check';
-import { setImageSetName as setImageSetNameRedux } from "../../app/imageSetSlice";
 import NewDialog from "../dialog/NewDialog";
 import OpenDialog from "../dialog/OpenDialog";
 import api from "../../api";
 
 
 interface HeaderProps {
-  onRenameImageset: (origin_name: string, new_name: string) => void,
-  onLoad: () => Promise<void>,
-  onStop?: () => Promise<void>,
+  imageset_name: string,
+  onRenameImageset?: (origin_name: string, new_name: string) => Promise<void>,
+
+  concept?: { name: string, repeat: number }, // 只有两种情况，不如直接通过 concept 是否为空来进行判断
+  onConceptChange?: (before: { name: string, repeat: number }, after: { name: string, repeat: number }) => Promise<void>,
+
+  onLoad?: () => Promise<void>,
   onDelete?: () => Promise<void>,
 };
 
 
-// 数据集名称使用redux
 export default function Header(props: HeaderProps) {
-  const location = useLocation();
-  const { imageset_name } = location.state;
-
   const [newDialog, setNewDialog] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
 
-  // header 需要selector到imageset.name和concept, 并且需要具备修改concept名称的能力
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  // 保存当前的 imagedir
-  const ctl = useRef<{ loading: boolean, stop: boolean, init: boolean }>({ loading: false, stop: false, init: true });
 
 
+  const [editImagesetName, setEditImagesetName] = useState(false);
+  const [imagesetName, setImagesetName] = useState(props.imageset_name);
 
-  const [loading, setLoading] = useState(ctl.current.loading);
-  const [showInput, setShowInput] = useState(false);
-  const [imagesetName, setImagesetName] = useState(imageset_name);
+  const [editConcept, setEditConcept] = useState(false);
+  const [concept, setConcept] = useState<{ name: string, repeat: number }>(props.concept || { name: '', repeat: 0 });
+
 
   function load() {
-    setLoading(true);
-    props.onLoad().catch((error: any) => console.error(error)).finally(() => setLoading(false));
+    props.onLoad?.().catch((error: any) => console.error(error));
   }
 
-  function stoploading() {
-    props.onStop?.().catch((error: any) => console.error(error)).finally(() => setLoading(false));
-  }
-
-  function renameImageset(name: string) {
-    // 调用后端修改名字的函数
-    api.rename_imageset(imageset_name, name).then(() => {
-      // 修改 redux 中的数据集名称
-      dispatch(setImageSetNameRedux(name));
-      setShowInput(false);
-      props.onRenameImageset(imageset_name, name);
-    }).catch((error: any) => { console.error(error) });
+  function changeConcept(concept: { name: string, repeat: number }) {
+    if(props.concept) {
+      props.onConceptChange?.(props.concept, concept).finally(() => {
+        setEditConcept(false);
+      });
+    }
   }
 
   // 不要在这里执行
   useEffect(() => {
     setNewDialog(false);
     setOpenDialog(false);
-    setShowInput(false);
-    setImagesetName(imageset_name);
+    setEditImagesetName(false);
+    setImagesetName(props.imageset_name);
 
     // 由 header 来执行加载
     load();
 
-  }, [imageset_name]);
+  }, [props.imageset_name]);
 
 
 
 
 
-  const imageset_name_ui = (showInput ?
+  const imageset_name_ui = (editImagesetName ?
     <TextField
       variant="standard" size="small"
       value={imagesetName}
@@ -94,15 +80,10 @@ export default function Header(props: HeaderProps) {
       }}
       onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
         if (event.key.toLowerCase() === 'enter') {
-          renameImageset(imagesetName)
+          props.onRenameImageset?.(props.imageset_name, imagesetName).then(
+            () => setEditImagesetName(false)
+          );
         }
-      }}
-      slotProps={{
-        input: {
-          endAdornment: <InputAdornment position="end">
-            <IconButton onClick={() => renameImageset(imagesetName)}><CheckIcon fontSize="inherit" /></IconButton>
-          </InputAdornment>,
-        },
       }}
     />
     : <Typography
@@ -120,10 +101,53 @@ export default function Header(props: HeaderProps) {
       }}
     >
       {imagesetName}
-      <IconButton aria-label="delete" size="small" onClick={() => setShowInput(true)}>
+      <IconButton aria-label="delete" size="small" onClick={() => setEditImagesetName(true)}>
         <EditNoteIcon fontSize="inherit" />
       </IconButton>
     </Typography>);
+
+  const concept_name_ui = (
+    editConcept ?
+
+      <Grid container>
+        <Grid size={2}>
+          <TextField
+            variant="standard"
+            aria-label="repeat"
+            label="repeat"
+            size="small"
+            value={concept.repeat}
+            onChange={(event) => setConcept((state) => ({ ...state, repeat: parseInt(event.target.value) }))}
+            inputProps={{
+              step: 1,
+              min: 1,
+              max: 0xffffffff,
+              type: 'number',
+            }}
+            onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
+              if (event.key.toLowerCase() === 'enter') {
+                changeConcept(concept);
+              }
+            }}
+          /></Grid>
+        <Grid size={10}>
+          <TextField variant="standard" label="concept name" size="small" value={concept.name}
+            onChange={(event) => setConcept((state) => ({ ...state, name: event.target.value }))}
+            onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
+              if (event.key.toLowerCase() === 'enter') {
+                changeConcept(concept);
+              }
+            }}
+          /></Grid>
+
+      </Grid>
+
+      :
+      <Chip variant="outlined" avatar={<Avatar>{concept.repeat}</Avatar>} label={concept.name}
+        deleteIcon={<EditNoteIcon />}
+        onDelete={() => setEditConcept(true)}
+      />
+  );
 
 
   return (<AppBar position="fixed" color="default"  >
@@ -132,16 +156,19 @@ export default function Header(props: HeaderProps) {
       {imageset_name_ui}
 
 
-      <div style={{ flexGrow: 1, }} />
+      <div style={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }} >
+        {/* 在这里添加一些 concept 的显示 */}
+        {
+          props.concept ? <>
+            {concept_name_ui}
+          </> : <></>
+        }
+      </div>
 
 
-      {
-        !loading ? <IconButton onClick={load}>
-          <RefreshIcon />
-        </IconButton> : <IconButton onClick={stoploading}>
-          <CloseIcon />
-        </IconButton>
-      }
+      <IconButton onClick={load}>
+        <RefreshIcon />
+      </IconButton>
 
 
       <IconButton onClick={() => setNewDialog(true)}><CreateNewFolderIcon /></IconButton>
@@ -151,18 +178,17 @@ export default function Header(props: HeaderProps) {
       <IconButton onClick={() => { navigate("/settings"); }}><FileDownloadIcon /></IconButton>
 
       <IconButton onClick={() => { navigate("/settings"); }}><SettingsIcon /></IconButton>
-      
+
       <IconButton href="https://github.com/Qiu-Weidong/imageset-editor.git"> <HelpIcon /> </IconButton>
       <IconButton onClick={() => {
         // 主页之前要先将没有加载完成的stop了
-        stoploading();
         navigate("/");
       }}>
         <HomeIcon />
       </IconButton>
       <IconButton onClick={() => {
         props.onDelete?.().catch((error: any) => console.error(error));
-      } }> <DeleteIcon /> </IconButton>
+      }}> <DeleteIcon /> </IconButton>
 
     </Toolbar>
 
