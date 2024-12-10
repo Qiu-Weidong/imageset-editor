@@ -19,7 +19,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
 import { useSelector } from "react-redux";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 
 const selectImagesByFilterName = (filter_name: string) => createSelector(
@@ -34,21 +34,33 @@ const selectFilterNameList = createSelector(
 
 
 function Editor({
-  imageset_name, concept_name, repeat, filter_name, is_regular
+  imageset_name, concept_name, repeat, is_regular
 }:{
   imageset_name: string, 
   concept_name: string, 
   repeat: number,
-  filter_name: string,
   is_regular: boolean,
 }) {
   const navigate = useNavigate();
 
   const filter_name_list = useSelector(selectFilterNameList);
   const images = useSelector((state: RootState) => state.concept.images);
-  const current_images = useSelector(selectImagesByFilterName(`[${filter_name}]`));
+  const filters = useSelector((state: RootState) => state.concept.filters);
+  
+
   const [column, setColumn] = useState(10);
+
+
+
+  const { filter_name = 'all' } = useParams();
+
+  const [filterName, setFilterName] = useState(`[${filter_name}]`);
+  const [currentImages, setCurrentImages] = useState(filters.find(filter => filter.name === `[${filter_name}]`)?.images || []);
   const ty = is_regular ? "reg" : "src";
+
+  useEffect(() => {
+    setCurrentImages(filters.find(filter => filter.name === `[${filter_name}]`)?.images || []);
+  }, [filters, filter_name]);
 
   const height = '85vh';
   
@@ -61,11 +73,12 @@ function Editor({
           label="concept or selection"
           variant="standard"
           size="small"
-          value={`[${filter_name}]`}
+          value={filterName}
           sx={{ m: 1, minWidth: 180 }}
           onChange={(event) => {
-            const filter_name = event.target.value.substring(1, event.target.value.length - 1);
-            navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}`);
+            const filter_name = event.target.value;
+            setFilterName(filter_name);
+            setCurrentImages(filters.find(filter => filter.name === filter_name)?.images || []);
           }}
         >
           {
@@ -76,7 +89,7 @@ function Editor({
         </Select>
 
         <Box sx={{ display: 'flex', flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          total images: <b>{images.length}</b>, current images: <b>{current_images.length}</b>
+          total images: <b>{images.length}</b>, current images: <b>{currentImages.length}</b>
           <Box sx={{ flex: 1 }}></Box>
           {/* 直接在这里定义操作按钮 */}
           <Tooltip title="create selection"><IconButton color="success" size="small"
@@ -97,7 +110,7 @@ function Editor({
 
           <Tooltip title="convert image format and rename"><IconButton color="secondary" size="small"><TransformIcon /></IconButton></Tooltip>
           {
-            filter_name !== "[all]" ? <>
+            filterName !== "[all]" ? <>
               <Tooltip title="remove selection(keep the image)"><IconButton color="secondary" size="small"><DeleteIcon /></IconButton></Tooltip>
               <Tooltip title="delete images in current selection"><IconButton color="secondary" size="small"><DeleteForeverIcon /></IconButton></Tooltip>
               <Tooltip title="move current images to"><IconButton color="secondary" size="small"><SendIcon /></IconButton></Tooltip>
@@ -125,7 +138,7 @@ function Editor({
         </Box>
 
       </Box>
-      <ImageGallery height={height} images={current_images} column={column} enableFullscreen badge></ImageGallery>
+      <ImageGallery height={height} images={currentImages} column={column} enableFullscreen badge></ImageGallery>
     </Paper>
   </Container>);
 }

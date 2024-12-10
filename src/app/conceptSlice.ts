@@ -33,18 +33,50 @@ export const conceptSlice = createSlice({
   initialState,
   reducers: {
     loadConcept: (state, action: PayloadAction<ConceptState>) => {
+      
+      const filters = [ { name: "[all]", images: action.payload.images } ];
+      if(
+        state.name === action.payload.name 
+        && state.is_regular === action.payload.is_regular 
+        && state.repeat === action.payload.repeat
+        && state.imageset_name === action.payload.imageset_name
+      ) {
+        const image_map = new Map<string, ImageState>;
+        action.payload.images.forEach(image => image_map.set(image.path, image));
+
+        const selections: FilterState[] = state.filters.filter(filter => filter.name !== '[all]');
+        for(const selection of selections) {
+          const filter: FilterState = {
+            name: selection.name, 
+            images: [],
+          };
+          for(const image of selection.images) {
+            const new_image = image_map.get(image.path);
+            if(new_image) {
+              filter.images.push(new_image);
+            }
+          }
+          filters.push(filter);
+        }
+      }
       state.images = action.payload.images;
       state.name = action.payload.name;
       state.is_regular = action.payload.is_regular;
       state.imageset_name = action.payload.imageset_name;
       state.repeat = action.payload.repeat;
-      // 同时添加 filter all
-      state.filters = [ { name: "[all]", images: action.payload.images } ];
+
+      // 同时添加 filter all, 注意不要清除掉了已有的 selection
+      state.filters = filters;
+    },
+
+    addFilter: (state, action: PayloadAction<FilterState>) => {
+      const filters = state.filters.filter(filter => filter.name !== action.payload.name);
+      state.filters = [...filters, action.payload];
     },
   },
 });
 
 
 export default conceptSlice.reducer;
-export const { loadConcept } = conceptSlice.actions;
+export const { loadConcept, addFilter } = conceptSlice.actions;
 

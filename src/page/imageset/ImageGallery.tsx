@@ -47,7 +47,7 @@ function ImageGallery({
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             loading="lazy"
-            onDoubleClick={click_handler}
+            onClick={click_handler}
           />
 
           {/* 蒙版就只是蒙版 */}

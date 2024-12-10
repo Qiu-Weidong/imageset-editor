@@ -18,7 +18,7 @@ function ImageSet() {
   const is_regular = param.type === 'reg';
   const concept_name = param.concept_name || 'error';
   const repeat = parseInt(param.repeat || "0") || 0;
-  const filter_name = `${param.filter || 'all'}`; // 默认是 all
+  // const filter_name = `${param.filter || 'all'}`; // 默认是 all
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -84,7 +84,7 @@ function ImageSet() {
 
     <Routes>
 
-      <Route path="*" element={<Editor imageset_name={imageset_name} filter_name={filter_name} is_regular={is_regular} repeat={repeat} concept_name={concept_name} />}></Route>
+      <Route path="*" element={<Editor imageset_name={imageset_name} is_regular={is_regular} repeat={repeat} concept_name={concept_name} />}></Route>
     </Routes>
 
   </>);
