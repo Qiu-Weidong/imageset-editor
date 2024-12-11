@@ -28,3 +28,5 @@ tmp/
 *.zip
 *.spec
 *.log
+/repo
+
