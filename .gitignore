@@ -10,6 +10,7 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -25,4 +26,5 @@ tmp/
 *.html
 **/__pycache__
 *.zip
-
+*.spec
+*.log

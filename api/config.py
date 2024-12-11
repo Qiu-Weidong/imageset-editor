@@ -5,15 +5,21 @@ python 全局配置类
 '''
 
 import json, os
+import sys
 
+# 需要配置前端文件夹地址
+if getattr(sys, "frozen", False):
+  base_path = sys._MEIPASS
+else:
+  base_path = os.path.abspath(".")
 
 CONFIG = {
   # 先设置默认值
   'PORT': 1420,
   'HOST': 'localhost',
-  'REPO_DIR': os.path.join(os.getcwd(), 'tmp'),
+  'REPO_DIR': os.path.join(os.getcwd(), 'repo'), 
   'IMAGE_EXT': 'jpg',
-  'WEB_DIR': os.path.join(os.getcwd(), 'build'),
+  'WEB_DIR': os.path.join(base_path, 'build'), # 定义为这个路径再来尝试一下
 }
 
 
@@ -25,6 +31,7 @@ try:
     config = json.load(f)
     CONFIG.update(config)
 except:
+  print('did not found config.json, use default config')
   pass
 
 
@@ -35,7 +42,8 @@ CONF_REPO_DIR = CONFIG['REPO_DIR']
 CONF_IMAGE_EXT = CONFIG['IMAGE_EXT']
 CONF_WEB_DIR = CONFIG['WEB_DIR']
 
-
+if not os.path.exists(CONF_REPO_DIR):
+  os.makedirs(CONF_REPO_DIR, exist_ok=True)
 
 
 
