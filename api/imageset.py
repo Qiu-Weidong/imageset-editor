@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException,  File, UploadFile, Form
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from .config import CONF_REPO_DIR, CONF_HOST, CONF_PORT
+from .config import CONF_REPO_DIR, CONF_HOST, CONF_PORT, CONF_IMAGE_EXT
 import os,io
 from typing import List
 from tqdm import tqdm
@@ -11,7 +11,7 @@ import re
 import random
 import platform, subprocess
 import glob, json
-from PIL.PngImagePlugin import PngInfo
+# import pyexiv2, json
 
 
 api_imageset = APIRouter()
@@ -97,12 +97,13 @@ def convert_and_copy_images(source_dir: str, target_dir: str) -> int:
     source_path = os.path.join(source_dir, file_name)
     try:
       with Image.open(source_path) as img:
-        # img = img.convert("RGB")
+        if CONF_IMAGE_EXT == "JPEG":
+          img = img.convert("RGB")
         # 生成新的文件名
-        new_file_name = f"{index:06d}.png"
+        new_file_name = f"{index:06d}.{CONF_IMAGE_EXT.lower()}"
         target_path = os.path.join(CONF_REPO_DIR, target_dir, new_file_name)
         # 保存为 JPG 格式
-        img.save(target_path, "PNG")
+        img.save(target_path, CONF_IMAGE_EXT)
         # 增加计数器
         index += 1
         image_count += 1
@@ -111,19 +112,29 @@ def convert_and_copy_images(source_dir: str, target_dir: str) -> int:
   return image_count
 
 def load_caption(image_path: str) -> list[str]:
-  image = Image.open(os.path.join(CONF_REPO_DIR, image_path))
-  try:
-    tags = json.loads(image.text["captions"])
+  '''
+    image_path 从 imageset-xxx 开始
+  '''
+  import pyexiv2, json
+  image_path = os.path.join(CONF_REPO_DIR, image_path)
+  metadata = pyexiv2.Image(image_path)
+  tags = metadata.read_comment()
+  metadata.close()
+  try: 
+    tags = json.loads(tags)
   except:
     tags = []
   return tags
 
-def save_caption(image_path: str, tags: list[str]) -> None:
-  """将字幕保存到 PNG 图片中"""
-  image = Image.open(os.path.join(CONF_REPO_DIR, image_path))
-  png_info = PngInfo()
-  png_info.add_text('captions', json.dumps(tags))
-  image.save(os.path.join(CONF_REPO_DIR, image_path), pnginfo=png_info)    
+def save_caption(image_path: str, tags: list[str]):
+  import pyexiv2, json
+  image_path = os.path.join(CONF_REPO_DIR, image_path)
+  metadata = pyexiv2.Image(image_path)
+  try:
+    metadata.modify_comment(json.dumps(tags))
+  except:
+    pass
+  metadata.close()  
 
 def dump_caption(concept_path):
   # imageset-xx/src/8_katana
@@ -253,7 +264,7 @@ async def load(imageset_name: str, is_regular: bool):
       filename, _ = os.path.splitext(basename)
       result['images'].append({
         'src': f'http://{CONF_HOST}:{CONF_PORT}/image/{imagefilename}',
-        'thumbnail': f'http://{CONF_HOST}:{CONF_PORT}/image/thumbnail/{imagefilename}',
+        'thumbnail': f'http://{CONF_HOST}:{CONF_PORT}/image/thumbnail/{imagefilename}', # 缩略图都保存为 jpg 格式
         'filename': filename,
         'basename': basename,
         'captions': load_caption(imagefilename),
@@ -388,9 +399,11 @@ async def upload_images(files: List[UploadFile] = File(...),
   for file in tqdm(files):
     contents = await file.read()
     image = Image.open(io.BytesIO(contents))
-    file_path = os.path.join(CONF_REPO_DIR, dest_dir, f'{index:06d}.png')
+    if CONF_IMAGE_EXT == "JPEG":
+      image = image.convert("RGB")
+    file_path = os.path.join(CONF_REPO_DIR, dest_dir, f'{index:06d}.{CONF_IMAGE_EXT.lower()}')
     index += 1
-    image.save(file_path, "PNG")
+    image.save(file_path, CONF_IMAGE_EXT)
   return index
   
 class MoveRequest(BaseModel):
@@ -492,13 +505,14 @@ async def rename_and_convert(imageset_name: str, is_regular: bool, concept_folde
   index = get_next_image_count(base_dir)
   imagefilenames = get_image_list(base_dir)
   for imagefilename in tqdm(imagefilenames):
-    newfilename = os.path.join(base_dir, f"{index:06d}.png")
+    newfilename = os.path.join(base_dir, f"{index:06d}.{CONF_IMAGE_EXT.lower()}")
     index += 1
     # 注意不要把标签掉了
     tags = load_caption(imagefilename)
     img = Image.open(os.path.join(CONF_REPO_DIR, imagefilename))
-    # img = img.convert('RGB')
-    img.save(os.path.join(CONF_REPO_DIR, newfilename), "PNG")
+    if CONF_IMAGE_EXT == "JPEG":
+      img = img.convert('RGB')
+    img.save(os.path.join(CONF_REPO_DIR, newfilename), CONF_IMAGE_EXT)
     img.close()
     save_caption(newfilename, tags)
     # 删除原始图片

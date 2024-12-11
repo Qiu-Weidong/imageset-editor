@@ -11,7 +11,9 @@ def package():
     '{}/launch.py'.format(basePath),
     # '-w',
     '--icon','{}/build/icon.ico'.format(basePath),
-    '--add-data', r'{}/build;build'.format(basePath),
+    '--add-data', '{}/build;build'.format(basePath),
+    '--add-binary', r'{}/api/exiv2api.pyd;pyexiv2/lib/py3.12-win'.format(basePath),
+    '--collect-binaries=pyexiv2',
     '--name', "imageset-editor",
     "--hidden-import=launch",
   ]

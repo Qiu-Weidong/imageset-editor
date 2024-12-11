@@ -205,7 +205,7 @@ async def save_tags(data: TagMap):
     Map<path, caption[]>
   '''
   # 接下来直接保存
-  for path, captions in data.tags.items():
+  for path, captions in tqdm(data.tags.items()):
     save_caption(path, captions)
   
 

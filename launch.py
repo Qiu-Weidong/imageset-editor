@@ -53,6 +53,7 @@ async def index():
 
 
 if __name__ == "__main__":
+  print(__file__)
   import argparse
   parser = argparse.ArgumentParser(description="imageset editor")
   parser.add_argument('--reload', action='store_true')
