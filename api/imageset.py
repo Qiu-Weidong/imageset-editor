@@ -426,6 +426,10 @@ async def move(request: MoveRequest):
 
 @api_imageset.post("/explore")
 async def explore(imageset_name: str):
+  import glob
+  zip_files = glob.glob(os.path.join(CONF_REPO_DIR, '*.zip'))
+  for zip_file in zip_files:
+    os.remove(zip_file)
   import shutil
   # 创建临时目录
   temp_dir = os.path.join(CONF_REPO_DIR, ".temp")
