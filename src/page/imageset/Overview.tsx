@@ -243,8 +243,12 @@ function Overview() {
 
       </Box>
 
-      <CreateDialog imageset_name={imageset_name} open={createTrainsetDialog} type="train" onClose={() => setCreateTrainsetDialog(false)} />
-      <CreateDialog imageset_name={imageset_name} open={createRegularsetDialog} type="regular" onClose={() => setCreateRegularsetDialog(false)} />
+      <CreateDialog imageset_name={imageset_name} open={createTrainsetDialog} type="train" onClose={() => setCreateTrainsetDialog(false)} 
+        onSubmit={load}
+      />
+      <CreateDialog imageset_name={imageset_name} open={createRegularsetDialog} type="regular" onClose={() => setCreateRegularsetDialog(false)} 
+        onSubmit={load}
+      />
     </Container>);
 }
 
