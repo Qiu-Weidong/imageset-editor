@@ -9,6 +9,8 @@ from pathlib import Path
 from huggingface_hub import hf_hub_download
 import re
 import json
+from onnxruntime import InferenceSession
+
 
 from numpy import asarray, float32, expand_dims, exp
 
@@ -125,8 +127,6 @@ class WaifuDiffusionInterrogator(Interrogator):
 
     def load(self) -> None:
         model_path, tags_path = self.download()
-
-        from onnxruntime import InferenceSession
         self.model = InferenceSession(str(model_path), providers=self.providers)
 
         print(f'Loaded {self.name} model from {model_path}')
@@ -213,8 +213,6 @@ class MLDanbooruInterrogator(Interrogator):
 
     def load(self) -> None:
         model_path, tags_path = self.download()
-
-        from onnxruntime import InferenceSession
         self.model = InferenceSession(model_path,
                                         providers=self.providers)
         print(f'Loaded {self.name} model from {model_path}')

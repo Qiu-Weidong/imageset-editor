@@ -2,10 +2,16 @@ from fastapi import APIRouter, HTTPException,  File, UploadFile, Form
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from .config import CONF_REPO_DIR, CONF_HOST, CONF_PORT
-import os
+import os,io
 from typing import List
 from tqdm import tqdm
 from PIL import Image
+import shutil
+import re
+import random
+import platform, subprocess
+import glob, json
+from PIL.PngImagePlugin import PngInfo
 
 
 api_imageset = APIRouter()
@@ -44,7 +50,6 @@ def get_concept_folder_list(train_or_regular_dir: str) -> list[dict]:
     从 imageset-xxx/src 目录下获取所有的概念列表
     ret [{ 'name': 'katana', 'repeat': 8, 'path': 'imageset-xx/src/8_katana' }, ...]
   '''
-  import re
   pattern = r'^(?P<repeat>\d+)_(?P<concept>.+)$'
 
   result = []
@@ -88,18 +93,16 @@ def convert_and_copy_images(source_dir: str, target_dir: str) -> int:
   index = get_next_image_count(target_dir)
   image_count = 0
   
-  from tqdm import tqdm
-  
   for file_name in tqdm(files):
     source_path = os.path.join(source_dir, file_name)
     try:
       with Image.open(source_path) as img:
-        img = img.convert("RGB")
+        # img = img.convert("RGB")
         # 生成新的文件名
-        new_file_name = f"{index:06d}.jpg"
+        new_file_name = f"{index:06d}.png"
         target_path = os.path.join(CONF_REPO_DIR, target_dir, new_file_name)
         # 保存为 JPG 格式
-        img.save(target_path, "JPEG")
+        img.save(target_path, "PNG")
         # 增加计数器
         index += 1
         image_count += 1
@@ -108,29 +111,19 @@ def convert_and_copy_images(source_dir: str, target_dir: str) -> int:
   return image_count
 
 def load_caption(image_path: str) -> list[str]:
-  '''
-    image_path 从 imageset-xxx 开始
-  '''
-  import pyexiv2, json
-  image_path = os.path.join(CONF_REPO_DIR, image_path)
-  metadata = pyexiv2.Image(image_path)
-  tags = metadata.read_comment()
-  metadata.close()
-  try: 
-    tags = json.loads(tags)
+  image = Image.open(os.path.join(CONF_REPO_DIR, image_path))
+  try:
+    tags = json.loads(image.text["captions"])
   except:
     tags = []
   return tags
-  
-def save_caption(image_path: str, tags: list[str]):
-  import pyexiv2, json
-  image_path = os.path.join(CONF_REPO_DIR, image_path)
-  metadata = pyexiv2.Image(image_path)
-  try:
-    metadata.modify_comment(json.dumps(tags))
-  except:
-    pass
-  metadata.close()
+
+def save_caption(image_path: str, tags: list[str]) -> None:
+  """将字幕保存到 PNG 图片中"""
+  image = Image.open(os.path.join(CONF_REPO_DIR, image_path))
+  png_info = PngInfo()
+  png_info.add_text('captions', json.dumps(tags))
+  image.save(os.path.join(CONF_REPO_DIR, image_path), pnginfo=png_info)    
 
 def dump_caption(concept_path):
   # imageset-xx/src/8_katana
@@ -175,7 +168,6 @@ async def get_imageset_metadata(name: str):
   def load_cover(concept_image_filenames: list[str]) -> str | None:
     if len(concept_image_filenames) <= 0:
       return None
-    import random
     random_element = random.choice(concept_image_filenames)
     return random_element
   
@@ -319,7 +311,6 @@ async def load_concept(imageset_name: str, is_regular: bool, concept_name: str, 
 @api_imageset.get("/open_in_file_explore")
 async def open_in_file_explore(imageset_name: str):
   dir = os.path.join(CONF_REPO_DIR, 'imageset-' + imageset_name)
-  import platform, subprocess
   info = platform.system()
   if info == 'Windows':
     os.startfile(dir)
@@ -333,7 +324,6 @@ async def get_imageset_list():
   '''
     查找已经创建的所有数据集
   '''
-  import os 
   imageset_names = os.listdir(CONF_REPO_DIR)
   imageset_names = [name[9:] for name in imageset_names if name.startswith('imageset-')]
   return imageset_names
@@ -397,11 +387,10 @@ async def upload_images(files: List[UploadFile] = File(...),
   
   for file in tqdm(files):
     contents = await file.read()
-    import io
     image = Image.open(io.BytesIO(contents))
-    file_path = os.path.join(CONF_REPO_DIR, dest_dir, f'{index:06d}.jpg')
+    file_path = os.path.join(CONF_REPO_DIR, dest_dir, f'{index:06d}.png')
     index += 1
-    image.convert("RGB").save(file_path, "JPEG")
+    image.save(file_path, "PNG")
   return index
   
 class MoveRequest(BaseModel):
@@ -417,7 +406,6 @@ async def move(request: MoveRequest):
   else:
     d = os.path.join("imageset-" + request.imageset_name, 'src')  
   dest = os.path.join(CONF_REPO_DIR, d, request.folder)
-  import shutil
   if not os.path.exists(dest):
     os.makedirs(dest, exist_ok=True)
   for filename in tqdm(request.images):
@@ -426,11 +414,9 @@ async def move(request: MoveRequest):
 
 @api_imageset.post("/explore")
 async def explore(imageset_name: str):
-  import glob
   zip_files = glob.glob(os.path.join(CONF_REPO_DIR, '*.zip'))
   for zip_file in zip_files:
     os.remove(zip_file)
-  import shutil
   # 创建临时目录
   temp_dir = os.path.join(CONF_REPO_DIR, ".temp")
   if os.path.exists(temp_dir):
@@ -502,18 +488,18 @@ async def rename_and_convert(imageset_name: str, is_regular: bool, concept_folde
   # 先删除缩略图
   thumbnail_dir = os.path.join(CONF_REPO_DIR, ".thumbnail", base_dir)
   if os.path.exists(thumbnail_dir):
-    import shutil
     shutil.rmtree(thumbnail_dir)
   index = get_next_image_count(base_dir)
   imagefilenames = get_image_list(base_dir)
   for imagefilename in tqdm(imagefilenames):
-    newfilename = os.path.join(base_dir, f"{index:06d}.jpg")
+    newfilename = os.path.join(base_dir, f"{index:06d}.png")
     index += 1
     # 注意不要把标签掉了
     tags = load_caption(imagefilename)
     img = Image.open(os.path.join(CONF_REPO_DIR, imagefilename))
-    img = img.convert('RGB')
-    img.save(os.path.join(CONF_REPO_DIR, newfilename), "JPEG")
+    # img = img.convert('RGB')
+    img.save(os.path.join(CONF_REPO_DIR, newfilename), "PNG")
+    img.close()
     save_caption(newfilename, tags)
     # 删除原始图片
     os.remove(os.path.join(CONF_REPO_DIR, imagefilename))
@@ -522,7 +508,6 @@ async def rename_and_convert(imageset_name: str, is_regular: bool, concept_folde
 
 @api_imageset.delete("/delete")
 async def delete_imageset(name: str):
-  import shutil
 
   imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name)
   # 注意先删除缩略图再删除原图
@@ -536,7 +521,6 @@ async def delete_imageset(name: str):
 @api_imageset.delete("/delete/src")
 async def delete_train(name: str):
   imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'src')
-  import shutil
   thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail', 'imageset-' + name, 'src')
   if os.path.exists(thumbnail_dir):
     shutil.rmtree(thumbnail_dir)
@@ -546,7 +530,6 @@ async def delete_train(name: str):
 @api_imageset.delete("/delete/reg")
 async def delete_regular(name: str):
   imageset_dir = os.path.join(CONF_REPO_DIR, 'imageset-' + name, 'reg')
-  import shutil
   thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail', 'imageset-' + name, 'reg')
   if os.path.exists(thumbnail_dir):
     shutil.rmtree(thumbnail_dir)
@@ -559,7 +542,6 @@ class DeleteImageRequest(BaseModel):
 @api_imageset.delete("/delete/images")
 async def delete_images(request: DeleteImageRequest):
   deleted_names = []
-  from tqdm import tqdm
   for filename in tqdm(request.filenames):
     abs_filename = os.path.join(CONF_REPO_DIR, filename)
     thumbnail_filename = os.path.join(CONF_REPO_DIR, '.thumbnail', filename)
@@ -586,7 +568,6 @@ async def delete_concept(imageset_name: str, is_regular: bool, concept_folder: s
     dir = os.path.join('imageset-'+imageset_name, 'src', concept_folder)
   thumbnail_dir = os.path.join(CONF_REPO_DIR, '.thumbnail', dir)
   dir = os.path.join(CONF_REPO_DIR, dir)
-  import shutil
   if os.path.exists(thumbnail_dir):
     shutil.rmtree(thumbnail_dir)
   if os.path.exists(dir):

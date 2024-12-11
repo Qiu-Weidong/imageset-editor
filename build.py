@@ -10,10 +10,10 @@ def package():
     '-F',
     '{}/launch.py'.format(basePath),
     # '-w',
-    r'--icon','{}/build/icon.ico'.format(basePath),
-    r'--add-data', r'{}/build;build'.format(basePath),
-    r'--name', "imageset-editor",
-    r"--hidden-import=launch",
+    '--icon','{}/build/icon.ico'.format(basePath),
+    '--add-data', r'{}/build;build'.format(basePath),
+    '--name', "imageset-editor",
+    "--hidden-import=launch",
   ]
   run(opts)
    

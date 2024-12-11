@@ -4,6 +4,10 @@ from pydantic import BaseModel
 from .config import CONF_REPO_DIR
 from tqdm import tqdm
 import os
+from fastapi.responses import FileResponse
+from typing import List
+
+
 
 api_image = APIRouter()
 
@@ -12,8 +16,7 @@ api_image = APIRouter()
 # 注意将这个放在前面, 直接通过路径获取缩略图
 @api_image.get("/thumbnail/{image_name:path}")
 async def get_thumbnail(image_name: str):
-  import os
-  from fastapi.responses import FileResponse
+  
   
   image_path = os.path.join(CONF_REPO_DIR, image_name)
   thumbnail_path = os.path.join(CONF_REPO_DIR, './.thumbnail', image_name)
@@ -35,9 +38,7 @@ async def get_thumbnail(image_name: str):
 # 直接通过路径获取原图
 @api_image.get("/{image_name:path}")
 async def get_image(image_name: str):
-  import os
-  from fastapi.responses import FileResponse
-  
+
   # 结合基础路径和用户传入的图像名称, repo_dir (将所有图片都保存在repo_dir中)
   image_path = os.path.join(CONF_REPO_DIR, image_name)
   
@@ -46,7 +47,6 @@ async def get_image(image_name: str):
     return FileResponse(image_path)
   raise HTTPException(status_code=404, detail="Image not found")
   
-from typing import List
 class FlipRequest(BaseModel):
   images: List[str]
   horizontal: bool

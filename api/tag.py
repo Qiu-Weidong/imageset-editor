@@ -1,7 +1,15 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict
 import os
+import imagehash
 from .config import CONF_HOST, CONF_PORT, CONF_REPO_DIR
+from pydantic import BaseModel
+from .tagger import interrogators
+from pathlib import Path
+from PIL import Image
+from .tagger import Interrogator
+from tqdm import tqdm
+from .imageset import load_caption, save_caption
 
 
 api_tag = APIRouter()
@@ -10,44 +18,22 @@ api_tag = APIRouter()
 '''
   将图片列表作为data传递过来
 '''
-from pydantic import BaseModel
-from .tagger import interrogators
-from pathlib import Path
-from PIL import Image
-from .tagger import Interrogator
-from tqdm import tqdm
 
 
 
 
 
-def update_tags(image_path: str, tags: list[str]) -> list[str]:
-  import pyexiv2, json
-  metadata = pyexiv2.Image(image_path)
-  old_tags = metadata.read_comment()
-  try:
-    old_tags = json.loads(old_tags)
-  except:
-    old_tags = []
+
+def update_captions(image_path: str, tags: list[str]) -> list[str]:
+  old_tags = load_caption(image_path)
   tags = list(set([*tags, *old_tags]))
-  metadata.modify_comment(json.dumps(tags))
-  metadata.close()
+  save_caption(image_path, tags)
   return tags
 
-def read_tags(image_path: str) -> list[str]:
-  import pyexiv2, json
-  metadata = pyexiv2.Image(image_path)
-  old_tags = metadata.read_comment()
-  try:
-    old_tags = json.loads(old_tags)
-  except:
-    old_tags = []
-  return old_tags
 
 def compute_hash(filenames: list[str]) -> dict:
   result = {}
   for filename in tqdm(filenames):
-    import imagehash
     highfreq_factor = 4 # resize的尺度
     hash_size = 32 # 最终返回hash数值长度
     image_scale = 64
@@ -75,6 +61,7 @@ async def image_list_interrogate(request_body: ImageListInterrogateRequest):
     # 注意添加将原有的标签添加到 additional 的逻辑
     im = Image.open(Path(os.path.join(CONF_REPO_DIR, image_path)))
     _, result = interrogator.interrogate(im)
+    im.close()
     tags = Interrogator.postprocess_tags(
       result,
       threshold=request_body.threshold,
@@ -82,7 +69,7 @@ async def image_list_interrogate(request_body: ImageListInterrogateRequest):
       exclude_tags=request_body.exclude_tags, # 要排除的标签, 给出一个标签的列表即可
     )
     tags = list(tags.keys())
-    tags = update_tags(image_path, tags)
+    tags = update_captions(image_path, tags)
     ret[image_path] = tags
   return ret
 
@@ -188,11 +175,12 @@ class InterrogateRequest(BaseModel):
 async def image_interrogate(request: InterrogateRequest):
   interrogator = interrogators[request.model_name]
   image_path = os.path.join(CONF_REPO_DIR, request.image)
-  tags = read_tags(image_path)
+  tags = load_caption(image_path)
   if len(tags) > 0:
     return tags
   im = Image.open(Path(image_path))
   _, result = interrogator.interrogate(im)
+  im.close()
   tags = Interrogator.postprocess_tags(
     result,
     threshold=request.threshold,
@@ -200,7 +188,7 @@ async def image_interrogate(request: InterrogateRequest):
     exclude_tags=request.exclude_tags,        # 要排除的标签, 给出一个标签的列表即可
   )
   tags = list(tags.keys())
-  tags = update_tags(image_path, tags)
+  tags = update_captions(image_path, tags)
   return tags
 
 
@@ -217,11 +205,7 @@ async def save_tags(data: TagMap):
     Map<path, caption[]>
   '''
   # 接下来直接保存
-  import pyexiv2, json
   for path, captions in data.tags.items():
-    image_path = os.path.join(CONF_REPO_DIR, path)
-    metadata = pyexiv2.Image(image_path)
-    metadata.modify_comment(json.dumps(captions))
-    metadata.close()
+    save_caption(path, captions)
   
 
