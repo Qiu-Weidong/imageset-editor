@@ -450,6 +450,11 @@ async def rename_and_convert(imageset_name: str, is_regular: bool, concept_folde
     base_dir = os.path.join('imageset-'+imageset_name, 'reg', concept_folder)
   else:
     base_dir = os.path.join('imageset-'+imageset_name, 'src', concept_folder)
+  # 先删除缩略图
+  thumbnail_dir = os.path.join(CONF_REPO_DIR, ".thumbnail", base_dir)
+  if os.path.exists(thumbnail_dir):
+    import shutil
+    shutil.rmtree(thumbnail_dir)
   index = get_next_image_count(base_dir)
   imagefilenames = get_image_list(base_dir)
   for imagefilename in tqdm(imagefilenames):
@@ -463,7 +468,6 @@ async def rename_and_convert(imageset_name: str, is_regular: bool, concept_folde
     save_caption(newfilename, tags)
     # 删除原始图片
     os.remove(os.path.join(CONF_REPO_DIR, imagefilename))
-
   
 
 

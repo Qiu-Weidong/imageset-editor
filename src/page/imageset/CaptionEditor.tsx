@@ -125,13 +125,13 @@ function CaptionEditorBox(props: {
       }
       {
         // 只有当可以添加标签的时候才显示添加按钮
-        props.addable ? (adding ? <EditableChip editable={true} color="info" caption="add new label"
+        props.addable ? (adding ? <EditableChip editable={true} color="default" caption="add new label"
           onRemove={() => { }}
           onChange={(_, after) => {/**新建标签 */
             setAdding(false);
             props.onAddCaption?.(after);
           }} />
-          : <IconButton color="primary" size="small" onClick={() => setAdding(true)}><AddIcon /></IconButton>) : ''
+          : <IconButton color="default" size="small" onClick={() => setAdding(true)}><AddIcon /></IconButton>) : ''
       }
 
 

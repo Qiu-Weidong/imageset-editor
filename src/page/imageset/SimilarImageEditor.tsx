@@ -1,8 +1,10 @@
 import { Container, Divider, Paper, Stack, Grid2 as Grid, IconButton, Chip, Button } from "@mui/material";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DeleteIcon from '@mui/icons-material/Delete';
 import api from "../../api";
+import { CheckCircle } from "@mui/icons-material";
+import { ImageState } from "../../app/imageSetSlice";
 
 
 export interface SimilarImageState {
@@ -14,9 +16,18 @@ export interface SimilarImageState {
   size: number,
   width: number,
   height: number,
+  is_selected: boolean | undefined | null;
 };
 
-
+function init(images: SimilarImageState[][]) {
+  return images.map(images => {
+    images.sort((a, b) => b.size - a.size).map((image, index) => {
+      image.is_selected = index !== 0;
+      return image;
+    });
+    return images;
+  });
+}
 
 
 function SimilarImageEditor() {
@@ -25,9 +36,9 @@ function SimilarImageEditor() {
 
   const { similar_images }: { similar_images: SimilarImageState[][] } = location.state;
 
-  const [similarImages, setSimilarImages] = useState(similar_images);
+  const [similarImages, setSimilarImages] = useState(init(similar_images));
   useEffect(() => {
-    setSimilarImages(similar_images);
+    setSimilarImages(init(similar_images));
   }, [similar_images]);
 
 
@@ -40,7 +51,7 @@ function SimilarImageEditor() {
     }]).then(() => {
       // 删除 similarImages 的 i, j 这张图片
       const images = similarImages.map((li, index) => {
-        if(index === i) {
+        if (index === i) {
           return li.filter((_, index) => index !== j);
         } else {
           return li;
@@ -50,43 +61,80 @@ function SimilarImageEditor() {
     });
   }
 
+  function delete_images(_: any) {
+    const response = window.confirm("do you want to delete the seleted images");
+    if(! response) {
+      return;
+    }
+    const images: ImageState[] = [];
+    for (const imageList of similarImages) {
+      for (const image of imageList) {
+        if (image.is_selected) {
+          images.push({
+            ...image,
+            captions: [],
+            concept: "",
+            repeat: 0,
+          });
+        }
+      }
+    }
+
+    api.delete_images(images).then(() => {
+      const images = similarImages.map((li) => li.filter(image => ! image.is_selected)).filter(li => li.length > 0);
+      setSimilarImages(images);
+    }).finally(() => {
+
+    });
+
+  }
+
+
+  function Image({ image, index, i }: { image: SimilarImageState, index: number, i: number }) {
+    const [selected, setSelected] = useState<boolean>(image.is_selected || false);
+    return <div style={{ position: 'relative', height: 256, overflow: 'hidden' }}>
+      <img style={{ objectFit: 'contain', }} src={image.src} height={256}
+        onClick={() => {
+          image.is_selected = !image.is_selected;
+          setSelected(image.is_selected);
+        }}
+      ></img>
+      <Grid spacing={1} container sx={{ margin: 1, position: 'absolute', bottom: 0, left: 0, }}>
+        <Chip label={image.filename} size="small" variant="filled" color="success" />
+        <Chip label={`${image.width}x${image.height}`} size="small" variant="filled" color="primary" />
+        <Chip label={`${(image.size / 1024).toFixed(1)}KB`} size="small" variant="filled" color="secondary" />
+      </Grid>
+      <IconButton
+        sx={{ position: 'absolute', top: 0, right: 0, }}
+        size="small"
+        color="default"
+        onClick={() => delete_image(image, index, i)}
+      >
+        <DeleteIcon />
+      </IconButton>
+
+      {
+        selected ? <IconButton
+          sx={{ position: 'absolute', top: 0, left: 0, }}
+          size="small"
+          color="error"
+          onClick={() => delete_image(image, index, i)}
+        >
+          <CheckCircle />
+        </IconButton> : <></>
+      }
+
+    </div>
+  }
+
 
   function SimilarImageList({
     images, index,
   }: { images: SimilarImageState[], index: number }) {
-    return (<Paper elevation={3} style={{ overflowX: 'scroll', paddingBottom: 0, }}>
-      <Stack direction={"row"} spacing={1}>
+    return (<Paper elevation={3}  >
+      <Stack direction={"row"} sx={{ overflowX: 'auto' }} divider={<Divider orientation="vertical" flexItem />}>
         {
-          images.sort((a, b) => a.size - b.size).map((image, i) => <div style={{ position: 'relative', height: 256, overflow: 'hidden' }}>
-
-            <img style={{ objectFit: 'contain', }} src={image.src} height={256}></img>
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: 'linear-gradient(to bottom,  rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.25) 30%, rgba(0,0,0,0) 75%)',
-              pointerEvents: 'none',
-            }} >
-              <Grid spacing={1} container sx={{ margin: 1, position: 'absolute', bottom: 0, left: 0, }}>
-                <Chip label={image.filename} size="small" variant="filled" color="success" />
-                <Chip label={`${image.width}x${image.height}`} size="small" variant="filled" color="primary" />
-                <Chip label={`${(image.size / 1024).toFixed(1)}KB`} size="small" variant="filled" color="secondary" />
-              </Grid>
-
-
-            </div>
-            <IconButton
-              sx={{ position: 'absolute', top: 0, right: 0, }}
-              size="small"
-              color="default"
-              onClick={() => delete_image(image, index, i) }
-            >
-              <DeleteIcon />
-            </IconButton>
-          </div>
-
+          images.sort((a, b) => b.size - a.size).map((image, i) => <Image image={image} index={index} i={i}></Image>
           )
         }
       </Stack>
@@ -96,7 +144,11 @@ function SimilarImageEditor() {
 
   return (<>
     <Container fixed maxWidth="xl">
-      <Button onClick={() => navigate(-1) } variant="contained">return</Button>
+      <Grid container spacing={1} sx={{ marginBottom: 1 }}>
+        <Button onClick={() => navigate(-1)} size="small" variant="contained">return</Button>
+        <Button onClick={delete_images} size="small" variant="contained" color="error">delete selected</Button>
+      </Grid>
+
       <Grid container spacing={2}>
         {
           similarImages.map((images, index) =>

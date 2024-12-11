@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { loadConcept } from "../../app/conceptSlice";
 import Editor from "./Editor";
 import CaptionEditor from "./CaptionEditor";
+import SimilarImageEditor from "./SimilarImageEditor";
 
 
 
@@ -85,6 +86,7 @@ function ImageSet() {
 
     <Routes>
       {/* 加入标签编辑页面 */}
+      <Route path="/similar-image-editor" element={ <SimilarImageEditor />} ></Route>
       <Route path="/caption-editor" element={<CaptionEditor 
         imageset_name={imageset_name} is_regular={is_regular} repeat={repeat} concept_name={concept_name} />}></Route>
       <Route path="*" element={<Editor imageset_name={imageset_name} is_regular={is_regular} repeat={repeat} concept_name={concept_name} />}></Route>

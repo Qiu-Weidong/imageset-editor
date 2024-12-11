@@ -25,6 +25,7 @@ import api from "../../api";
 import CreateDialog from "../dialog/CreateDialog";
 import AddImageDialog from "../dialog/AddImagesDialog";
 import TaggerDialog from "../dialog/TaggerDialog";
+import { SimilarImageState } from "./SimilarImageEditor";
 
 
 export const selectFilterNameList = createSelector(
@@ -60,9 +61,9 @@ function Editor({
 
 
   const [currentFilter, setCurrentFilter] = useState<FilterState>(getFilterByName(filters, `[${filter_name}]`));
-  
+
   const [loading, setLoading] = useState(false);
-  
+
   const [createDialog, setCreateDialog] = useState(false);
   const [addImageDialog, setAddImageDialog] = useState(false);
   const [taggerDialog, setTaggerDialog] = useState(false);
@@ -113,21 +114,36 @@ function Editor({
             }}
           ><FilterAltIcon /></IconButton></Tooltip>
           <Divider orientation="vertical" flexItem />
-          <Tooltip title="detect duplicate images"><IconButton color="error" size="small"><ImageSearchIcon /></IconButton></Tooltip>
+          <Tooltip title="detect duplicate images"
+            onClick={() => {
+              setLoading(true);
+              api.detect_similar_images(currentFilter.images, 0.9).then((similar_images: SimilarImageState[][]) => {
+                if (similar_images.length > 0) {
+                  navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${currentFilter.name.substring(1, currentFilter.name.length - 1)}/similar-image-editor`, { state: { similar_images } });
+                }
+                else {
+                  window.alert('did not found similar images.');
+                }
+              }).finally(() => setLoading(false));
+            }}
+          ><IconButton color="error" size="small"><ImageSearchIcon /></IconButton></Tooltip>
           <Divider orientation="vertical" flexItem />
-          <Tooltip title="create new concept" onClick={() => setCreateDialog(true) }><IconButton color="info" size="small"><CreateNewFolderIcon /></IconButton></Tooltip>
-          <Tooltip title="add images for current concept" onClick={() => setAddImageDialog(true) }><IconButton color="info" size="small"><AddIcon /></IconButton></Tooltip>
+          <Tooltip title="create new concept" onClick={() => setCreateDialog(true)}><IconButton color="info" size="small"><CreateNewFolderIcon /></IconButton></Tooltip>
+          <Tooltip title="add images for current concept" onClick={() => setAddImageDialog(true)}><IconButton color="info" size="small"><AddIcon /></IconButton></Tooltip>
           <Divider orientation="vertical" flexItem />
 
-          <Tooltip title="tag current images" onClick={() => setTaggerDialog(true) }><IconButton color="warning" size="small"><ClosedCaptionIcon /></IconButton></Tooltip>
-          <Tooltip title="edit captions" onClick={() => 
-            navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${currentFilter.name.substring(1, currentFilter.name.length-1)}/caption-editor`) }><IconButton color="warning" size="small"><EditNoteIcon /></IconButton></Tooltip>
+          <Tooltip title="tag current images" onClick={() => setTaggerDialog(true)}><IconButton color="warning" size="small"><ClosedCaptionIcon /></IconButton></Tooltip>
+          <Tooltip title="edit captions" onClick={() =>
+            navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${currentFilter.name.substring(1, currentFilter.name.length - 1)}/caption-editor`)}><IconButton color="warning" size="small"><EditNoteIcon /></IconButton></Tooltip>
           <Divider orientation="vertical" flexItem />
 
           <Tooltip title="convert image format and rename" onClick={() => {
             setLoading(true);
             api.rename_and_convert(imageset_name, is_regular, `${repeat}_${concept_name}`).finally(() => {
-              reload().finally(() => setLoading(false));
+              reload().finally(() => {
+                setLoading(false);
+                window.alert('please restart the app after rename your images!');
+              });
             });
           }}><IconButton color="secondary" size="small"><TransformIcon /></IconButton></Tooltip>
           {
@@ -201,7 +217,7 @@ function Editor({
       onClose={() => { setTaggerDialog(false); }} onSubmit={() => {
         reload();
         // 跳转到标签编辑页面
-        const filter_name = currentFilter.name.substring(1, currentFilter.name.length-1);
+        const filter_name = currentFilter.name.substring(1, currentFilter.name.length - 1);
         navigate(`/concept/${imageset_name}/${is_regular ? "reg" : "src"}/${concept_name}/${repeat}/${filter_name}/caption-editor`);
       }} />
 

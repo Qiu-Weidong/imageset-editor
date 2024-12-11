@@ -453,7 +453,7 @@ function SelectionEditor({
               <Tooltip title="reset">
                 <IconButton size="small" color="error"
                   onClick={() => {
-                    const response = window.confirm('do you want to clear all your selection');
+                    const response = selectedImageCount > 0 ? window.confirm('do you want to clear all your selection') : true;
                     if (response) {
                       data.current.images.forEach(image => image.is_selected = false);
                       setSelectedImageCount(0);
@@ -465,7 +465,7 @@ function SelectionEditor({
               <Tooltip title="return">
                 <IconButton size="small" color="secondary"
                   onClick={() => {
-                    const response = window.confirm('do you want to clear all your selection');
+                    const response = selectedImageCount > 0 ? window.confirm('do you want to clear all your selection') : true;
                     if (response) {
                       data.current.images.forEach(image => image.is_selected = false);
                       navigate(-1);
