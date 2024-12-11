@@ -1,4 +1,4 @@
-import { AppBar, Avatar, Chip, IconButton, Grid2 as Grid, TextField, Toolbar, Typography } from "@mui/material";
+import { AppBar, Avatar, Chip, IconButton, Grid2 as Grid, TextField, Toolbar, Typography, Tooltip } from "@mui/material";
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FolderIcon from '@mui/icons-material/Folder';
 import HomeIcon from '@mui/icons-material/Home';
@@ -165,31 +165,20 @@ export default function Header(props: HeaderProps) {
         }
       </div>
 
+      <Tooltip title="reload"><IconButton onClick={load}><RefreshIcon /></IconButton></Tooltip>
+      <Tooltip title="create new imageset"><IconButton onClick={() => setNewDialog(true)}><CreateNewFolderIcon /></IconButton></Tooltip>
+      <Tooltip title="open"><IconButton onClick={() => setOpenDialog(true)}><FolderOpenIcon /></IconButton></Tooltip>
+      <Tooltip title="open in file explore"><IconButton onClick={() => { api.open_in_file_explore(imagesetName) }}><FolderIcon /></IconButton></Tooltip>
+      <Tooltip title="explore imageset"><IconButton onClick={() => {  
+        
+      }}><FileDownloadIcon /></IconButton></Tooltip>
 
-      <IconButton onClick={load}>
-        <RefreshIcon />
-      </IconButton>
 
-
-      <IconButton onClick={() => setNewDialog(true)}><CreateNewFolderIcon /></IconButton>
-      <IconButton onClick={() => setOpenDialog(true)}><FolderOpenIcon /></IconButton>
-      <IconButton onClick={() => { api.open_in_file_explore(imagesetName) }}><FolderIcon /></IconButton>
-      <IconButton onClick={() => { navigate("/settings"); }}><SaveIcon /></IconButton>
-      <IconButton onClick={() => { navigate("/settings"); }}><FileDownloadIcon /></IconButton>
-
-      <IconButton onClick={() => { navigate("/settings"); }}><SettingsIcon /></IconButton>
-
-      <IconButton href="https://github.com/Qiu-Weidong/imageset-editor.git"> <HelpIcon /> </IconButton>
-      <IconButton onClick={() => {
-        // 主页之前要先将没有加载完成的stop了
-        navigate("/");
-      }}>
-        <HomeIcon />
-      </IconButton>
-      <IconButton onClick={() => {
+      <Tooltip title="help"><IconButton href="https://github.com/Qiu-Weidong/imageset-editor.git" target="_blank"> <HelpIcon /> </IconButton></Tooltip>
+      <Tooltip title="home"><IconButton onClick={() => navigate("/")}><HomeIcon /></IconButton></Tooltip>
+      <Tooltip title="delete"><IconButton onClick={() => {
         props.onDelete?.().catch((error: any) => console.error(error));
-      }}> <DeleteIcon /> </IconButton>
-
+      }}> <DeleteIcon /> </IconButton></Tooltip>
     </Toolbar>
 
 

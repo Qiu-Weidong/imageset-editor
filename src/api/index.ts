@@ -14,6 +14,12 @@ const host = window.api_host || 'localhost';
 // 设置后端路径
 axios.defaults.baseURL = `http://${host}:${port}`;
 
+async function flip_images(images: ImageState[], horizontal: boolean) {
+  await axios.put("/image/flip", { 
+    images: images.map(image => image.path),
+    horizontal,
+  });
+}
 
 async function delete_imageset(imageset_name: string) {
   await axios.delete('/imageset/delete', { params: { name: imageset_name } })
@@ -216,6 +222,7 @@ const api = {
   move_images,
   rename_concept,
   load_concept,
+  flip_images,
 };
 
 

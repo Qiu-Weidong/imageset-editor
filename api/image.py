@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from PIL import Image
+from pydantic import BaseModel
 from .config import CONF_REPO_DIR
-
+from tqdm import tqdm
+import os
 
 api_image = APIRouter()
 
@@ -44,6 +46,26 @@ async def get_image(image_name: str):
     return FileResponse(image_path)
   raise HTTPException(status_code=404, detail="Image not found")
   
-
+from typing import List
+class FlipRequest(BaseModel):
+  images: List[str]
+  horizontal: bool
+  
+@api_image.put("/flip")
+async def flip_images(request: FlipRequest):
+  for image in tqdm(request.images):
+    image_path = os.path.join(CONF_REPO_DIR, image)
+    thumbnail_path = os.path.join(CONF_REPO_DIR, '.thumbnail', image)
+    
+    image = Image.open(image_path)
+    if request.horizontal:
+      image = image.transpose(Image.FLIP_LEFT_RIGHT)
+    else:
+      image = image.transpose(Image.FLIP_TOP_BOTTOM)
+    image.save(image_path)
+    # 记得删除对应的缩略图
+    if os.path.exists(thumbnail_path):
+      os.remove(thumbnail_path)
+    
 
 

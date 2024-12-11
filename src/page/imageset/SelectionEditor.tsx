@@ -126,6 +126,7 @@ function SelectionEditor({
 
 
   const [openImageIndex, setOpenImageIndex] = useState(0);
+  const timestamp = useSelector((state: RootState) => state.concept.time);
 
   function ImageCard(props: { image: SelectableImageState, index: number, selectable: boolean, }) {
     const [selected, setSelected] = useState(props.image.is_selected);
@@ -142,7 +143,7 @@ function SelectionEditor({
     return (
       <ImageListItem key={props.image.image.path}
       >
-        <img src={props.image.image.thumbnail} // 显示缩略图算了
+        <img src={`${props.image.image.thumbnail}?t=${timestamp}`} // 显示缩略图算了
           alt={props.image.image.filename}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
@@ -202,7 +203,7 @@ function SelectionEditor({
 
       <Carousel.Slide key={index}>
         <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-          <img src={image.image.src}
+          <img src={`${image.image.src}?t=${timestamp}`}
             alt={image.image.filename}
             style={{
               objectFit: 'contain', width: '100%', height: '100%',

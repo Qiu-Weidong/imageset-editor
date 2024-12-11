@@ -10,6 +10,8 @@ import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
 import { useDispatch } from "react-redux";
 import { closeImage, openImage } from "../../app/openImageSlice";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
 
 
 
@@ -27,6 +29,7 @@ function ImageGallery({
   enableFullscreen?: boolean,
   badge?: boolean,
 }) {
+  const timestamp = useSelector((state: RootState) => state.concept.time);
   const dispatch = useDispatch();
 
   const [openImageIndex, setOpenImageIndex] = useState(-1);
@@ -41,7 +44,7 @@ function ImageGallery({
       <>
         <ImageListItem key={props.image.path}
         >
-          <img alt="fail to load" src={props.image.thumbnail} // 显示缩略图算了
+          <img alt="fail to load" src={`${props.image.thumbnail}?t=${timestamp}`} // 显示缩略图算了
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             loading="lazy"
@@ -90,7 +93,7 @@ function ImageGallery({
         {
           images.map((image, index) =>
             <Carousel.Slide key={index}>
-              <img src={image.src} alt="fail to load" style={{
+              <img src={`${image.src}?t=${timestamp}`} alt="fail to load" style={{
                 objectFit: 'contain', width: '100%', height: '100%',
                 background: 'rgba(255, 255, 255, .2)',
                 backdropFilter: 'blur(7px)',

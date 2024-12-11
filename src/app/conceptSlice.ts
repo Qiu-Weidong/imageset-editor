@@ -16,6 +16,7 @@ export interface ConceptState {
 
   // filter 过滤
   filters: FilterState[],
+  time: number,
 };
 
 const initialState: ConceptState = {
@@ -25,6 +26,7 @@ const initialState: ConceptState = {
   imageset_name: 'uninitialzed',
   images: [],
   filters: [],
+  time: new Date().getTime(),
 };
 
 
@@ -77,10 +79,14 @@ export const conceptSlice = createSlice({
     removeFilter: (state, action: PayloadAction<string>) => {
       state.filters = state.filters.filter(filter => filter.name !== action.payload);
     },
+
+    updateImages: (state) => {
+      state.time = new Date().getTime();
+    }
   },
 });
 
 
 export default conceptSlice.reducer;
-export const { loadConcept, addFilter, removeFilter } = conceptSlice.actions;
+export const { loadConcept, addFilter, removeFilter, updateImages } = conceptSlice.actions;
 

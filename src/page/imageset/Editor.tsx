@@ -13,16 +13,17 @@ import ImageSearchIcon from '@mui/icons-material/ImageSearch';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import FlipIcon from '@mui/icons-material/Flip';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 import FolderDeleteIcon from '@mui/icons-material/FolderDelete';
 import Rotate90DegreesCcwIcon from '@mui/icons-material/Rotate90DegreesCcw';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { useNavigate, useParams } from "react-router-dom";
 import { createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { addFilter, FilterState, loadConcept, removeFilter } from "../../app/conceptSlice";
+import { addFilter, FilterState, loadConcept, removeFilter, updateImages } from "../../app/conceptSlice";
 import api from "../../api";
 import CreateDialog from "../dialog/CreateDialog";
 import AddImageDialog from "../dialog/AddImagesDialog";
@@ -59,7 +60,6 @@ function Tool({
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  // const filter = { name: '', images: [] };
   const ty = is_regular ? "reg" : "src";
 
 
@@ -69,6 +69,26 @@ function Tool({
   const [addImageDialog, setAddImageDialog] = useState(false);
   const [taggerDialog, setTaggerDialog] = useState(false);
   const [operatorDialog, setOperatorDialog] = useState(false);
+
+
+  function flip(horizontal: boolean) {
+    setLoading(true);
+    let images: ImageState[] = [];
+    if (openImage) {
+      // 水平反转所选图片
+      images = [openImage];
+    } else {
+      // 水平反转所有图片
+      images = filter.images;
+    }
+    api.flip_images(images, horizontal).finally(() => {
+      reload().finally(() => {
+        dispatch(updateImages());
+        setLoading(false);
+      });
+      
+    });
+  }
 
   return (
     <Toolbar variant="dense">
@@ -104,7 +124,7 @@ function Tool({
       <Tooltip title="tag current images" onClick={() => setTaggerDialog(true)}>
         <IconButton color="warning" size="small"><ClosedCaptionIcon /></IconButton></Tooltip>
       <Tooltip title="edit captions" onClick={() => {
-        if(openImage) {
+        if (openImage) {
           // 对该图片进行标签编辑
           dispatch(addFilter({
             name: `[${openImage.filename}]`,
@@ -114,7 +134,7 @@ function Tool({
         } else {
           navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${filter.name.substring(1, filter.name.length - 1)}/caption-editor`)
         }
-        
+
       }}
       ><IconButton color="warning" size="small"><EditNoteIcon /></IconButton></Tooltip>
       <Divider orientation="vertical" flexItem />
@@ -124,9 +144,10 @@ function Tool({
         api.rename_and_convert(imageset_name, is_regular, `${repeat}_${concept_name}`).finally(() => {
           reload().finally(() => {
             setLoading(false);
-            window.alert('please restart the app after rename your images!');
+            dispatch(updateImages());
           });
         });
+        
       }}><IconButton color="secondary" size="small"><TransformIcon /></IconButton></Tooltip>
       {
         filter.name !== "[all]" ? <>
@@ -186,10 +207,14 @@ function Tool({
         </> : <></>
       }
       <Divider orientation="vertical" flexItem />
-      <Tooltip title="cut images"><IconButton color="primary" size="small"><ContentCutIcon /></IconButton></Tooltip>
-      <Tooltip title="resize images"><IconButton color="primary" size="small"><ZoomInIcon /></IconButton></Tooltip>
-      <Tooltip title="flip images"><IconButton color="primary" size="small"><FlipIcon /></IconButton></Tooltip>
-      <Tooltip title="rotate images"><IconButton color="primary" size="small"><Rotate90DegreesCcwIcon /></IconButton></Tooltip>
+      {/* <Tooltip title="cut images"><IconButton color="primary" size="small"><ContentCutIcon /></IconButton></Tooltip> */}
+      {/* <Tooltip title="resize images"><IconButton color="primary" size="small"><ZoomInIcon /></IconButton></Tooltip> */}
+      <Tooltip title="horizontal flip images"
+        onClick={() => flip(true) }
+      ><IconButton color="primary" size="small"><SwapHorizIcon /></IconButton></Tooltip>
+      <Tooltip title="vertical flip images" onClick={() => flip(false) }
+      ><IconButton color="primary" size="small"><SwapVertIcon /></IconButton></Tooltip>
+      {/* <Tooltip title="rotate images"><IconButton color="primary" size="small"><Rotate90DegreesCcwIcon /></IconButton></Tooltip> */}
 
 
       <CreateDialog open={createDialog} imageset_name={imageset_name} type={is_regular ? 'regular' : 'train'}
@@ -201,11 +226,7 @@ function Tool({
         is_regular={is_regular} concept_name={concept_name} repeat={repeat}
         onClose={() => { setTaggerDialog(false); }} onSubmit={() => {
           reload();
-          // // 跳转到标签编辑页面
-          // const filter_name = filter.name.substring(1, filter.name.length - 1);
-          // navigate(`/concept/${imageset_name}/${is_regular ? "reg" : "src"}/${concept_name}/${repeat}/${filter_name}/caption-editor`);
         }} />
-
       <SelectionOperatorDialog open={operatorDialog} onClose={() => setOperatorDialog(false)}
         onSubmit={(name) => {
           navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${name}`);

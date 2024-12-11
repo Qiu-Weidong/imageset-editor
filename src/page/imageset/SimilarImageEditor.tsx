@@ -5,6 +5,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import api from "../../api";
 import { CheckCircle } from "@mui/icons-material";
 import { ImageState } from "../../app/imageSetSlice";
+import { RootState } from "../../app/store";
+import { useSelector } from "react-redux";
 
 
 export interface SimilarImageState {
@@ -31,6 +33,8 @@ function init(images: SimilarImageState[][]) {
 
 
 function SimilarImageEditor() {
+  const timestamp = useSelector((state: RootState) => state.concept.time);
+  
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -93,7 +97,7 @@ function SimilarImageEditor() {
   function Image({ image, index, i }: { image: SimilarImageState, index: number, i: number }) {
     const [selected, setSelected] = useState<boolean>(image.is_selected || false);
     return <div style={{ position: 'relative', height: 256, overflow: 'hidden' }}>
-      <img style={{ objectFit: 'contain', }} src={image.src} height={256}
+      <img style={{ objectFit: 'contain', }} src={`${image.src}?t=${timestamp}`} height={256}
         onClick={() => {
           image.is_selected = !image.is_selected;
           setSelected(image.is_selected);

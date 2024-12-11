@@ -74,7 +74,7 @@ if __name__ == "__main__":
     window = webview.create_window("imageset editor", url=f"http://{CONF_HOST}:{CONF_PORT}/web", maximized=True, confirm_close=True, )
     thread.daemon = True
     thread.start()
-    webview.start(icon=os.path.join(CONF_WEB_DIR, 'icon.png'))
+    webview.start(icon=os.path.join(CONF_WEB_DIR, 'icon.png'), )
     
   else:
     uvicorn.run("launch:app", host=CONF_HOST, port=CONF_PORT, reload=args.reload)
