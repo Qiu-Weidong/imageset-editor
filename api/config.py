@@ -13,8 +13,6 @@ if getattr(sys, "frozen", False):
 else:
   base_path = os.path.abspath(".")
 
-print(base_path)
-
 CONFIG = {
   # 先设置默认值
   'PORT': 1420,
