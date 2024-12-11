@@ -1,6 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, InputLabel, LinearProgress, MenuItem, Select, Slider, Stack, Switch, TextField } from "@mui/material";
 import { useRef, useState } from "react";
-import { FilterState } from "../../app/imageSetSlice";
+import { FilterState } from "../../app/conceptSlice";
 import api from "../../api";
 
 interface taggerDialogProps {

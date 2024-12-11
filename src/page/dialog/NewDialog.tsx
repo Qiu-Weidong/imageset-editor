@@ -49,7 +49,7 @@ function NewDialog(props: newDialogProps) {
             .then((res: any) => {
               setState({ ...state, msg: `create imageset '${res}' successful.`, open: true, severity: 'success' });
               // 应该在这里就设置 imageset_name
-              navigate(`/overview`, { state: { imageset_name: name } });
+              navigate(`/overview/${name}`);
             })
             .catch((err: any) => {
               setState({ ...state, msg: exception2string(err), open: true, severity: 'error' })

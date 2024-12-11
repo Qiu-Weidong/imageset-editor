@@ -15,8 +15,8 @@ export function App() {
       <Router>
         <Routes>
           <Route path='/home' element={<Start />} />
-          <Route path='/overview/:imageset_name' element={<Overview />} />
-          <Route path="/selection-editor/:imageset_name/:type/:concept_name/:repeat/*" element={ <SelectionEditor selectable badge /> } />
+          <Route path='/overview/:imageset_name/*' element={<Overview />} />
+          <Route path="/selection-editor/:imageset_name/:type/:concept_name/:repeat/:filter_name/*" element={ <SelectionEditor selectable badge /> } />
 
           {/* 有点意思，还可以这样 */}
           <Route path='/concept/:imageset_name/:type/:concept_name/:repeat/:filter_name/*' element={ <ImageSet /> } />

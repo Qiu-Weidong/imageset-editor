@@ -1,12 +1,16 @@
-import { Backdrop, Button, Card, CardActions, CardContent, Chip, CircularProgress, IconButton, TextField, Typography } from "@mui/material";
-import { FilterState, ImageState } from "../../app/imageSetSlice";
+import { Backdrop, Box, Button, Card, CardActions, CardContent, Chip, CircularProgress, Grid2 as Grid, IconButton, MenuItem, Paper, Select, Slider, TextField, Typography } from "@mui/material";
+import { FilterState, loadConcept } from "../../app/conceptSlice";
 import { useEffect, useState } from "react";
 import DoneIcon from '@mui/icons-material/Done';
 import AddIcon from '@mui/icons-material/Add';
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api";
+import { ImageState } from "../../app/imageSetSlice";
+import { useDispatch } from "react-redux";
+import { getFilterByName, selectFilterNameList } from "./Editor";
+import ImageGallery from "./ImageGallery";
 
 
 
@@ -94,7 +98,7 @@ function CaptionEditorBox(props: {
   const [adding, setAdding] = useState(false);
 
   const captionList = (filteredCaptions.map(caption =>
-    <EditableChip editable={false} color="info" caption={caption}
+    <EditableChip editable={false} color="default" caption={caption}
       onRemove={(removedCaption: string) => {
         // 向上传递
         props.onRemoveCaption?.(removedCaption);
@@ -177,15 +181,22 @@ interface CaptionState {
   image_captions: Map<string, string[]>,
 }
 
-function CaptionEditor({
-  filter, // filter 决定了要当前编辑的对象, 但是我不能直接在 filter 上面进行修改
-  onReload, // 还是需要一个 onReload
+function CaptionEditorCard({
+  filter,
+  imageset_name,
+  is_regular,
+  concept_name,
+  repeat,
 }: {
   filter: FilterState,
-  onReload: () => Promise<void>,
+  imageset_name: string,
+  is_regular: boolean,
+  concept_name: string,
+  repeat: number,
 }) {
-  // 点击保存会直接保存到磁盘, 然后直接从磁盘重新加载即可
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
 
   // 第一步, 计算所有标签的交集
   const image_captions = getAllCaptionsFromFilter(filter);
@@ -196,24 +207,10 @@ function CaptionEditor({
   });
 
   const openImage = useSelector((state: RootState) => state.openImage.image);
-
-
-
   const [loading, setLoading] = useState(false);
   const [dirty, setDirty] = useState(false);
 
 
-  async function save() {
-    setLoading(true);
-    // 调用保存api
-    await api.save_tags(captionState.image_captions);
-    await onReload();
-    setLoading(false);
-
-    setDirty(false);
-  }
-
-  // 除非 filter 改变
   useEffect(() => {
     if (dirty) {
       const response = window.confirm("do you want to save your work?");
@@ -225,6 +222,22 @@ function CaptionEditor({
       image_captions, total_captions, common_captions,
     });
   }, [filter]);
+
+
+  async function reload() {
+    const result = await api.load_concept(imageset_name, is_regular, concept_name, repeat);
+    dispatch(loadConcept(result));
+  }
+
+  async function save() {
+    setLoading(true);
+    // 调用保存api
+    await api.save_tags(captionState.image_captions);
+    await reload();
+    setLoading(false);
+
+    setDirty(false);
+  }
 
   function updateImageCaptions(image: ImageState, captions: string[]) {
     setDirty(true);
@@ -281,11 +294,8 @@ function CaptionEditor({
     });
   }
 
-
-
-  // 第二步, 计算所有标签的并集
   return (
-    <><Card sx={{ backgroundColor: 'rgba(255, 255, 255, 0.75)' }}>
+    <Card sx={{ backgroundColor: 'rgba(255, 255, 255, 0.85)' }}>
       <CardContent>
         <Typography
           variant="h5"
@@ -408,20 +418,99 @@ function CaptionEditor({
               if (response) { save(); }
             }
             navigate(-1);
-            
+
           }}
         >
           Return
         </Button>
       </CardActions>
 
-    </Card>
       <Backdrop
         sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}
         open={loading}
       >
         <CircularProgress color="inherit" />
       </Backdrop>
+
+    </Card>
+  );
+}
+
+
+
+function CaptionEditor({
+  imageset_name, is_regular, concept_name, repeat,
+}: {
+  imageset_name: string,
+  is_regular: boolean,
+  concept_name: string,
+  repeat: number,
+}) {
+  const { filter_name = 'all' } = useParams();
+
+  const filter_name_list = useSelector(selectFilterNameList);
+  const filters = useSelector((state: RootState) => state.concept.filters);
+  const [currentFilter, setCurrentFilter] = useState<FilterState>(getFilterByName(filters, `[${filter_name}]`));
+  const [column, setColumn] = useState(10);
+
+  useEffect(() => {
+    const _filter_name = `[${filter_name}]`;
+    setCurrentFilter(getFilterByName(filters, _filter_name));
+  }, [filters, filter_name]);
+
+
+
+  const height = '85vh';
+  return (
+    <>
+      <Grid container spacing={1} sx={{ marginLeft: 1, marginRight: 1 }}>
+        <Grid size={9}>
+          <Paper elevation={3} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.85)' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Select
+                labelId="demo-simple-select-standard-label"
+                id="demo-simple-select-standard"
+                label="concept or selection"
+                variant="standard"
+                size="small"
+                value={currentFilter.name}
+                sx={{ m: 1, minWidth: 180 }}
+                onChange={(event) => {
+                  const filter_name = event.target.value;
+                  setCurrentFilter(getFilterByName(filters, filter_name));
+                }}
+              >
+                {
+                  filter_name_list.map((name, index) => <MenuItem key={index} value={name}>
+                    {name}
+                  </MenuItem>)
+                }
+              </Select>
+              <div style={{flex:1}}>
+              current images: <b>{currentFilter.images.length}</b>
+              </div>
+              <Slider
+                size="small"
+                defaultValue={column}
+                value={column}
+                onChange={(_, value) => setColumn(value as number)}
+                valueLabelDisplay="off"
+                sx={{ maxWidth: 120, margin: 1, }}
+                max={16}
+                min={4}
+              />
+            </Box>
+            <ImageGallery images={currentFilter.images} height={height} enableFullscreen badge></ImageGallery>
+          </Paper>
+        </Grid>
+
+        {/* 似乎需要拆分为不同的组件 */}
+        <Grid size={3}>
+          <CaptionEditorCard
+            imageset_name={imageset_name} is_regular={is_regular} concept_name={concept_name} repeat={repeat}
+            filter={currentFilter}></CaptionEditorCard>
+        </Grid>
+      </Grid>
     </>);
 }
 

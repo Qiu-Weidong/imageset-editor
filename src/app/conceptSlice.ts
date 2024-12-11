@@ -73,10 +73,14 @@ export const conceptSlice = createSlice({
       const filters = state.filters.filter(filter => filter.name !== action.payload.name);
       state.filters = [...filters, action.payload];
     },
+
+    removeFilter: (state, action: PayloadAction<string>) => {
+      state.filters = state.filters.filter(filter => filter.name !== action.payload);
+    },
   },
 });
 
 
 export default conceptSlice.reducer;
-export const { loadConcept, addFilter } = conceptSlice.actions;
+export const { loadConcept, addFilter, removeFilter } = conceptSlice.actions;
 

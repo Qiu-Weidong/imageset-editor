@@ -1,4 +1,4 @@
-import { AppBar, Container, Toolbar, Typography } from "@mui/material";
+import { AppBar, Breadcrumbs, Container, Toolbar, Tooltip, Typography } from "@mui/material";
 import { Paper, Autocomplete, Avatar, Button, Chip, Divider, FormControl, Grid2 as Grid, IconButton, ImageList, ImageListItem, InputLabel, MenuItem, Select, Slider, TextField } from "@mui/material";
 import { useRef, useState } from "react";
 import { ImageState } from "../../app/imageSetSlice";
@@ -19,40 +19,16 @@ import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addFilter } from "../../app/conceptSlice";
 
 
 // 可以将这个选择器放到外面的页面中，将对应的 filter_name 的图片作为属性传入进来
-const selectAllImages = createSelector(
-  [
-    (state: RootState) => state.imageSet.images,
-    (state: RootState) => state.imageSet.filters,
-  ],
-  (images, filters) => {
-    // 首先需要建立一个 image map
-    const image_map = new Map<string, SelectableImageState>();
-    for (const [path, image] of images) {
-      image_map.set(path, { image, is_selected: false });
-    }
-
-    // 得到一个 SelectableImageState 的 filter
-    const image_list_map = new Map<string, SelectableImageState[]>();
-
-
-    for (const filter of filters) {
-      const selectable_images: SelectableImageState[] = [];
-      for (const image of filter.images) {
-        const selectable_image = image_map.get(image.path);
-        if (selectable_image) {
-          selectable_images.push(selectable_image);
-        }
-      }
-      image_list_map.set(filter.name, selectable_images);
-    }
-    return image_list_map;
-  }
+const selectImagesByFilterName = (filter_name: string) => createSelector(
+  (state: RootState) => state.concept.filters,
+  (filters) => filters.find(filter => filter.name === filter_name)?.images || [],
 );
 
 
@@ -118,6 +94,7 @@ function SelectionEditor({
   const is_regular = param.type === 'reg';
   const concept_name = param.concept_name || 'error';
   const repeat = parseInt(param.repeat || "0") || 0;
+  const filter_name = param.filter_name || 'all'; // 过滤名称
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -126,7 +103,7 @@ function SelectionEditor({
 
 
   // 获取到了所有的 concept 和 selection
-  const images = useSelector((state: RootState) => state.concept.images); // 获取所有图片
+  const images = useSelector(selectImagesByFilterName(`[${filter_name}]`)); // 获取所有图片
 
   // 当前的所有图片和所有标签
   const data = useRef(getAllImagesAndLabels(images));
@@ -379,115 +356,153 @@ function SelectionEditor({
       <Container fixed maxWidth="xl" >
         <AppBar position="fixed" color="default" >
           <Toolbar variant="dense">
-            <Typography
-              variant="h6"
-              noWrap
-              component="div"
-              sx={{
-                mr: 2,
-                display: { xs: 'none', md: 'flex' },
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                letterSpacing: '.3rem',
-                color: 'inherit',
-                textDecoration: 'none',
-              }}
-            >
-              {imageset_name}
-            </Typography>
-
-            <Grid container spacing={1} sx={{ flex: 1, }}>
-              <Button variant="contained" size="small" startIcon={<VisibilityIcon />}
-                onClick={() => {
-                  const images = data.current.images.filter(image => image.is_selected);
-                  setFilteredImages(images);
-                  setSelectableLabels(getAllLabelsFromImages(images));
-                  setSelectedLabels([]);
+            <Breadcrumbs aria-label="breadcrumb">
+              <Typography
+                variant="h6"
+                noWrap
+                sx={{
+                  display: { xs: 'none', md: 'flex' },
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  letterSpacing: '.3rem',
+                  color: 'inherit',
+                  textDecoration: 'none',
                 }}
-              >查看已选图片</Button>
-              <Button variant="contained" size="small" startIcon={<VisibilityIcon />}
-                onClick={() => clearAllFilter()}
-              >查看所有图片</Button>
+              >
+                {imageset_name}
+              </Typography>
+              <Typography variant="h6" noWrap
+                sx={{
+                  fontFamily: 'monospace',
+                  fontWeight: 600,
+                }}
+              >
+                { is_regular ? "reg" : "src" }
+              </Typography>
+
+              <Chip variant="outlined" size="small" avatar={<Avatar>{repeat}</Avatar>} label={concept_name}
+              />
+              <Typography variant="h6" noWrap
+                sx={{
+                  fontFamily: 'monospace',
+                  fontWeight: 600,
+                }}
+              >
+                { filter_name }
+              </Typography>
+            </Breadcrumbs>
+
+            <div style={{ flex:1 }}></div>
+            <Grid container spacing={1} sx={{ flex: 1, display: 'flex', alignItems:'center' }}>
+              <Tooltip title="show selected images">
+                <IconButton size="small"
+                  onClick={() => {
+                    const images = data.current.images.filter(image => image.is_selected);
+                    setFilteredImages(images);
+                    setSelectableLabels(getAllLabelsFromImages(images));
+                    setSelectedLabels([]);
+                  }}
+                > <VisibilityIcon /></IconButton>
+              </Tooltip>
+
+              <Tooltip title="show all images">
+                <IconButton size="small"
+                  onClick={() => clearAllFilter()}
+                > <VisibilityOutlinedIcon /></IconButton>
+              </Tooltip>
               <Divider orientation="vertical" flexItem />
-              <Button variant="contained" size="small" startIcon={<SelectAllIcon />}
-                onClick={() => {
-                  const selected_images = filteredImages.map(image => {
-                    image.is_selected = true;
-                    return image;
-                  });
-                  setSelectedImageCount(data.current.images.filter(image => image.is_selected).length);
-                  setFilteredImages(selected_images);
-                }}
-              >全选以下图片</Button>
+              <Tooltip title="select all below">
+                <IconButton size="small"
+                  onClick={() => {
+                    const selected_images = filteredImages.map(image => {
+                      image.is_selected = true;
+                      return image;
+                    });
+                    setSelectedImageCount(data.current.images.filter(image => image.is_selected).length);
+                    setFilteredImages(selected_images);
+                  }}
+                > <SelectAllIcon /></IconButton>
+              </Tooltip>
+              <Tooltip title="unselect all below">
+                <IconButton size="small"
+                  onClick={() => {
+                    const selected_images = filteredImages.map(image => {
+                      image.is_selected = false;
+                      return image;
+                    });
+                    setSelectedImageCount(data.current.images.filter(image => image.is_selected).length);
+                    setFilteredImages(selected_images);
+                  }}
+                > <TabUnselectedIcon /></IconButton>
+              </Tooltip>
 
-              <Button variant="contained" size="small" startIcon={<TabUnselectedIcon />}
-                onClick={() => {
-                  const selected_images = filteredImages.map(image => {
-                    image.is_selected = false;
-                    return image;
-                  });
-                  setSelectedImageCount(data.current.images.filter(image => image.is_selected).length);
-                  setFilteredImages(selected_images);
-                }}
-              >将以下图片全部取消选择</Button>
-
-              <Button variant="contained" size="small" startIcon={<FlipCameraAndroidIcon />}
-                onClick={() => {
-                  const selected_images = filteredImages.map(image => {
-                    image.is_selected = !image.is_selected;
-                    return image;
-                  });
-                  setSelectedImageCount(data.current.images.filter(image => image.is_selected).length);
-                  setFilteredImages(selected_images);
-                }}
-              >反转选择</Button>
+              <Tooltip title="reverse selection blow">
+                <IconButton size="small"
+                  onClick={() => {
+                    const selected_images = filteredImages.map(image => {
+                      image.is_selected = !image.is_selected;
+                      return image;
+                    });
+                    setSelectedImageCount(data.current.images.filter(image => image.is_selected).length);
+                    setFilteredImages(selected_images);
+                  }}
+                > <FlipCameraAndroidIcon /></IconButton>
+              </Tooltip>
 
               <Divider orientation="vertical" flexItem />
+              <Tooltip title="reset">
+                <IconButton size="small" color="error"
+                  onClick={() => {
+                    const response = window.confirm('do you want to clear all your selection');
+                    if (response) {
+                      data.current.images.forEach(image => image.is_selected = false);
+                      setSelectedImageCount(0);
+                      clearAllFilter();
+                    }
+                  }}
+                > <RestartAltIcon /></IconButton>
+              </Tooltip>
+              <Tooltip title="return">
+                <IconButton size="small" color="secondary"
+                  onClick={() => {
+                    const response = window.confirm('do you want to clear all your selection');
+                    if (response) {
+                      data.current.images.forEach(image => image.is_selected = false);
+                      navigate(-1);
+                    }
+                  }}
+                > <ChevronLeftIcon /></IconButton>
+              </Tooltip>
 
-              <Button variant="contained" size="small" color="error" startIcon={<RestartAltIcon />}
-                onClick={() => {
-                  const response = window.confirm('do you want to clear all your selection');
-                  if (response) {
-                    data.current.images.forEach(image => image.is_selected = false);
-                    setSelectedImageCount(0);
-                    clearAllFilter();
-                  }
+              <Tooltip title="create">
+                <IconButton size="small" color="success"
+                  onClick={() => {
+                    const images: ImageState[] = data.current.images.filter(image => image.is_selected).map(image => image.image) || [];
+                    if (images.length <= 0) {
+                      // 警告
+                      window.alert('you have not select any images');
+                      return;
+                    }
 
-                }}
-              >重置</Button>
-              <Button variant="contained" size="small" color="secondary" startIcon={<ChevronLeftIcon />}
-                onClick={() => {
-                  data.current.images.forEach(image => image.is_selected = false);
-                  navigate(-1);
-                }}
-              >返回</Button>
-              <Button variant="contained" size="small" color="success" startIcon={<AddCircleIcon />}
-                onClick={() => {
-                  const images: ImageState[] = data.current.images.filter(image => image.is_selected).map(image => image.image) || [];
-                  if (images.length <= 0) {
-                    // 警告
-                    window.alert('you have not select any images');
-                    return;
-                  }
-
-                  let input = window.prompt('create a new selection', 'input your selection name');
-                  while (input && input.trim() === 'all') {
-                    input = window.prompt('create a new selection', 'input your selection name, can not be "all"');
-                  }
+                    let input = window.prompt('create a new selection', 'input your selection name');
+                    while (input && input.trim() === 'all') {
+                      input = window.prompt('create a new selection', 'input your selection name, can not be "all"');
+                    }
 
 
-                  if (input) {
-                    input = input.trim();
-                    const name = `[${input}]`;
+                    if (input) {
+                      input = input.trim();
+                      const name = `[${input}]`;
 
-                    dispatch(addFilter({
-                      name,
-                      images,
-                    }));
-                    navigate(`/concept/${imageset_name}/${is_regular ? "reg" : "src"}/${concept_name}/${repeat}/${input}`, { replace: true });
-                  }
-                }}
-              >创建</Button>
+                      dispatch(addFilter({
+                        name,
+                        images,
+                      }));
+                      navigate(`/concept/${imageset_name}/${is_regular ? "reg" : "src"}/${concept_name}/${repeat}/${input}`, { replace: true });
+                    }
+                  }}
+                > <AddCircleIcon /></IconButton>
+              </Tooltip>
               <Divider orientation="vertical" flexItem />
               <div>
                 <b>{selectedImageCount}</b> / <b>{data.current.images.length}</b>
@@ -503,8 +518,14 @@ function SelectionEditor({
               sx={{ maxWidth: 120, }}
               max={16}
               min={4}
-            /><Button size="small" variant="text" onClick={() => setShowCaptionFilter((prev) => !prev)}
-              endIcon={!showCaptionFilter ? <ExpandMoreIcon /> : <ExpandLessIcon />}>根据标签过滤</Button>
+            />
+            <Tooltip title="filter by tags">
+              <IconButton size="small" onClick={() => setShowCaptionFilter((prev) => !prev)} color="primary">
+                {!showCaptionFilter ? <ExpandMoreIcon /> : <ExpandLessIcon />}
+              </IconButton>
+            </Tooltip>
+
+
           </Toolbar>
 
           {

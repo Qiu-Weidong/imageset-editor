@@ -69,8 +69,8 @@ function CreateDialog(props: createDialogProps) {
               // 需要先 submit
               props.onSubmit?.();
               
-              // 跳转到新建的concept
-              navigate('/imageset', { state: { imageset_name: props.imageset_name, is_regular: props.type === 'regular', filter_name: `${repeat}_${conceptName}` } });
+              // 跳转到新建的concept, 跳转到 overview 即可
+              navigate(`/overview/${props.imageset_name}/${props.type === "regular" ? "reg" : "src"}/${conceptName}/${repeat}/all`);
             }).catch((error: any) => {
               console.error(error);
             }).finally(() => {
