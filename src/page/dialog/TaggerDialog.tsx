@@ -1,18 +1,30 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, InputLabel, LinearProgress, MenuItem, Select, Slider, Stack, Switch, TextField } from "@mui/material";
 import { useRef, useState } from "react";
-import { FilterState } from "../../app/conceptSlice";
+import { addFilter, FilterState } from "../../app/conceptSlice";
 import api from "../../api";
+import { ImageState } from "../../app/imageSetSlice";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 interface taggerDialogProps {
   open: boolean;
   filter: FilterState,
   onClose: () => void,
   onSubmit?: () => void,
+  openImage?: ImageState | null,
+
+  imageset_name: string,
+  is_regular: boolean,
+  concept_name: string,
+  repeat: number,
 };
 
 
 // 配置thredhold, additional_tags,
 function TaggerDialog(props: taggerDialogProps) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const default_model_name = 'wd14-convnextv2.v1';
   const all_model_name = [
     'wd14-vit.v1', 'wd14-vit.v2', 'wd14-convnext.v1', 'wd14-convnext.v2', 'wd14-convnextv2.v1', 'wd14-swinv2-v1,wd-v1-4-moat-tagger.v2',
@@ -39,11 +51,29 @@ function TaggerDialog(props: taggerDialogProps) {
     const additional_tags = additionalTags.split(',').map(tag => tag.trim());
     const exclude_tags = excludeTags.split(',').map(tag => tag.trim());
 
-    for (const [index, image] of props.filter.images.entries()) {
-      if (stop.current) { break; }
-      const tags = await api.interrogate(image, modelName, threshold, additional_tags, exclude_tags, ignoreTagged);
-      setProgress(index * 100 / props.filter.images.length);
+    if (props.openImage) {
+      // 如果打开了图片，那么就对打开的图片进行打标
+      await api.interrogate(props.openImage, modelName, threshold, additional_tags, exclude_tags, ignoreTagged);
+      // 创建一个 selection
+      dispatch(addFilter({
+        name: `[${props.openImage.filename}]`,
+        images: [props.openImage],
+      }));
+      // 跳转到对应的 selection 进行编辑
+      navigate(`/concept/${props.imageset_name}/${props.is_regular ? "reg" : "src"}/${props.concept_name}/${props.repeat}/${props.openImage.filename}/caption-editor`);
     }
+    else {
+      for (const [index, image] of props.filter.images.entries()) {
+        if (stop.current) { break; }
+        const _ = await api.interrogate(image, modelName, threshold, additional_tags, exclude_tags, ignoreTagged);
+        setProgress(index * 100 / props.filter.images.length);
+      }
+
+      const filter_name = props.filter.name.substring(1, props.filter.name.length - 1);
+      navigate(`/concept/${props.imageset_name}/${props.is_regular ? "reg" : "src"}/${props.concept_name}/${props.repeat}/${filter_name}/caption-editor`);
+
+    }
+
 
     setLoading(false);
 
@@ -54,7 +84,7 @@ function TaggerDialog(props: taggerDialogProps) {
       open={props.open}
       onClose={props.onClose}
     >
-      <DialogTitle>tagger for <b>{props.filter.name}</b></DialogTitle>
+      <DialogTitle>tagger for <b>{ props.openImage ? props.openImage.filename : props.filter.name}</b></DialogTitle>
       <DialogContent>
         {/* 模型选择器 */}
         <Stack spacing={2}>
@@ -87,7 +117,7 @@ function TaggerDialog(props: taggerDialogProps) {
               min={0}
             />
           </FormControl>
-          <FormControlLabel labelPlacement="start" control={<Switch defaultChecked value={ignoreTagged} size="small" 
+          <FormControlLabel labelPlacement="start" control={<Switch defaultChecked value={ignoreTagged} size="small"
             onChange={(event) => setIgnoreTagged(event.target.checked)} />} label="ignore tagged images" />
 
           {/* 直接使用 text input 即可 */}
@@ -106,15 +136,15 @@ function TaggerDialog(props: taggerDialogProps) {
       </DialogContent>
       <DialogActions>
         {
-          loading ? 
-          <Button onClick={() => stop.current = true }>stop</Button> : 
-          <Button onClick={() => {
-            // 开始打标
-            tagger().finally(() => {
-              props.onClose();
-              props.onSubmit?.();
-            });
-          }}>tagger</Button>
+          loading ?
+            <Button onClick={() => stop.current = true}>stop</Button> :
+            <Button onClick={() => {
+              // 开始打标
+              tagger().finally(() => {
+                props.onClose();
+                props.onSubmit?.();
+              });
+            }}>tagger</Button>
         }
 
       </DialogActions>

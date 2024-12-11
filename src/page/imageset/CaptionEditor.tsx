@@ -11,6 +11,7 @@ import { ImageState } from "../../app/imageSetSlice";
 import { useDispatch } from "react-redux";
 import { getFilterByName, selectFilterNameList } from "./Editor";
 import ImageGallery from "./ImageGallery";
+import { closeImage } from "../../app/openImageSlice";
 
 
 
@@ -417,8 +418,8 @@ function CaptionEditorCard({
               const response = window.confirm("do you want to save your work?");
               if (response) { save(); }
             }
+            dispatch(closeImage());
             navigate(-1);
-
           }}
         >
           Return

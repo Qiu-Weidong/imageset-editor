@@ -29,9 +29,7 @@ function ImageGallery({
 }) {
   const dispatch = useDispatch();
 
-  const [openImageIndex, setOpenImageIndex] = useState(
-    images.length <= 1 ? 0 : -1
-  );
+  const [openImageIndex, setOpenImageIndex] = useState(-1);
   function ImageCard(props: { image: ImageState, index: number, }) {
     const [hovered, setHovered] = useState(false);
     function click_handler() {

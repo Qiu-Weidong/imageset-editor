@@ -169,11 +169,6 @@ export function Editor({ filter, onReload }: { filter: FilterState, onReload: ()
       <AddImageDialog open={addImageDialog} imageset_name={imageset_name} is_regular={is_regular} concept_folder={filter.name}
         onClose={() => { setAddImageDialog(false); }} onSubmit={onReload} />
 
-      <TaggerDialog open={taggerDialog} filter={filter}
-        onClose={() => { setTaggerDialog(false); }} onSubmit={() => {
-          onReload();
-          navigate("/imageset/caption-editor", { replace: true, state: { ...location.state, filter_name: filter.name } });
-        }} />
 
       <Backdrop
         sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}
