@@ -200,6 +200,17 @@ async function move_images(imageset_name: string, images:ImageState[], is_regula
   });
 }
 
+async function explore(imageset_name: string) {
+  const response = (await axios.post("/imageset/explore", {}, { params: { imageset_name }, responseType: 'blob' }));
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', `${imageset_name}.zip`); // 设置下载文件的名称
+  document.body.appendChild(link);
+  link.click(); // 模拟点击下载
+  link.remove(); // 下载后移除链接
+}
+
 const api = {
   delete_imageset,
   create_imageset,
@@ -223,6 +234,7 @@ const api = {
   rename_concept,
   load_concept,
   flip_images,
+  explore,
 };
 
 

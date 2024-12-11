@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException,  File, UploadFile, Form
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from .config import CONF_REPO_DIR, CONF_HOST, CONF_PORT
 import os
@@ -131,6 +132,17 @@ def save_caption(image_path: str, tags: list[str]):
     pass
   metadata.close()
 
+def dump_caption(concept_path):
+  # imageset-xx/src/8_katana
+  imagefiles = get_image_list(concept_path)
+  for imagefile in tqdm(imagefiles):
+    file_name_with_extension = os.path.basename(imagefile)
+    dirname = os.path.dirname(imagefile)
+    name, _ = os.path.splitext(file_name_with_extension)
+    tags = load_caption(imagefile)
+    s = ", ".join(tags)
+    with open(os.path.join(CONF_REPO_DIR, dirname, f"{name}.txt"), "w") as f:
+      f.write(s)
 
 
 
@@ -412,6 +424,39 @@ async def move(request: MoveRequest):
     shutil.move(os.path.join(CONF_REPO_DIR, filename), dest)
   return
 
+@api_imageset.post("/explore")
+async def explore(imageset_name: str):
+  import shutil
+  # 创建临时目录
+  temp_dir = os.path.join(CONF_REPO_DIR, ".temp")
+  if os.path.exists(temp_dir):
+    shutil.rmtree(temp_dir)
+  os.makedirs(temp_dir, exist_ok=True)
+  
+  # 导出数据集
+  train_dir = os.path.join('imageset-'+imageset_name, 'src')
+  reg_dir = os.path.join('imageset-'+imageset_name, 'reg')
+  if os.path.exists(os.path.join(CONF_REPO_DIR, train_dir)):
+    temp_train_dir = os.path.join(temp_dir, 'src')
+    os.makedirs(temp_train_dir, exist_ok=True)
+    concepts = get_concept_folder_list(train_dir)
+    for concept in concepts:
+      # 对每个概念，首先将标签导出为 txt 文件
+      dump_caption(concept['path'])
+      shutil.copytree(os.path.join(CONF_REPO_DIR, concept['path']), os.path.join(temp_train_dir, f"{concept['repeat']}_{concept['name']}"))
+  if os.path.exists(os.path.join(CONF_REPO_DIR, reg_dir)):
+    temp_reg_dir = os.path.join(temp_dir, 'reg')
+    os.makedirs(temp_reg_dir, exist_ok=True)
+    concepts = get_concept_folder_list(reg_dir)
+    for concept in concepts:
+      # 对每个概念，首先将标签导出为 txt 文件
+      dump_caption(concept['path'])
+      shutil.copytree(os.path.join(CONF_REPO_DIR, concept['path']), os.path.join(temp_reg_dir, f"{concept['repeat']}_{concept['name']}"))
+  
+  shutil.make_archive(os.path.join(CONF_REPO_DIR, imageset_name), 'zip', temp_dir)
+  shutil.rmtree(temp_dir)
+  return FileResponse(os.path.join(CONF_REPO_DIR, f"{imageset_name}.zip"), media_type='application/zip', filename=f"{imageset_name}.zip")
+  
 
 
 @api_imageset.put("/rename")  
@@ -515,9 +560,16 @@ async def delete_images(request: DeleteImageRequest):
     abs_filename = os.path.join(CONF_REPO_DIR, filename)
     thumbnail_filename = os.path.join(CONF_REPO_DIR, '.thumbnail', filename)
     try:
-      os.remove(thumbnail_filename)
-      os.remove(abs_filename)
-    except:
+      if os.path.exists(thumbnail_filename):
+        os.remove(thumbnail_filename)
+    except Exception as e:
+      print(e)
+      continue
+    try:
+      if os.path.exists(abs_filename):
+        os.remove(abs_filename)
+    except Exception as e:
+      print(e)
       continue
     deleted_names.append(filename)
   return deleted_names

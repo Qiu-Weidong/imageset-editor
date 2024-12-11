@@ -170,7 +170,7 @@ export default function Header(props: HeaderProps) {
       <Tooltip title="open"><IconButton onClick={() => setOpenDialog(true)}><FolderOpenIcon /></IconButton></Tooltip>
       <Tooltip title="open in file explore"><IconButton onClick={() => { api.open_in_file_explore(imagesetName) }}><FolderIcon /></IconButton></Tooltip>
       <Tooltip title="explore imageset"><IconButton onClick={() => {  
-        
+        api.explore(props.imageset_name);
       }}><FileDownloadIcon /></IconButton></Tooltip>
 
 

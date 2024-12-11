@@ -88,7 +88,6 @@ function SimilarImageEditor() {
       const images = similarImages.map((li) => li.filter(image => ! image.is_selected)).filter(li => li.length > 0);
       setSimilarImages(images);
     }).finally(() => {
-
     });
 
   }
