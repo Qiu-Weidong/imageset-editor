@@ -30,3 +30,4 @@ tmp/
 *.log
 /repo
 *.ipynb
+/venv/
