@@ -2,14 +2,12 @@ import { AppBar, Avatar, Chip, IconButton, Grid2 as Grid, TextField, Toolbar, Ty
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FolderIcon from '@mui/icons-material/Folder';
 import HomeIcon from '@mui/icons-material/Home';
-import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/Help';
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import DeleteIcon from '@mui/icons-material/Delete';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import SaveIcon from '@mui/icons-material/Save';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import NewDialog from "../dialog/NewDialog";

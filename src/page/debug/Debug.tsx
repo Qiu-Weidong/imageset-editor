@@ -5,8 +5,6 @@ import ReactCrop, {
   centerCrop,
   makeAspectCrop,
   Crop,
-  PixelCrop,
-  convertToPixelCrop,
 } from 'react-image-crop';
 
 // 一定要记得导入 css

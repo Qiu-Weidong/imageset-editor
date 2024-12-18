@@ -43,7 +43,7 @@ export const conceptSlice = createSlice({
         && state.repeat === action.payload.repeat
         && state.imageset_name === action.payload.imageset_name
       ) {
-        const image_map = new Map<string, ImageState>;
+        const image_map = new Map<string, ImageState>();
         action.payload.images.forEach(image => image_map.set(image.path, image));
 
         const selections: FilterState[] = state.filters.filter(filter => filter.name !== '[all]');

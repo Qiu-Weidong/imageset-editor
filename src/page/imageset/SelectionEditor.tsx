@@ -1,5 +1,5 @@
 import { AppBar, Breadcrumbs, Container, Toolbar, Tooltip, Typography } from "@mui/material";
-import { Paper, Autocomplete, Avatar, Button, Chip, Divider, FormControl, Grid2 as Grid, IconButton, ImageList, ImageListItem, InputLabel, MenuItem, Select, Slider, TextField } from "@mui/material";
+import { Paper, Autocomplete, Avatar, Chip, Divider, FormControl, Grid2 as Grid, IconButton, ImageList, ImageListItem, InputLabel, MenuItem, Select, Slider, TextField } from "@mui/material";
 import { useRef, useState } from "react";
 import { ImageState } from "../../app/imageSetSlice";
 

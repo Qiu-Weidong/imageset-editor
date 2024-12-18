@@ -65,7 +65,7 @@ function TaggerDialog(props: taggerDialogProps) {
     else {
       for (const [index, image] of props.filter.images.entries()) {
         if (stop.current) { break; }
-        const _ = await api.interrogate(image, modelName, threshold, additional_tags, exclude_tags, ignoreTagged);
+        await api.interrogate(image, modelName, threshold, additional_tags, exclude_tags, ignoreTagged);
         setProgress(index * 100 / props.filter.images.length);
       }
 

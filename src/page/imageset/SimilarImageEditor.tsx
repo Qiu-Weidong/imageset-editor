@@ -1,5 +1,5 @@
 import { Container, Divider, Paper, Stack, Grid2 as Grid, IconButton, Chip, Button } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DeleteIcon from '@mui/icons-material/Delete';
 import api from "../../api";
@@ -96,7 +96,7 @@ function SimilarImageEditor() {
   function Image({ image, index, i }: { image: SimilarImageState, index: number, i: number }) {
     const [selected, setSelected] = useState<boolean>(image.is_selected || false);
     return <div style={{ position: 'relative', height: 256, overflow: 'hidden' }}>
-      <img style={{ objectFit: 'contain', }} src={`${image.src}?t=${timestamp}`} height={256}
+      <img style={{ objectFit: 'contain', }} src={`${image.src}?t=${timestamp}`} height={256} alt="x"
         onClick={() => {
           image.is_selected = !image.is_selected;
           setSelected(image.is_selected);
