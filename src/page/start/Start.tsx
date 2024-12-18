@@ -35,7 +35,7 @@ function Start() {
           >New</Button>
           <Button color="success" variant="contained" startIcon={<FolderOpenIcon />} onClick={() => setOpenDialog(true) } >Open</Button>
           <Button color="primary" variant="contained" startIcon={<SettingsIcon />} onClick={() => navigate("/settings") }>Settings</Button>
-          <Button color="warning" variant="contained" startIcon={<HelpIcon />} href="https://github.com/Qiu-Weidong/imageset-editor.git">Help</Button>
+          <Button color="warning" variant="contained" startIcon={<HelpIcon />} href="https://github.com/Qiu-Weidong/imageset-editor.git" target="_blank">Help</Button>
         </Stack>
 
       </div>
