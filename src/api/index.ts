@@ -5,6 +5,7 @@ import { ImageSetMetadata } from "../page/imageset/Overview";
 import { FilterState, ImageSetState, ImageState } from "../app/imageSetSlice";
 import { FileWithPath } from "@mantine/dropzone";
 import { ConceptState } from "../app/conceptSlice";
+import { CropperImageState } from "../page/imageset/ImageCropper";
 
 
 const port = window.api_port || 1420;
@@ -211,7 +212,14 @@ async function explore(imageset_name: string) {
   link.remove(); // 下载后移除链接
 }
 
+async function cut_images(images: CropperImageState[]) {
+  // 直接传递 percent 
+  const _images = images.map(image => ({ path: image.image.path, ...image.crop}));
+  await axios.put("/image/cut", _images);
+}
+
 const api = {
+  cut_images,
   delete_imageset,
   create_imageset,
   find_imageset_list,

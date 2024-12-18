@@ -1,99 +1,107 @@
-import { Group, Text } from '@mantine/core';
-import { Dropzone, DropzoneProps, FileWithPath, IMAGE_MIME_TYPE } from '@mantine/dropzone';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import ImageIcon from '@mui/icons-material/Image';
-import ErrorIcon from '@mui/icons-material/Error';
-import { useState } from 'react';
-import { Button, IconButton, ImageList, ImageListItem } from '@mui/material';
-import { CloseOutlined } from '@mui/icons-material';
-import api from '../../api';
+import { ImageList, ImageListItem } from '@mui/material';
+import React, { useState, useRef } from 'react'
 
-function ImageUploader({
-  onChange,
-  dropZoneProps,
-  preview = false,
-}: {
-  onChange?: (files: FileWithPath[]) => void,
-  dropZoneProps?: Partial<DropzoneProps>,
-  preview: boolean,
-}) {
-  const [files, setFiles] = useState<FileWithPath[]>([]);
-  return (
-    <>
-      <Dropzone
-        // 这里的 file 是带数据的
-        onDrop={(_files) => { 
-          const __files = [...files, ..._files];
-          setFiles(__files);
-          onChange?.(__files);
-        }}
-        maxSize={5 * 1024 ** 2}
-        accept={IMAGE_MIME_TYPE} // 接受图片类型
-        {...dropZoneProps}
-      >
-        <Group justify="center" gap="xl" mih={120} style={{ pointerEvents: 'none' }}>
-          <Dropzone.Accept>
-            <CloudUploadIcon />
-          </Dropzone.Accept>
-          <Dropzone.Reject>
-            <ErrorIcon />
-          </Dropzone.Reject>
-          {/* 默认展示的是idle */}
-          <Dropzone.Idle>
-            <ImageIcon />
-          </Dropzone.Idle>
+import ReactCrop, {
+  centerCrop,
+  makeAspectCrop,
+  Crop,
+  PixelCrop,
+  convertToPixelCrop,
+} from 'react-image-crop';
 
-          <div>
-            <Text size="xl" inline>
-              Drag images here or click to select files
-            </Text>
-            <Text size="sm" c="dimmed" inline mt={7}>
-              Attach as many files as you like, each file should not exceed 5mb
-            </Text>
-          </div>
-        </Group>
-      </Dropzone>
+// 一定要记得导入 css
+import 'react-image-crop/dist/ReactCrop.css'
 
+
+
+// This is to demonstate how to make and center a % aspect crop
+// which is a bit trickier so we use some helper functions.
+function centerAspectCrop(
+  mediaWidth: number,
+  mediaHeight: number,
+  aspect: number,
+) {
+  return centerCrop(
+    makeAspectCrop(
       {
-        preview ? <ImageList variant="masonry" cols={12} gap={4} sx={{ marginTop: 0, }}>
-          {
-            files.map((file, index) => {
-              const imageUrl = URL.createObjectURL(file);
-              return <ImageListItem>
-                <img key={index} src={imageUrl} alt="load fail" onLoad={() => URL.revokeObjectURL(imageUrl)} />
-                <IconButton size='small' sx={{ position: 'absolute', top: 0, right: 0, }}
-                  onClick={() => {
-                    const _files = files.filter(f => f !== file);
-                    setFiles(_files);
-                    onChange?.(_files);
-                  }}
-                > <CloseOutlined /> </IconButton>
-              </ImageListItem>
-            })
-          }
-        </ImageList> : <></>
-      }
-    </>
-
-  );
+        unit: '%',
+        width: 100,
+      },
+      aspect,
+      mediaWidth,
+      mediaHeight,
+    ),
+    mediaWidth,
+    mediaHeight,
+  )
 }
 
 
 
+function CropperItem({ url, aspect }: { url: string, aspect?: number | undefined }) {
 
-export function Debug() {
-  const [files, setFiles] = useState<FileWithPath[]>([]);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  const [crop, setCrop] = useState<Crop>();
+
+  // 加载图片的时候就直接设置
+  function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+    if (aspect) {
+      const { width, height } = e.currentTarget
+      setCrop(centerAspectCrop(width, height, aspect))
+    }
+  }
+
   return (
-    <>
-      <ImageUploader preview onChange={(files) => setFiles(files)}></ImageUploader>
-      <Button onClick={() => {
-        api.upload_images(files, 'mikasa', false, '1_cloak').then((result) => {
-          console.log(result);
-        })
-      }}>upload</Button>
-    </>
+    <ImageListItem>
+      <ReactCrop
+        crop={crop}
+        onChange={(_, percentCrop) => setCrop(percentCrop)}
+        onComplete={(pixCrop, percentCrop) => {
+          console.log('complete');
+          console.log(pixCrop);
+          console.log(percentCrop);
+        }}
+        aspect={aspect} // 宽高比, 设置为 undefined 表示自由
+        minWidth={50}
+        minHeight={50}
+      >
+        <img
+          ref={imgRef}
+          alt="Crop me"
+          src={url}
+          onLoad={onImageLoad}
+        />
+      </ReactCrop></ImageListItem>
   );
 }
 
 
-export default Debug;
+
+
+export default function Debug() {
+  const image_urls = [
+    'http://localhost:1420/image/imageset-katana/src/8_katana/000000.jpeg?t=1734514712037',
+    'http://localhost:1420/image/imageset-katana/src/8_katana/000001.jpeg?t=1734514712037',
+    'http://localhost:1420/image/imageset-katana/src/8_katana/000002.jpeg?t=1734514712037',
+    'http://localhost:1420/image/imageset-katana/src/8_katana/000003.jpeg?t=1734514712037',
+    'http://localhost:1420/image/imageset-katana/src/8_katana/000004.jpeg?t=1734514712037',
+    'http://localhost:1420/image/imageset-katana/src/8_katana/000005.jpeg?t=1734514712037',
+    'http://localhost:1420/image/imageset-katana/src/8_katana/000006.jpeg?t=1734514712037',
+    'http://localhost:1420/image/imageset-katana/src/8_katana/000007.jpeg?t=1734514712037',
+    'http://localhost:1420/image/imageset-katana/src/8_katana/000008.jpeg?t=1734514712037',
+    'http://localhost:1420/image/imageset-katana/src/8_katana/000009.jpeg?t=1734514712037',
+  ];
+
+  return (
+    <div>
+      {/* 这里展示图片 */}
+      <ImageList variant="masonry" cols={8} gap={4} sx={{ marginTop: 0, overflow: 'hidden' }}>
+        {
+          image_urls.map(url => <CropperItem url={url} aspect={16 / 9} />)
+        }
+      </ImageList>
+
+    </div>
+  )
+}

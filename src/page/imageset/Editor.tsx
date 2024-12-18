@@ -207,7 +207,9 @@ function Tool({
         </> : <></>
       }
       <Divider orientation="vertical" flexItem />
-      {/* <Tooltip title="cut images"><IconButton color="primary" size="small"><ContentCutIcon /></IconButton></Tooltip> */}
+      <Tooltip title="cut images"><IconButton color="primary" size="small"
+        onClick={() => { navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${filter.name.substring(1, filter.name.length - 1)}/cropper-editor`); }}
+      ><ContentCutIcon /></IconButton></Tooltip>
       {/* <Tooltip title="resize images"><IconButton color="primary" size="small"><ZoomInIcon /></IconButton></Tooltip> */}
       <Tooltip title="horizontal flip images"
         onClick={() => flip(true) }

@@ -66,6 +66,31 @@ async def flip_images(request: FlipRequest):
     # 记得删除对应的缩略图
     if os.path.exists(thumbnail_path):
       os.remove(thumbnail_path)
-    
 
+class CropperImage(BaseModel):
+  path: str 
+  x: float
+  y: float
+  width: float
+  height: float  
+@api_image.put("/cut")    
+async def cut_images(images: List[CropperImage]):
+  for item in tqdm(images):
+    img_path = os.path.join(CONF_REPO_DIR, item.path)
+    thumbnail_path = os.path.join(CONF_REPO_DIR, '.thumbnail', item.path)
+    image = Image.open(img_path)
+    left = item.x * image.width / 100
+    right = left + item.width * image.width / 100
+    top = item.y * image.height / 100
+    bottom = top + item.height * image.height / 100
+    crop_area = (left, top, right, bottom,)
+    try:
+      cropped_image = image.crop(crop_area)
+      cropped_image.save(img_path)
+    except:
+      pass
+    if os.path.exists(thumbnail_path):
+      os.remove(thumbnail_path)
+    
+    
 

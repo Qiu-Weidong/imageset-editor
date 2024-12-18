@@ -20,6 +20,8 @@ from api.tag import api_tag
 
 # 定义允许的来源, 发布的时候可以注释掉,
 origins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
   "http://localhost:1420",  # 允许的来源（例如前端的地址）
   "http://127.0.0.1:1420",
 ]
@@ -65,7 +67,7 @@ if __name__ == "__main__":
     
   if not args.web:
     import webview, threading
-    thread = threading.Thread(target=uvicorn.run, kwargs={ 'app': "launch:app", 'host': CONF_HOST, 'port': CONF_PORT,  })
+    thread = threading.Thread(target=uvicorn.run, kwargs={ 'app': "launch:app", 'host': CONF_HOST, 'port': CONF_PORT, })
     window = webview.create_window("imageset editor", url=f"http://{CONF_HOST}:{CONF_PORT}/web", maximized=True, confirm_close=True, )
     thread.daemon = True
     thread.start()

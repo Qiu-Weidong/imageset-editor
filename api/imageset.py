@@ -11,7 +11,6 @@ import re
 import random
 import platform, subprocess
 import glob, json
-# import pyexiv2, json
 
 
 api_imageset = APIRouter()
@@ -117,9 +116,16 @@ def load_caption(image_path: str) -> list[str]:
   '''
   import pyexiv2, json
   image_path = os.path.join(CONF_REPO_DIR, image_path)
-  metadata = pyexiv2.Image(image_path)
-  tags = metadata.read_comment()
-  metadata.close()
+  try:
+    metadata = pyexiv2.Image(image_path)
+    tags = metadata.read_comment()
+    metadata.close()
+  except Exception as e:
+    # 这里会报异常 XMP Toolkit error 203: Duplicate property or field node
+    # 是否应该 clear, 目前只能够使用 exiftool 手动删除
+    print(image_path)
+    print('exception', e)
+    return []
   try: 
     tags = json.loads(tags)
   except:
