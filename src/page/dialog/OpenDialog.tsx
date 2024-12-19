@@ -2,6 +2,9 @@ import { CircularProgress, Dialog, DialogContent, DialogTitle, List, ListItem, L
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api";
+import { useDispatch } from "react-redux";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
 
 
 interface OpenDialogProps {
@@ -11,6 +14,7 @@ interface OpenDialogProps {
 
 function OpenDialog(props: OpenDialogProps) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [imagesetNames, setImagesetNames] = useState<string[] | null>(null);
 
   useEffect(() => {
@@ -20,7 +24,7 @@ function OpenDialog(props: OpenDialogProps) {
         setImagesetNames(names);
       }).catch((err: any) => {
         setImagesetNames([]);
-        console.error(err);
+        dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
       });
     }
 

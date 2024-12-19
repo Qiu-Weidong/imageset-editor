@@ -3,6 +3,7 @@ import settingsReducer from './settingsSlice';
 import imageSetReducer from './imageSetSlice';
 import openImageReducer from './openImageSlice';
 import conceptReducer from './conceptSlice';
+import messageReducer from './messageSlice';
 
 
 export const store = configureStore({
@@ -11,6 +12,7 @@ export const store = configureStore({
     imageSet: imageSetReducer,
     openImage: openImageReducer,
     concept: conceptReducer,
+    message: messageReducer,
   },
 })
 

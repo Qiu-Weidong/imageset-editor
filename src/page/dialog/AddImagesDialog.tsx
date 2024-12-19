@@ -8,6 +8,9 @@ import ErrorIcon from '@mui/icons-material/Error';
 import { useState } from 'react';
 import { CloseOutlined } from '@mui/icons-material';
 import api from '../../api';
+import { useDispatch } from "react-redux";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
 
 
 function ImageUploader({
@@ -90,6 +93,7 @@ interface addImageDialogProps {
 };
 
 function AddImageDialog(props: addImageDialogProps) {
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<FileWithPath[]>([]);
 
@@ -104,6 +108,8 @@ function AddImageDialog(props: addImageDialogProps) {
         setLoading(true);
         api.upload_images(files, props.imageset_name, props.is_regular, props.concept_folder).then((result) => {
           props.onSubmit?.();
+        }).catch((err: any) => {
+          dispatch(addMessage({ msg: exception2string(err), severity: 'error' }));
         }).finally(() => {
           setLoading(false);
           props.onClose();

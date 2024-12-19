@@ -2,10 +2,15 @@
 
 
 function exception2string(excp: any): string {
-  if (excp.errorText) {
-    return excp.errorText;
+  try {
+    const detail: string = excp.response.data.detail;
+    return detail;
+  } catch {
+    if (excp.errorText) {
+      return excp.errorText;
+    }
+    return JSON.stringify(excp);
   }
-  return JSON.stringify(excp)
 }
 
 export {

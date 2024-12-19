@@ -35,8 +35,7 @@ async function delete_regular(imageset_name: string) {
 }
 
 async function create_imageset(imageset_name: string) {
-  // 注意 post 和 put 的第二个参数是 data
-  await axios.post('/imageset/create', {}, { params: { name: imageset_name } })
+  return (await axios.post('/imageset/create', {}, { params: { name: imageset_name } })).data;
 }
 
 async function delete_images(images: ImageState[]) {

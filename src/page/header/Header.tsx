@@ -13,6 +13,9 @@ import EditNoteIcon from '@mui/icons-material/EditNote';
 import NewDialog from "../dialog/NewDialog";
 import OpenDialog from "../dialog/OpenDialog";
 import api from "../../api";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
+import { useDispatch } from "react-redux";
 
 
 interface HeaderProps {
@@ -28,6 +31,7 @@ interface HeaderProps {
 
 
 export default function Header(props: HeaderProps) {
+  const dispatch = useDispatch();
   const [newDialog, setNewDialog] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -166,9 +170,10 @@ export default function Header(props: HeaderProps) {
       <Tooltip title="reload"><IconButton onClick={load}><RefreshIcon /></IconButton></Tooltip>
       <Tooltip title="create new imageset"><IconButton onClick={() => setNewDialog(true)}><CreateNewFolderIcon /></IconButton></Tooltip>
       <Tooltip title="open"><IconButton onClick={() => setOpenDialog(true)}><FolderOpenIcon /></IconButton></Tooltip>
-      <Tooltip title="open in file explore"><IconButton onClick={() => { api.open_in_file_explore(imagesetName) }}><FolderIcon /></IconButton></Tooltip>
+      <Tooltip title="open in file explore"><IconButton onClick={() => { 
+        api.open_in_file_explore(imagesetName).catch((err: any) => dispatch(addMessage({msg: exception2string(err), severity: 'error'}))) }}><FolderIcon /></IconButton></Tooltip>
       <Tooltip title="explore imageset"><IconButton onClick={() => {  
-        api.explore(props.imageset_name);
+        api.explore(props.imageset_name).catch((err: any) => dispatch(addMessage({msg: exception2string(err), severity: 'error'})) );
       }}><FileDownloadIcon /></IconButton></Tooltip>
 
 
@@ -183,7 +188,6 @@ export default function Header(props: HeaderProps) {
 
     <NewDialog open={newDialog} onClose={() => setNewDialog(false)} />
     <OpenDialog open={openDialog} onClose={() => setOpenDialog(false)} />
-    {/* <DeleteDialog open={deleteDialog} onClose={() => setDeleteDialog(false)} concept={props.concept} imagesetName={imagesetName} /> */}
   </AppBar>);
 }
 

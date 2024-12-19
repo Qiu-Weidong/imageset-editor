@@ -6,6 +6,9 @@ import { RootState } from "../../app/store";
 import { useState } from "react";
 import { createSelector } from "@reduxjs/toolkit";
 import api from "../../api";
+import { useDispatch } from "react-redux";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
 
 
 interface moveDialogProps {
@@ -50,9 +53,9 @@ const selectConcepts = createSelector(
 
 
 function MoveDialog({
-  open, filter, onClose, onSubmit, openImage, imageset_name, is_regular, concept_name, repeat,
+  open, filter, onClose, onSubmit, openImage, imageset_name,
 }: moveDialogProps) {
-
+  const dispatch = useDispatch();
   const concepts = useSelector(selectConcepts);
 
 
@@ -126,8 +129,12 @@ function MoveDialog({
       <Button onClick={() => {
         // 执行移动操作, name, repeat, is_regular, 
         const images = openImage ? [openImage] : filter.images;
-        api.move_images(imageset_name, images, selectedConcept.is_regular, selectedConcept.name, selectedConcept.repeat).finally(() => {
+        api.move_images(imageset_name, images, selectedConcept.is_regular, selectedConcept.name, selectedConcept.repeat)
+        .then(() => {
           onSubmit?.();
+        })
+        .catch((error: any) => dispatch(addMessage({msg: exception2string(error), severity: 'error'})))
+        .finally(() => {
           onClose();
         });
         

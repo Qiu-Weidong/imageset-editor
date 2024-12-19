@@ -10,7 +10,7 @@ import shutil
 import re
 import random
 import platform, subprocess
-import glob, json
+import glob
 
 
 api_imageset = APIRouter()
@@ -23,7 +23,7 @@ api_imageset = APIRouter()
   图片的缩略图url则直接 http://{config.host}:{config.port}/image/thumbnail/{path}即可
 '''
 
-def get_next_image_count(target_dir: str) -> int:
+def get_next_image_count(target_dir: str, image_count: int) -> int:
   '''
     path 应该从 imageset-xxx 开始
   '''
@@ -40,7 +40,7 @@ def get_next_image_count(target_dir: str) -> int:
         min_number = number
     except:
       continue
-  if len(os.listdir(os.path.join(CONF_REPO_DIR, target_dir))) < min_number:
+  if image_count < min_number:
     return 0
   return max_number + 1  # 返回下一个可用的序号
 
@@ -88,8 +88,8 @@ def convert_and_copy_images(source_dir: str, target_dir: str) -> int:
   files = [os.path.join(source_dir, filename) for filename in os.listdir(source_dir)]
   files = [filename for filename in files if os.path.isfile(filename) and os.path.splitext(filename)[1].lower() in valid_image_extensions]
   
-  # image_count 应该初始化为已有图片的序号的最大值
-  index = get_next_image_count(target_dir)
+  # 我需要将 len(files) 张图片移动到 target_dir 中
+  index = get_next_image_count(target_dir, len(files))
   image_count = 0
   
   for file_name in tqdm(files):
@@ -399,7 +399,7 @@ async def upload_images(files: List[UploadFile] = File(...),
   if not os.path.exists(abs_dest_dir):
     os.makedirs(abs_dest_dir, exist_ok=True)
   
-  index = get_next_image_count(dest_dir)
+  index = get_next_image_count(dest_dir, len(files))
   
   for file in tqdm(files):
     contents = await file.read()
@@ -488,8 +488,9 @@ async def rename_and_convert(imageset_name: str, is_regular: bool, concept_folde
   thumbnail_dir = os.path.join(CONF_REPO_DIR, ".thumbnail", base_dir)
   if os.path.exists(thumbnail_dir):
     shutil.rmtree(thumbnail_dir)
-  index = get_next_image_count(base_dir)
+  
   imagefilenames = get_image_list(base_dir)
+  index = get_next_image_count(base_dir, len(imagefilenames))
   for imagefilename in tqdm(imagefilenames):
     newfilename = os.path.join(base_dir, f"{index:06d}.{CONF_IMAGE_EXT.lower()}")
     index += 1
@@ -522,9 +523,15 @@ async def move(request: MoveRequest):
   if not os.path.exists(dest_path):
     os.makedirs(dest_path, exist_ok=True)
   # 将图片移动过去
+  id = get_next_image_count(d, len(request.filenames))
+  
   for filename in tqdm(request.filenames):
     src_path = os.path.join(CONF_REPO_DIR, filename)
-    shutil.move(src_path, dest_path)
+    thumbnail = os.path.join(CONF_REPO_DIR, '.thumbnail', filename)
+    shutil.move(src_path, os.path.join(dest_path, f"{id:06d}.{CONF_IMAGE_EXT.lower()}"))
+    if os.path.exists(thumbnail):
+      os.remove(thumbnail)
+    id += 1
   
 
 

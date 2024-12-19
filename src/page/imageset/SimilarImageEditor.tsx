@@ -7,6 +7,9 @@ import { CheckCircle } from "@mui/icons-material";
 import { ImageState } from "../../app/imageSetSlice";
 import { RootState } from "../../app/store";
 import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
 
 
 export interface SimilarImageState {
@@ -33,6 +36,7 @@ function init(images: SimilarImageState[][]) {
 
 
 function SimilarImageEditor() {
+  const dispatch = useDispatch();
   const timestamp = useSelector((state: RootState) => state.concept.time);
   
   const location = useLocation();
@@ -46,26 +50,31 @@ function SimilarImageEditor() {
   }, [similar_images]);
 
 
-  function delete_image(image: SimilarImageState, i: number, j: number) {
-    api.delete_images([{
-      ...image,
-      captions: [],
-      concept: "",
-      repeat: 0,
-    }]).then(() => {
-      // 删除 similarImages 的 i, j 这张图片
-      const images = similarImages.map((li, index) => {
-        if (index === i) {
-          return li.filter((_, index) => index !== j);
-        } else {
-          return li;
-        }
-      });
-      setSimilarImages(images.filter(li => li.length > 0));
+  async function delete_image(image: SimilarImageState, i: number, j: number) {
+    try {
+      await api.delete_images([{
+        ...image,
+        captions: [],
+        concept: "",
+        repeat: 0,
+      }]);
+    } catch (err: any) {
+      dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+      return;
+    }
+    // 删除 similarImages 的 i, j 这张图片
+    const images = similarImages.map((li, index) => {
+      if (index === i) {
+        return li.filter((_, index) => index !== j);
+      } else {
+        return li;
+      }
     });
+    setSimilarImages(images.filter(li => li.length > 0));
+
   }
 
-  function delete_images(_: any) {
+  async function delete_images(_: any) {
     const response = window.confirm("do you want to delete the seleted images");
     if(! response) {
       return;
@@ -83,12 +92,17 @@ function SimilarImageEditor() {
         }
       }
     }
+    try {
+      await api.delete_images(images);
+    } catch (err: any) {
+      dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+      return;
+    }
+    
 
-    api.delete_images(images).then(() => {
-      const images = similarImages.map((li) => li.filter(image => ! image.is_selected)).filter(li => li.length > 0);
-      setSimilarImages(images);
-    }).finally(() => {
-    });
+    const _images = similarImages.map((li) => li.filter(image => ! image.is_selected)).filter(li => li.length > 0);
+    setSimilarImages(_images);
+
 
   }
 

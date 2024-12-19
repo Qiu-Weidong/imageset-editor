@@ -5,6 +5,8 @@ import api from "../../api";
 import { ImageState } from "../../app/imageSetSlice";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
 
 interface taggerDialogProps {
   open: boolean;
@@ -53,7 +55,14 @@ function TaggerDialog(props: taggerDialogProps) {
 
     if (props.openImage) {
       // 如果打开了图片，那么就对打开的图片进行打标
-      await api.interrogate(props.openImage, modelName, threshold, additional_tags, exclude_tags, ignoreTagged);
+      try {
+        await api.interrogate(props.openImage, modelName, threshold, additional_tags, exclude_tags, ignoreTagged);
+      } catch(err: any) {
+        dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+        setLoading(false);
+        return;
+      }
+      
       // 创建一个 selection
       dispatch(addFilter({
         name: `[${props.openImage.filename}]`,
@@ -65,7 +74,12 @@ function TaggerDialog(props: taggerDialogProps) {
     else {
       for (const [index, image] of props.filter.images.entries()) {
         if (stop.current) { break; }
-        await api.interrogate(image, modelName, threshold, additional_tags, exclude_tags, ignoreTagged);
+        try {
+          await api.interrogate(image, modelName, threshold, additional_tags, exclude_tags, ignoreTagged);
+        } catch(err: any) {
+          dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+        }
+        
         setProgress(index * 100 / props.filter.images.length);
       }
 

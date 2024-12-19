@@ -31,6 +31,8 @@ import { SimilarImageState } from "./SimilarImageEditor";
 import SelectionOperatorDialog from "../dialog/SelectionOperatorDialog";
 import { ImageState } from "../../app/imageSetSlice";
 import MoveDialog from "../dialog/MoveDialog";
+import { exception2string } from "../../utils";
+import { addMessage } from "../../app/messageSlice";
 
 
 export const selectFilterNameList = createSelector(
@@ -54,8 +56,14 @@ function Tool({
   const openImage: ImageState | null = useSelector((state: RootState) => state.openImage.image);
 
   async function reload() {
-    const result = await api.load_concept(imageset_name, is_regular, concept_name, repeat);
-    dispatch(loadConcept(result));
+    try {
+      const result = await api.load_concept(imageset_name, is_regular, concept_name, repeat);
+      dispatch(loadConcept(result));
+      dispatch(updateImages());
+    } catch(err: any) {
+      dispatch(addMessage({ msg: exception2string(err), severity: 'error' }));
+    }
+    
   }
 
   const navigate = useNavigate();
@@ -72,7 +80,7 @@ function Tool({
   const [moveDialog, setMoveDialog] = useState(false);
 
 
-  function flip(horizontal: boolean) {
+  async function flip(horizontal: boolean) {
     setLoading(true);
     let images: ImageState[] = [];
     if (openImage) {
@@ -82,13 +90,27 @@ function Tool({
       // 水平反转所有图片
       images = filter.images;
     }
-    api.flip_images(images, horizontal).finally(() => {
-      reload().finally(() => {
-        dispatch(updateImages());
-        setLoading(false);
-      });
-      
-    });
+
+    try {
+      await api.flip_images(images, horizontal);
+      await reload();
+    } catch(err: any) {
+      dispatch(addMessage({ msg: exception2string(err), severity: 'error' }));
+    }
+    setLoading(false);
+  }
+
+  async function delete_images(images: ImageState[]) {
+    setLoading(true);
+    try {
+      await api.delete_images(images);
+      await reload();
+
+      navigate(`/concept/${imageset_name}/${is_regular ? "reg" : "src"}/${concept_name}/${repeat}/all`, { replace: true });
+    } catch (err: any) {
+      dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+    }
+    setLoading(false);
   }
 
   return (
@@ -114,7 +136,7 @@ function Tool({
             else {
               window.alert('did not found similar images.');
             }
-          }).finally(() => setLoading(false));
+          }).catch((err: any) => dispatch(addMessage({ msg: exception2string(err), severity: 'error' }))).finally(() => setLoading(false));
         }}
       ><IconButton color="error" size="small"><ImageSearchIcon /></IconButton></Tooltip>
       <Divider orientation="vertical" flexItem />
@@ -125,12 +147,11 @@ function Tool({
 
       <Tooltip title="convert image format and rename for open concept" onClick={() => {
         setLoading(true);
-        api.rename_and_convert(imageset_name, is_regular, `${repeat}_${concept_name}`).finally(() => {
-          reload().finally(() => {
+        api.rename_and_convert(imageset_name, is_regular, `${repeat}_${concept_name}`).then(() => {
+          reload().then(() => {
             setLoading(false);
-            dispatch(updateImages());
           });
-        });
+        }).catch((err: any) => dispatch(addMessage({ msg: exception2string(err), severity: 'error' })));
       }}><IconButton color="secondary" size="small"><TransformIcon /></IconButton></Tooltip>
       {
         (filter.name !== '[all]' || openImage) ? <Tooltip title="move current images to"
@@ -155,16 +176,7 @@ function Tool({
                 setLoading(true);
                 const name = filter.name;
                 dispatch(removeFilter(name));
-                api.delete_images(filter.images).finally(() => {
-                  api.load_concept(imageset_name, is_regular, concept_name, repeat).then(
-                    (result) => {
-                      dispatch(loadConcept(result));
-                      navigate(`/concept/${imageset_name}/${is_regular ? "reg" : "src"}/${concept_name}/${repeat}/all`, { replace: true });
-                      setLoading(false);
-                    }
-                  );
-                });
-
+                delete_images(filter.images);
               }
             }}
           ><IconButton color="secondary" size="small"><FolderDeleteIcon /></IconButton></Tooltip>
@@ -178,16 +190,7 @@ function Tool({
             onClick={() => {
               const response = window.confirm(`do you want to delete opened image ${openImage.filename}`);
               if (response) {
-                setLoading(true);
-                api.delete_images([openImage]).finally(() => {
-                  api.load_concept(imageset_name, is_regular, concept_name, repeat).then(
-                    (result) => {
-                      dispatch(loadConcept(result));
-                      navigate(`/concept/${imageset_name}/${is_regular ? "reg" : "src"}/${concept_name}/${repeat}/all`, { replace: true });
-                      setLoading(false);
-                    }
-                  );
-                });
+                delete_images([openImage]);
               }
             }}
           ><IconButton color="secondary" size="small"><DeleteForeverIcon /></IconButton></Tooltip>

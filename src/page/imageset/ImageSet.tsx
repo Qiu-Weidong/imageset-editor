@@ -9,6 +9,8 @@ import Editor from "./Editor";
 import CaptionEditor from "./CaptionEditor";
 import SimilarImageEditor from "./SimilarImageEditor";
 import CropperEditor from "./ImageCropper";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
 
 
 
@@ -30,16 +32,23 @@ function ImageSet() {
 
   async function rename_imageset(oldname: string, newname: string) {
     setLoading(true);
-    await api.rename_imageset(oldname, newname);
-    navigate(`/concept/${newname}/${param.type}/${concept_name}/${repeat}`);
+    try {
+      await api.rename_imageset(oldname, newname);
+      navigate(`/concept/${newname}/${param.type}/${concept_name}/${repeat}/all`);
+    } catch (err: any) {
+      dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+    }
     setLoading(false);
   }
 
   async function rename_concept(before: { name: string, repeat: number }, after: { name: string, repeat: number }) {
-    // 调用修改的 api
     setLoading(true);
-    await api.rename_concept(imageset_name, is_regular, before.name, after.name, before.repeat, after.repeat);
-    navigate(`/concept/${imageset_name}/${param.type}/${after.name}/${after.repeat}`);
+    try {
+      await api.rename_concept(imageset_name, is_regular, before.name, after.name, before.repeat, after.repeat);
+      navigate(`/concept/${imageset_name}/${param.type}/${after.name}/${after.repeat}/all`);
+    } catch (err: any) {
+      dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+    }
     setLoading(false);
   }
 
@@ -47,17 +56,27 @@ function ImageSet() {
     const response = window.confirm(`do you want to delete ${repeat}_${concept_name}`);
     if (response) {
       setLoading(true);
-      await api.delete_concept(imageset_name, is_regular, `${repeat}_${concept_name}`);
+      try {
+        await api.delete_concept(imageset_name, is_regular, `${repeat}_${concept_name}`);
+        navigate(`/overview/${imageset_name}`);
+      } catch (err: any) {
+        dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+      }
       setLoading(false);
-      navigate(`/overview/${imageset_name}`);
+      
     }
   }
 
   async function load() {
     // 加载
     setLoading(true);
-    const result = await api.load_concept(imageset_name, is_regular, concept_name, repeat);
-    dispatch(loadConcept(result));
+    try {
+      const result = await api.load_concept(imageset_name, is_regular, concept_name, repeat);
+      dispatch(loadConcept(result));
+    } catch (err: any) {
+      dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+    }
+    
     setLoading(false);
   }
 

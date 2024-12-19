@@ -5,6 +5,9 @@ import '@mantine/dropzone/styles.css';
 import api from "../../api";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
 
 
 interface createDialogProps {
@@ -22,6 +25,7 @@ function capitalizeFirstLetter(str: string): string {
 }
 
 function CreateDialog(props: createDialogProps) {
+  const dispatch = useDispatch();
   const [conceptName, setConceptName] = useState('');
   const [repeat, setRepeat] = useState(1);
   const [loadDirectory, setLoadDirectory] = useState('');
@@ -72,7 +76,7 @@ function CreateDialog(props: createDialogProps) {
               // 跳转到新建的concept, 跳转到 overview 即可
               navigate(`/overview/${props.imageset_name}/${props.type === "regular" ? "reg" : "src"}/${conceptName}/${repeat}/all`);
             }).catch((error: any) => {
-              console.error(error);
+              dispatch(addMessage({ msg: exception2string(error), severity: 'error'}));
             }).finally(() => {
               setLoading(false);
               props.onClose()

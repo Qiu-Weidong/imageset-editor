@@ -26,6 +26,8 @@ import { FilterState, loadConcept, updateImages } from "../../app/conceptSlice";
 import { Close } from "@mui/icons-material";
 import api from "../../api";
 import { useDispatch } from "react-redux";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
 
 
 export interface CropperImageState {
@@ -172,21 +174,24 @@ function CropperEditor({
   const height = '85vh';
 
   async function reload() {
-    const result = await api.load_concept(imageset_name, is_regular, concept_name, repeat);
-    dispatch(loadConcept(result));
+    try {
+      const result = await api.load_concept(imageset_name, is_regular, concept_name, repeat);
+      dispatch(loadConcept(result));
+      dispatch(updateImages());
+    } catch (err: any) {
+      dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+    }
+    
+    
   }
 
 
-  function handle_cut() {
+  async function handle_cut() {
     const response = window.confirm('This operation is irreversible.');
     if (response) {
-      api.cut_images(currentFilter.images.filter(image => image.crop)).finally(() => {
-        reload().finally(() => {
-          dispatch(updateImages());
-          navigate(-1);
-        })
-
-      });
+      await api.cut_images(currentFilter.images.filter(image => image.crop));
+      await reload();
+      navigate(-1);
     }
   }
 

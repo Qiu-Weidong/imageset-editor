@@ -9,6 +9,8 @@ import CreateDialog from "../dialog/CreateDialog";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import api from "../../api";
 import { useDispatch } from "react-redux";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
 
 
 export interface ConceptMetadata {
@@ -94,8 +96,8 @@ function Overview() {
         setRegularDataset(result.regular);
       }
 
-    } catch (error) {
-      console.error(error);
+    } catch (err: any) {
+      dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
     } finally {
       setLoading(false);
     }
@@ -104,11 +106,16 @@ function Overview() {
   async function _delete() {
     const result = window.confirm(`Do you want to delete the whole imageset ${imageset_name}`);
     if (result) {
-      await api.delete_imageset(imageset_name);
+      setLoading(true);
+      try {
+        await api.delete_imageset(imageset_name);
+      } catch (err: any) {
+        dispatch(addMessage({msg: exception2string(err), severity: 'error'}));
+      }
+      setLoading(false);
+      // 记得跳转到首页
+      navigate("/");
     }
-
-    // 记得跳转到首页
-    navigate("/");
   }
 
 

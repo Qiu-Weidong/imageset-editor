@@ -12,6 +12,8 @@ import { useDispatch } from "react-redux";
 import { getFilterByName, selectFilterNameList } from "./Editor";
 import ImageGallery from "./ImageGallery";
 import { closeImage } from "../../app/openImageSlice";
+import { addMessage } from "../../app/messageSlice";
+import { exception2string } from "../../utils";
 
 
 
@@ -226,14 +228,26 @@ function CaptionEditorCard({
 
 
   async function reload() {
-    const result = await api.load_concept(imageset_name, is_regular, concept_name, repeat);
-    dispatch(loadConcept(result));
+    try {
+      const result = await api.load_concept(imageset_name, is_regular, concept_name, repeat);
+      dispatch(loadConcept(result));
+    } catch(err: any) {
+      dispatch(addMessage({ msg: exception2string(err), severity: 'error' }));
+    }
+    
   }
 
   async function save() {
     setLoading(true);
     // 调用保存api
-    await api.save_tags(captionState.image_captions);
+    try {
+      await api.save_tags(captionState.image_captions);
+    } catch(err: any) {
+      dispatch(addMessage({ msg: exception2string(err), severity: 'error' }));
+      setLoading(false);
+      return;
+    }
+    
     await reload();
     setLoading(false);
 

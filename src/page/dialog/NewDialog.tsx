@@ -1,9 +1,9 @@
-import { Alert, AlertColor, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
-import { useState } from "react";
-import Snackbar, { SnackbarOrigin } from '@mui/material/Snackbar';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
 import { exception2string } from "../../utils";
 import { useNavigate } from "react-router-dom";
 import api from "../../api";
+import { useDispatch } from "react-redux";
+import { addMessage } from "../../app/messageSlice";
 
 
 interface newDialogProps {
@@ -11,27 +11,10 @@ interface newDialogProps {
   onClose: () => void,
 };
 
-
-
-interface State extends SnackbarOrigin {
-  open: boolean,
-  msg: string,
-  severity: AlertColor,
-}
-
 function NewDialog(props: newDialogProps) {
   const navigate = useNavigate();
-  // const dispatch = useDispatch();
-  
-  const [state, setState] = useState<State>({
-    open: false,
-    vertical: 'top',
-    horizontal: 'center',
-    msg: '',
-    severity: 'success',
-  });
+  const dispatch = useDispatch();
 
-  const { vertical, horizontal, open } = state;
 
   return (
     <><Dialog
@@ -47,18 +30,16 @@ function NewDialog(props: newDialogProps) {
 
           api.create_imageset(name)
             .then((res: any) => {
-              setState({ ...state, msg: `create imageset '${res}' successful.`, open: true, severity: 'success' });
+              dispatch(addMessage({ msg: `create imageset '${res}' successful.`, severity: 'success' }));
               // 应该在这里就设置 imageset_name
               navigate(`/overview/${name}`);
             })
             .catch((err: any) => {
-              setState({ ...state, msg: exception2string(err), open: true, severity: 'error' })
+              dispatch(addMessage({ msg: exception2string(err), severity: 'error' }));
             })
             .finally(() => {
               props.onClose();
             });
-
-
         },
       }}
     >
@@ -79,20 +60,10 @@ function NewDialog(props: newDialogProps) {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={props.onClose}>Cancel</Button>
-        <Button type="submit">CREATE</Button>
+        <Button onClick={props.onClose}>cancel</Button>
+        <Button type="submit">create</Button>
       </DialogActions>
     </Dialog>
-    <Snackbar 
-      anchorOrigin={{vertical, horizontal}} 
-      open={open} 
-      onClose={() => setState({...state, open: false})} 
-      >
-        <Alert onClose={() => setState({...state, open: false})} severity={state.severity}>
-          {state.msg}
-        </Alert>
-
-      </Snackbar>
     </>
   );
 }
