@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { ImageSetMetadata } from "../page/imageset/Overview";
-import { FilterState, ImageSetState, ImageState } from "../app/imageSetSlice";
+import { ImageSetState, ImageState } from "../app/imageSetSlice";
 import { FileWithPath } from "@mantine/dropzone";
 import { ConceptState } from "../app/conceptSlice";
 import { CropperImageState } from "../page/imageset/ImageCropper";
@@ -81,47 +81,6 @@ async function add_concept(
   return result;
 }
 
-// 这里修改一下, load 只需要返回所有图片的列表即可
-async function load(imageset_name: string, is_regular: boolean): Promise<ImageSetState> {
-  // 返回一个 ImageState[] 的结果，根据这个结果来构造
-  let response: {
-    name: string, 
-    type: 'train' | 'regular',
-    images: ImageState[],
-    filters: FilterState[],
-  } = (await axios.get("/imageset/load", {
-    params: { imageset_name, is_regular }
-  })).data;
-
-  const result: ImageSetState = {
-    name: response.name,
-    type: response.type, 
-    filters: response.filters, // 注意这里只有 concept 的 filter, 且不包含任何图片
-    images: new Map(),
-  };
-
-
-  // 第一步, 先构造出来一个 image 的 map
-  for(const image of response.images) {
-    result.images.set(image.path, image);
-  }
-  // 第二步, 构造出一个 all 的 filter
-  const filter_all: FilterState = {
-    name: '<all>', concept: null, images: [...response.images],
-  };
-  result.filters.push(filter_all);
-
-  // 还是这样处理比较好, 然后往 result 的 filter 中填充图片即可
-  for(const image of response.images) {
-    const filter_name = `${image.repeat}_${image.concept}`;
-    const filter = result.filters.find((filter) => filter.name === filter_name);
-    if(filter) {
-      filter.images.push(image);
-    } 
-  }
-  return result;
-}
-
 async function load_concept(imageset_name: string, is_regular: boolean, concept_name: string, repeat: number): Promise<ConceptState> {
   return (await axios.get("/imageset/load_concept", { params: { imageset_name, is_regular, concept_name, repeat } })).data;
 }
@@ -195,9 +154,9 @@ async function detect_similar_images(images: ImageState[], threshold: number) {
   return (await axios.post("/tag/detect_similar_images", { images: images.map(image => image.path), threshold })).data;
 }
 
-async function move_images(imageset_name: string, images:ImageState[], is_regular: boolean, folder: string) {
-  await axios.post("/imageset/move", {
-    imageset_name, images: images.map(img => img.path), is_regular, folder,
+async function move_images(imageset_name: string, images:ImageState[], is_regular: boolean, concept_name: string, repeat: number) {
+  await axios.put("/imageset/move", {
+    imageset_name, filenames: images.map(img => img.path), is_regular, concept_name, repeat,
   });
 }
 
@@ -226,7 +185,6 @@ const api = {
   rename_imageset,
   get_imageset_metadata,
   add_concept,
-  load,
   open_in_file_explore,
   delete_concept,
   image_list_interrogate,
@@ -243,6 +201,7 @@ const api = {
   load_concept,
   flip_images,
   explore,
+  // find_concept_list,
 };
 
 

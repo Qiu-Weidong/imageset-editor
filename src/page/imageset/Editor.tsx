@@ -15,6 +15,7 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import FolderDeleteIcon from '@mui/icons-material/FolderDelete';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
 import { useNavigate, useParams } from "react-router-dom";
 import { createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
@@ -29,6 +30,7 @@ import TaggerDialog from "../dialog/TaggerDialog";
 import { SimilarImageState } from "./SimilarImageEditor";
 import SelectionOperatorDialog from "../dialog/SelectionOperatorDialog";
 import { ImageState } from "../../app/imageSetSlice";
+import MoveDialog from "../dialog/MoveDialog";
 
 
 export const selectFilterNameList = createSelector(
@@ -67,6 +69,7 @@ function Tool({
   const [addImageDialog, setAddImageDialog] = useState(false);
   const [taggerDialog, setTaggerDialog] = useState(false);
   const [operatorDialog, setOperatorDialog] = useState(false);
+  const [moveDialog, setMoveDialog] = useState(false);
 
 
   function flip(horizontal: boolean) {
@@ -119,25 +122,8 @@ function Tool({
       <Tooltip title="add images for current concept" onClick={() => setAddImageDialog(true)}><IconButton color="info" size="small"><AddIcon /></IconButton></Tooltip>
       <Divider orientation="vertical" flexItem />
 
-      <Tooltip title="tag current images" onClick={() => setTaggerDialog(true)}>
-        <IconButton color="warning" size="small"><ClosedCaptionIcon /></IconButton></Tooltip>
-      <Tooltip title="edit captions" onClick={() => {
-        if (openImage) {
-          // 对该图片进行标签编辑
-          dispatch(addFilter({
-            name: `[${openImage.filename}]`,
-            images: [openImage],
-          }));
-          navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${openImage.filename}/caption-editor`)
-        } else {
-          navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${filter.name.substring(1, filter.name.length - 1)}/caption-editor`)
-        }
 
-      }}
-      ><IconButton color="warning" size="small"><EditNoteIcon /></IconButton></Tooltip>
-      <Divider orientation="vertical" flexItem />
-
-      <Tooltip title="convert image format and rename" onClick={() => {
+      <Tooltip title="convert image format and rename for open concept" onClick={() => {
         setLoading(true);
         api.rename_and_convert(imageset_name, is_regular, `${repeat}_${concept_name}`).finally(() => {
           reload().finally(() => {
@@ -145,8 +131,11 @@ function Tool({
             dispatch(updateImages());
           });
         });
-        
       }}><IconButton color="secondary" size="small"><TransformIcon /></IconButton></Tooltip>
+      {
+        (filter.name !== '[all]' || openImage) ? <Tooltip title="move current images to"
+          ><IconButton color="secondary" size="small" onClick={() => setMoveDialog(true) }><SendIcon /></IconButton></Tooltip> : <></>
+      }
       {
         filter.name !== "[all]" ? <>
           <Tooltip title="remove selection(keep the image)"
@@ -179,8 +168,8 @@ function Tool({
               }
             }}
           ><IconButton color="secondary" size="small"><FolderDeleteIcon /></IconButton></Tooltip>
-          {/* 使用一个对话框来选择一下要移动到的 concept */}
-          <Tooltip title="move current images to"><IconButton color="secondary" size="small"><SendIcon /></IconButton></Tooltip>
+
+          
         </> : <></>
       }
       {
@@ -205,6 +194,33 @@ function Tool({
         </> : <></>
       }
       <Divider orientation="vertical" flexItem />
+      
+      
+      
+      
+      
+      <Tooltip title="tag current images" onClick={() => setTaggerDialog(true)}>
+        <IconButton color="warning" size="small"><ClosedCaptionIcon /></IconButton></Tooltip>
+      <Tooltip title="edit captions" onClick={() => {
+        if (openImage) {
+          // 对该图片进行标签编辑
+          dispatch(addFilter({
+            name: `[${openImage.filename}]`,
+            images: [openImage],
+          }));
+          navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${openImage.filename}/caption-editor`)
+        } else {
+          navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${filter.name.substring(1, filter.name.length - 1)}/caption-editor`)
+        }
+
+      }}
+      ><IconButton color="warning" size="small"><EditNoteIcon /></IconButton></Tooltip>
+      
+      <Divider orientation="vertical" flexItem />
+
+
+
+
       <Tooltip title="cut images"><IconButton color="primary" size="small"
         onClick={() => { navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${filter.name.substring(1, filter.name.length - 1)}/cropper-editor`); }}
       ><ContentCutIcon /></IconButton></Tooltip>
@@ -232,6 +248,9 @@ function Tool({
           navigate(`/concept/${imageset_name}/${ty}/${concept_name}/${repeat}/${name}`);
         }}
       ></SelectionOperatorDialog>
+      <MoveDialog open={moveDialog} filter={filter} openImage={openImage} imageset_name={imageset_name}
+        is_regular={is_regular} concept_name={concept_name} repeat={repeat}
+        onClose={() => { setMoveDialog(false); }} onSubmit={() => {reload();}}></MoveDialog>
 
       <Backdrop
         sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 10 })}

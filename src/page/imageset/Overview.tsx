@@ -4,10 +4,11 @@ import { Box, Button, Card, CardContent, CircularProgress, Container, Fab, Toolb
 import { Carousel } from '@mantine/carousel';
 import '@mantine/carousel/styles.css';
 import Header from "../header/Header";
-import { setImageSetName } from "../../app/imageSetSlice";
+import { ImageSetState, setImageSet, setImageSetName } from "../../app/imageSetSlice";
 import CreateDialog from "../dialog/CreateDialog";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import api from "../../api";
+import { useDispatch } from "react-redux";
 
 
 export interface ConceptMetadata {
@@ -59,6 +60,7 @@ function ConceptCover(props: { concept: ConceptMetadata, onClick: () => void }) 
 
 // 展示训练集和正则集的基本信息, 点击即可进入
 function Overview() {
+  const dispatch = useDispatch();
   const carousel_height = 480;
   const { imageset_name = 'error' } = useParams(); 
 
@@ -76,10 +78,15 @@ function Overview() {
     setLoading(true);
     setTrainDataset(null);
     setRegularDataset(null);
-
     try {
       let result: { train: ImageSetMetadata, regular: ImageSetMetadata } = await api.get_imageset_metadata(imageset_name);
-      // 这里的 load 是无法 stop 的
+      const imageset: ImageSetState = { 
+        name: imageset_name, 
+        src: result.train, 
+        reg: result.regular 
+      };
+      dispatch(setImageSet(imageset));
+
       if (result.train) {
         setTrainDataset(result.train);
       }
@@ -89,7 +96,6 @@ function Overview() {
 
     } catch (error) {
       console.error(error);
-      // 跳转到 404 页面
     } finally {
       setLoading(false);
     }

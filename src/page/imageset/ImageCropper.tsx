@@ -139,12 +139,13 @@ function CropperEditor({
               <Close />
             </IconButton>
           </div>
-        </ReactCrop></ImageListItem>
+        </ReactCrop>
+      </ImageListItem>
     );
   }
 
 
-  const [column, setColumn] = useState(6);
+  const [column, setColumn] = useState(4);
 
   // 对于自定义, 也只需要使用 aspect 作为 state 来进行滑动即可, 对于 custom, 直接输入宽高比即可
   const [aspect, setAspect] = useState<{ name: string, aspect: number | undefined, customWidth: number, customHeight: number }>({
@@ -178,13 +179,13 @@ function CropperEditor({
 
   function handle_cut() {
     const response = window.confirm('This operation is irreversible.');
-    if(response) {
+    if (response) {
       api.cut_images(currentFilter.images.filter(image => image.crop)).finally(() => {
         reload().finally(() => {
           dispatch(updateImages());
           navigate(-1);
         })
-        
+
       });
     }
   }
@@ -216,19 +217,19 @@ function CropperEditor({
           images: <b>{currentFilter.images.length}</b>
           <Box sx={{ flex: 1 }}></Box>
 
-          <Button color="secondary" size="small" variant="contained" sx={{  marginRight: 1 }}
+          <Button color="secondary" size="small" variant="contained" sx={{ marginRight: 1 }}
             onClick={() => {
               const response = window.confirm("you will loose all your changes");
-              if(response) navigate(-1);
-            } }
+              if (response) navigate(-1);
+            }}
           >return</Button>
           {/* 添加两个按钮, 裁剪和重置 */}
-          <Button color="error" size="small" variant="contained" sx={{  marginRight: 1 }}
+          <Button color="error" size="small" variant="contained" sx={{ marginRight: 1 }}
             onClick={() => {
               setCurrentFilter((state) => ({ ...state, images: state.images.map(image => ({ ...image, crop: undefined })) }));
             }}
           >reset</Button>
-          <Button color="info" size="small" variant="contained" sx={{  marginRight: 1 }}
+          <Button color="info" size="small" variant="contained" sx={{ marginRight: 1 }}
             onClick={handle_cut}
           >cut</Button>
 

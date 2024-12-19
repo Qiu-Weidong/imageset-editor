@@ -348,7 +348,6 @@ async def get_imageset_list():
 
 
 
-
 @api_imageset.post("/create")  
 async def create_imageset(name: str):
   origin_name = name
@@ -411,25 +410,6 @@ async def upload_images(files: List[UploadFile] = File(...),
     index += 1
     image.save(file_path, CONF_IMAGE_EXT)
   return index
-  
-class MoveRequest(BaseModel):
-  imageset_name: str
-  is_regular: bool
-  images: List[str] 
-  folder: str
-    
-@api_imageset.post("/move")
-async def move(request: MoveRequest):
-  if request.is_regular:
-    d = os.path.join("imageset-" + request.imageset_name, 'reg')
-  else:
-    d = os.path.join("imageset-" + request.imageset_name, 'src')  
-  dest = os.path.join(CONF_REPO_DIR, d, request.folder)
-  if not os.path.exists(dest):
-    os.makedirs(dest, exist_ok=True)
-  for filename in tqdm(request.images):
-    shutil.move(os.path.join(CONF_REPO_DIR, filename), dest)
-  return
 
 @api_imageset.post("/explore")
 async def explore(imageset_name: str):
@@ -523,7 +503,31 @@ async def rename_and_convert(imageset_name: str, is_regular: bool, concept_folde
     save_caption(newfilename, tags)
     # 删除原始图片
     os.remove(os.path.join(CONF_REPO_DIR, imagefilename))
+
+class MoveRequest(BaseModel):
+  filenames: List[str]
+  imageset_name: str
+  is_regular: bool
+  concept_name: str 
+  repeat: int  
+@api_imageset.put("/move")  
+async def move(request: MoveRequest):
+  # 将 filenames 中的图片移动到对应的地址即可
+  if request.is_regular:
+    d = os.path.join("imageset-" + request.imageset_name, "reg")
+  else:
+    d = os.path.join("imageset-"+request.imageset_name, "src")
+  d = os.path.join(d, f"{request.repeat}_{request.concept_name}")
+  dest_path = os.path.join(CONF_REPO_DIR, d)
+  if not os.path.exists(dest_path):
+    os.makedirs(dest_path, exist_ok=True)
+  # 将图片移动过去
+  for filename in tqdm(request.filenames):
+    src_path = os.path.join(CONF_REPO_DIR, filename)
+    shutil.move(src_path, dest_path)
   
+
+
 
 
 @api_imageset.delete("/delete")
